@@ -688,7 +688,7 @@ function QuickTilesSection() {
                 className="w-full flex items-center gap-2 px-4 py-3 text-sm text-brand-600 font-medium hover:bg-brand-50 transition"
               >
                 <Plus className="w-4 h-4" />
-                Add tile ({tiles.length}/5 selected)
+                Add tile ({tiles.length}/6 selected)
               </button>
             ) : (
               <div className="p-3 space-y-1">
@@ -729,9 +729,9 @@ function QuickTilesSection() {
           </div>
         )}
 
-        {tiles.length >= 5 && (
+        {tiles.length >= 6 && (
           <div className="px-4 py-2 border-t border-warm-100">
-            <p className="text-xs text-gray-400">Maximum of 5 tiles reached.</p>
+            <p className="text-xs text-gray-400">Maximum of 6 tiles reached.</p>
           </div>
         )}
       </div>

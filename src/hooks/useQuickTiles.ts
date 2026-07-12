@@ -3,7 +3,7 @@ import { DEFAULT_TILES, TILE_DEFS } from '../lib/tileConstants'
 import type { TileId } from '../lib/tileConstants'
 
 const MIN_TILES = 2
-const MAX_TILES = 5
+const MAX_TILES = 6
 
 function storageKey(userId: string) {
   return `quick_tiles_v1_${userId}`
