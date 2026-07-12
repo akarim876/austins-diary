@@ -408,8 +408,9 @@ function CaregiversSection() {
   const { user } = useAuth()
   const { activeProfile } = useProfile()
   const { access, invites, loading, reload } = useCaregivers(activeProfile?.id ?? null)
-  const [showInvite, setShowInvite] = useState(false)
-  const [inviting, setInviting]     = useState(false)
+  const [showInvite, setShowInvite]     = useState(false)
+  const [inviting, setInviting]         = useState(false)
+  const [editingRoleId, setEditingRoleId] = useState<string | null>(null)
 
   const inviteForm = useForm<InviteFormValues>({
     resolver: zodResolver(inviteSchema),
@@ -504,21 +505,31 @@ function CaregiversSection() {
                       </span>
                     </div>
                   </div>
-                  {canRevoke && (
-                    <button onClick={() => revokeAccess(row)}
-                      title="Remove access"
-                      className="w-7 h-7 rounded-full flex items-center justify-center text-gray-300 hover:text-red-500 hover:bg-red-50 transition-colors flex-shrink-0">
-                      <X className="w-3.5 h-3.5" />
-                    </button>
-                  )}
+                  <div className="flex items-center gap-1 flex-shrink-0">
+                    {canChangeRole && (
+                      <button
+                        onClick={() => setEditingRoleId(id => id === row.id ? null : row.id)}
+                        className="text-xs text-brand-600 font-medium px-2 py-1 rounded-lg hover:bg-brand-50 transition"
+                      >
+                        {editingRoleId === row.id ? 'Cancel' : 'Edit role'}
+                      </button>
+                    )}
+                    {canRevoke && (
+                      <button onClick={() => revokeAccess(row)}
+                        title="Remove access"
+                        className="w-7 h-7 rounded-full flex items-center justify-center text-gray-300 hover:text-red-500 hover:bg-red-50 transition-colors">
+                        <X className="w-3.5 h-3.5" />
+                      </button>
+                    )}
+                  </div>
                 </div>
 
-                {/* Role selector — owners can change any non-last-owner's role */}
-                {canChangeRole && (
+                {/* Role selector — collapsible, owners only */}
+                {canChangeRole && editingRoleId === row.id && (
                   <RoleSelector
                     currentRole={row.role}
                     accessId={row.id}
-                    onChanged={reload}
+                    onChanged={() => { reload(); setEditingRoleId(null) }}
                   />
                 )}
               </div>
@@ -559,7 +570,8 @@ function CaregiversSection() {
         <div className="mt-3">
           {!showInvite ? (
             <button onClick={() => setShowInvite(true)}
-              className="w-full flex items-center justify-center gap-2 py-3 rounded-xl border border-brand-200 text-brand-600 text-sm font-medium hover:bg-brand-50 transition">
+              className="w-full flex items-center justify-center gap-2 py-3 rounded-xl text-sm font-semibold text-white transition hover:opacity-90"
+              style={{ background: '#5B7B7A' }}>
               <Mail className="w-4 h-4" /> Invite a caregiver
             </button>
           ) : (
