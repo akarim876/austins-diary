@@ -3,7 +3,7 @@ import { format, startOfWeek, endOfWeek, addDays, subDays, parseISO } from 'date
 import {
   AlertTriangle, Bell, BookOpen, Calendar,
   ChevronDown, ChevronUp, ChevronLeft, ChevronRight,
-  Moon, Pill, TrendingDown, TrendingUp, Minus,
+  Moon, Pill, Settings2, TrendingDown, TrendingUp, Minus,
 } from 'lucide-react'
 import { ModuleIcon } from '../components/ui/ModuleIcon'
 import { useNavigate } from 'react-router-dom'
@@ -35,16 +35,17 @@ import type { AttentionItem } from '../hooks/useDashboard'
 
 // ─── Small helpers ────────────────────────────────────────────────────────────
 
-function Section({ title, children, className = '' }: {
-  title: string; children: React.ReactNode; className?: string
+function Section({ title, children, className = '', action }: {
+  title: string; children: React.ReactNode; className?: string; action?: React.ReactNode
 }) {
   return (
     <section
       className={`overflow-hidden ${className}`}
       style={{ background: '#fff', borderRadius: 10, boxShadow: '0 2px 10px rgba(51,50,46,0.07)' }}
     >
-      <div className="px-4 pt-4 pb-1">
+      <div className="px-4 pt-4 pb-1 flex items-center justify-between">
         <h2 className="text-[10px] font-bold uppercase tracking-widest" style={{ color: '#9A9187' }}>{title}</h2>
+        {action}
       </div>
       <div className="px-4 pb-4">{children}</div>
     </section>
@@ -314,7 +315,19 @@ export function DashboardPage() {
         </Section>
 
         {/* ── Daily schedule ───────────────────────────────────────────────────── */}
-        <Section title={isViewingToday ? "Today's schedule" : `${format(parseISO(viewDate), 'MMM d')} schedule`}>
+        <Section
+          title={isViewingToday ? "Today's schedule" : `${format(parseISO(viewDate), 'MMM d')} schedule`}
+          action={
+            <button
+              onClick={() => navigate('/schedule-settings')}
+              className="flex items-center gap-1 px-2 py-1 rounded-lg text-[11px] font-semibold transition-colors hover:opacity-80"
+              style={{ color: '#5B7B7A', background: 'rgba(91,123,122,0.08)' }}
+            >
+              <Settings2 className="w-3 h-3" />
+              Edit template
+            </button>
+          }
+        >
           <DailySchedule
             profileId={activeProfile.id}
             date={viewDate}
