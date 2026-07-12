@@ -165,6 +165,7 @@ export interface Database {
           duration_mins: number | null
           consequence: string
           helped: 'yes' | 'somewhat' | 'no'
+          schedule_item_id: string | null
           created_at: string
           updated_at: string
         }
@@ -182,6 +183,7 @@ export interface Database {
           duration_mins?: number | null
           consequence?: string
           helped: 'yes' | 'somewhat' | 'no'
+          schedule_item_id?: string | null
           created_at?: string
           updated_at?: string
         }
@@ -199,6 +201,7 @@ export interface Database {
           duration_mins?: number | null
           consequence?: string
           helped?: 'yes' | 'somewhat' | 'no'
+          schedule_item_id?: string | null
           created_at?: string
           updated_at?: string
         }
@@ -561,6 +564,99 @@ export interface Database {
           type?: string; status?: string; notes?: string | null
           followup_needed?: boolean; followup_text?: string | null
           followup_date?: string | null; created_at?: string; updated_at?: string
+        }
+        Relationships: []
+      }
+      handoff_notes: {
+        Row: {
+          profile_id: string
+          note: string
+          updated_by: string | null
+          updated_at: string
+        }
+        Insert: {
+          profile_id: string
+          note?: string
+          updated_by?: string | null
+          updated_at?: string
+        }
+        Update: {
+          profile_id?: string
+          note?: string
+          updated_by?: string | null
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      schedule_template_items: {
+        Row: {
+          id: string
+          profile_id: string
+          label: string
+          time_of_day: string | null
+          sort_order: number
+          created_at: string
+        }
+        Insert: {
+          id?: string
+          profile_id: string
+          label: string
+          time_of_day?: string | null
+          sort_order?: number
+          created_at?: string
+        }
+        Update: {
+          id?: string
+          profile_id?: string
+          label?: string
+          time_of_day?: string | null
+          sort_order?: number
+          created_at?: string
+        }
+        Relationships: []
+      }
+      daily_schedule_entries: {
+        Row: {
+          id: string
+          profile_id: string
+          schedule_date: string
+          template_item_id: string | null
+          label: string
+          time_of_day: string | null
+          sort_order: number
+          status: string
+          deviation_reason: string | null
+          deviation_note: string | null
+          author_id: string | null
+          updated_at: string
+        }
+        Insert: {
+          id?: string
+          profile_id: string
+          schedule_date: string
+          template_item_id?: string | null
+          label: string
+          time_of_day?: string | null
+          sort_order?: number
+          status?: string
+          deviation_reason?: string | null
+          deviation_note?: string | null
+          author_id?: string | null
+          updated_at?: string
+        }
+        Update: {
+          id?: string
+          profile_id?: string
+          schedule_date?: string
+          template_item_id?: string | null
+          label?: string
+          time_of_day?: string | null
+          sort_order?: number
+          status?: string
+          deviation_reason?: string | null
+          deviation_note?: string | null
+          author_id?: string | null
+          updated_at?: string
         }
         Relationships: []
       }

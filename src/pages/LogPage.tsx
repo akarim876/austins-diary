@@ -23,15 +23,13 @@ function LogTile({
   icon,
   label,
   description,
-  accent,
   iconBg,
   onClick,
 }: {
   icon: ReactNode
   label: string
   description: string
-  accent: string      // text color
-  iconBg: string      // icon circle bg
+  iconBg: string
   onClick: () => void
 }) {
   return (
@@ -126,7 +124,7 @@ export function LogPage() {
           icon={<ModuleIcon name="behavior" className="w-5 h-5" style={{ color: '#C6A84B' }} />}
           label="Behavior"
           description="Incident, severity, antecedent"
-          accent="#C6A84B"
+
           iconBg="rgba(198,168,75,0.13)"
           onClick={() => setSheet('behavior')}
         />
@@ -134,7 +132,7 @@ export function LogPage() {
           icon={<ModuleIcon name="sensory" className="w-5 h-5" style={{ color: '#9B8EC4' }} />}
           label="Sensory / Regulation"
           description="Zone, triggers, strategies"
-          accent="#9B8EC4"
+
           iconBg="rgba(155,142,196,0.13)"
           onClick={() => setSheet('sensory')}
         />
@@ -146,7 +144,7 @@ export function LogPage() {
           icon={<ModuleIcon name="meal" className="w-5 h-5" style={{ color: '#7CB48F' }} />}
           label="Meal or Snack"
           description="Breakfast, lunch, dinner, snack"
-          accent="#7CB48F"
+
           iconBg="rgba(124,180,143,0.13)"
           onClick={() => openDiet('meal')}
         />
@@ -154,7 +152,7 @@ export function LogPage() {
           icon={<ModuleIcon name="smoothie" className="w-5 h-5" style={{ color: '#4A9068' }} />}
           label="Smoothie"
           description="Recipe, omissions, hydration"
-          accent="#4A9068"
+
           iconBg="rgba(74,144,104,0.13)"
           onClick={() => openDiet('smoothie')}
         />
@@ -162,7 +160,7 @@ export function LogPage() {
           icon={<Pill className="w-5 h-5" style={{ color: '#3DB3B0' }} />}
           label="Supplements"
           description="Daily supplement checklist"
-          accent="#3DB3B0"
+
           iconBg="rgba(61,179,176,0.13)"
           onClick={() => openDiet('supplements')}
         />
@@ -170,7 +168,7 @@ export function LogPage() {
           icon={<Pill className="w-5 h-5" style={{ color: '#8B6FC9' }} />}
           label="Medications"
           description="Medication checklist"
-          accent="#8B6FC9"
+
           iconBg="rgba(139,111,201,0.13)"
           onClick={() => openDiet('medications')}
         />
@@ -182,7 +180,7 @@ export function LogPage() {
           icon={<ModuleIcon name="sleep" className="w-5 h-5" style={{ color: '#6875C8' }} />}
           label="Sleep"
           description="Bedtime, wake, quality, wakings"
-          accent="#6875C8"
+
           iconBg="rgba(104,117,200,0.13)"
           onClick={() => setSheet('sleep')}
         />
@@ -190,7 +188,7 @@ export function LogPage() {
           icon={<BookOpen className="w-5 h-5" style={{ color: '#4A7B5E' }} />}
           label="Diary Note"
           description="Free-text, photos, tags"
-          accent="#4A7B5E"
+
           iconBg="rgba(74,123,94,0.13)"
           onClick={() => setSheet('diary')}
         />
@@ -202,7 +200,7 @@ export function LogPage() {
           icon={<ModuleIcon name="goals" className="w-5 h-5" style={{ color: '#5B7B7A' }} />}
           label="Progress Note"
           description="Update an active goal"
-          accent="#5B7B7A"
+
           iconBg="rgba(91,123,122,0.13)"
           onClick={() => setSheet('progress')}
         />
@@ -210,7 +208,7 @@ export function LogPage() {
           icon={<ModuleIcon name="appointments" className="w-5 h-5" style={{ color: '#D4735F' }} />}
           label="Appointment"
           description="Visit, session, meeting"
-          accent="#D4735F"
+
           iconBg="rgba(212,115,95,0.13)"
           onClick={() => setSheet('appointment')}
         />
@@ -228,7 +226,7 @@ export function LogPage() {
       </BottomSheet>
 
       <BottomSheet open={sheet === 'sensory'} onClose={close} title="Log sensory / regulation">
-        <SensoryLogForm profileId={activeProfile.id} onSaved={close} onCancel={close} />
+        <SensoryLogForm profileId={activeProfile.id} date={today} onSaved={close} onCancel={close} />
       </BottomSheet>
 
       <BottomSheet open={sheet === 'diet'} onClose={close} title="Log diet">

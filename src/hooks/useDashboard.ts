@@ -103,6 +103,7 @@ export function useDashboard(profileId: string | null, viewDate: string) {
     let cancelled = false
 
     async function load() {
+      const pid = profileId as string   // guarded by the `if (!profileId) return` above
       // ── Date constants ──────────────────────────────────────────────────────
       // viewDate drives the daily snapshot; todayDate drives weekly/chart queries.
       const todayDate      = new Date()
@@ -153,28 +154,28 @@ export function useDashboard(profileId: string | null, viewDate: string) {
       ] = await Promise.all([
         // 1. Diary entries for viewDate
         supabase.from('diary_entries').select('id', { count: 'exact', head: true })
-          .eq('profile_id', profileId).eq('entry_date', viewDateStr),
+          .eq('profile_id', pid).eq('entry_date', viewDateStr),
 
         // 2. Behavior logs for viewDate
         supabase.from('behavior_logs').select('id, behavior, antecedent')
-          .eq('profile_id', profileId).eq('entry_date', viewDateStr),
+          .eq('profile_id', pid).eq('entry_date', viewDateStr),
 
         // 3. Sensory logs for viewDate (count only)
         supabase.from('sensory_logs').select('id', { count: 'exact', head: true })
-          .eq('profile_id', profileId).eq('entry_date', viewDateStr),
+          .eq('profile_id', pid).eq('entry_date', viewDateStr),
 
         // 4. Diet logs for viewDate (need log_type for breakdown)
         supabase.from('diet_logs').select('id, log_type')
-          .eq('profile_id', profileId).eq('entry_date', viewDateStr),
+          .eq('profile_id', pid).eq('entry_date', viewDateStr),
 
         // 5. Sleep logs for viewDate (log_date = viewDate or day before, to catch overnight)
         supabase.from('sleep_logs').select('id', { count: 'exact', head: true })
-          .eq('profile_id', profileId).gte('log_date', yesterdayStr).lte('log_date', viewDateStr),
+          .eq('profile_id', pid).gte('log_date', yesterdayStr).lte('log_date', viewDateStr),
 
         // 6. Draft sleep = sleep entry with no wake_time around viewDate
         supabase.from('sleep_logs')
           .select('id, log_date, bedtime')
-          .eq('profile_id', profileId)
+          .eq('profile_id', pid)
           .gte('log_date', yesterdayStr)
           .lte('log_date', viewDateStr)
           .is('wake_time', null),
@@ -182,33 +183,33 @@ export function useDashboard(profileId: string | null, viewDate: string) {
         // 7. Appointments on viewDate
         supabase.from('appointments')
           .select('id, appt_time, type, status, provider_id')
-          .eq('profile_id', profileId)
+          .eq('profile_id', pid)
           .eq('appt_date', viewDateStr)
           .in('status', ['upcoming', 'completed']),
 
         // 8. Follow-up reminders due on viewDate
         supabase.from('appointments')
           .select('id, type, followup_text, provider_id')
-          .eq('profile_id', profileId)
+          .eq('profile_id', pid)
           .eq('followup_needed', true)
           .eq('followup_date', viewDateStr),
 
         // 9. Behavior logs this week (antecedent + behavior)
         supabase.from('behavior_logs').select('id, behavior, antecedent')
-          .eq('profile_id', profileId).gte('entry_date', weekStart).lte('entry_date', weekEnd),
+          .eq('profile_id', pid).gte('entry_date', weekStart).lte('entry_date', weekEnd),
 
         // 10. Behavior logs last week (count only)
         supabase.from('behavior_logs').select('id', { count: 'exact', head: true })
-          .eq('profile_id', profileId).gte('entry_date', lastWeekStart).lte('entry_date', lastWeekEnd),
+          .eq('profile_id', pid).gte('entry_date', lastWeekStart).lte('entry_date', lastWeekEnd),
 
         // 11. Sensory logs this week (regulation_level)
         supabase.from('sensory_logs').select('id, regulation_level')
-          .eq('profile_id', profileId).gte('entry_date', weekStart).lte('entry_date', weekEnd),
+          .eq('profile_id', pid).gte('entry_date', weekStart).lte('entry_date', weekEnd),
 
         // 12. Sleep logs last 7 days (for "this week" comparison)
         supabase.from('sleep_logs')
           .select('id, log_date, total_sleep_minutes, sleep_quality')
-          .eq('profile_id', profileId)
+          .eq('profile_id', pid)
           .gte('log_date', sevenDaysAgoStr)
           .lte('log_date', todayStr)
           .not('wake_time', 'is', null),
@@ -216,37 +217,37 @@ export function useDashboard(profileId: string | null, viewDate: string) {
         // 13. Sleep logs prev 7 days (for comparison)
         supabase.from('sleep_logs')
           .select('id, log_date, total_sleep_minutes, sleep_quality')
-          .eq('profile_id', profileId)
+          .eq('profile_id', pid)
           .gte('log_date', fourteenDaysAgoStr)
           .lt('log_date', sevenDaysAgoStr)
           .not('wake_time', 'is', null),
 
         // 14. Smoothies this week
         supabase.from('diet_logs').select('id', { count: 'exact', head: true })
-          .eq('profile_id', profileId)
+          .eq('profile_id', pid)
           .eq('log_type', 'smoothie')
           .gte('entry_date', weekStart)
           .lte('entry_date', weekEnd),
 
         // 15. Behavior chart: last 30 days (just entry_date)
         supabase.from('behavior_logs').select('id, entry_date')
-          .eq('profile_id', profileId).gte('entry_date', thirtyDaysAgoStr).lte('entry_date', todayStr),
+          .eq('profile_id', pid).gte('entry_date', thirtyDaysAgoStr).lte('entry_date', todayStr),
 
         // 16. Sleep chart: last 30 days
         supabase.from('sleep_logs')
           .select('id, log_date, total_sleep_minutes')
-          .eq('profile_id', profileId)
+          .eq('profile_id', pid)
           .gte('log_date', thirtyDaysAgoStr)
           .lte('log_date', todayStr)
           .not('wake_time', 'is', null),
 
         // 17. Active goals
         supabase.from('goals').select('*')
-          .eq('profile_id', profileId).eq('status', 'active'),
+          .eq('profile_id', pid).eq('status', 'active'),
 
         // 18. Progress notes last 14 days (just goal_id)
         supabase.from('progress_notes').select('goal_id')
-          .eq('profile_id', profileId).gte('note_date', fourteenDaysAgoStr),
+          .eq('profile_id', pid).gte('note_date', fourteenDaysAgoStr),
       ])
 
       if (cancelled) return
@@ -407,3 +408,4 @@ export function useDashboard(profileId: string | null, viewDate: string) {
 
   return data
 }
+

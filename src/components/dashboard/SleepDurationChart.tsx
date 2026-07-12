@@ -35,8 +35,8 @@ export function SleepDurationChart({ data, reference = 9 }: Props) {
         <Tooltip
           contentStyle={{ fontSize: 12, borderRadius: 8, border: '1px solid #f0ede8', boxShadow: '0 2px 8px rgba(0,0,0,0.08)' }}
           cursor={{ stroke: '#c7d2fe', strokeWidth: 1 }}
-          formatter={(v: number | null) => [v != null ? `${v.toFixed(1)}h` : '—', 'sleep']}
-          labelFormatter={(l: string) => `${l}`}
+          formatter={((v: number | null) => [v != null ? `${v.toFixed(1)}h` : '—', 'sleep']) as any}
+          labelFormatter={((l: string) => `${l}`) as any}
         />
         <ReferenceLine
           y={reference}

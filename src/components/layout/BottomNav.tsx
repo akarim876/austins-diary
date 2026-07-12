@@ -1,3 +1,4 @@
+import type { ReactElement } from 'react'
 import { NavLink } from 'react-router-dom'
 import { CalendarDays, LayoutDashboard, Plus, Settings } from 'lucide-react'
 import { ModuleIcon } from '../ui/ModuleIcon'
@@ -7,7 +8,7 @@ import { ModuleIcon } from '../ui/ModuleIcon'
 const NAV_ITEMS: {
   to: string
   label: string
-  renderIcon: (cls: string, col: string) => JSX.Element
+  renderIcon: (cls: string, col: string) => ReactElement
 }[] = [
   {
     to: '/dashboard',

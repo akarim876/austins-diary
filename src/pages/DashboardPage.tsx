@@ -1,9 +1,9 @@
 import { useState } from 'react'
 import { format, startOfWeek, endOfWeek, addDays, subDays, parseISO } from 'date-fns'
 import {
-  AlarmClock, AlertTriangle, Bell, BookOpen, Calendar,
+  AlertTriangle, Bell, BookOpen, Calendar,
   ChevronDown, ChevronUp, ChevronLeft, ChevronRight,
-  Pill, TrendingDown, TrendingUp, Minus,
+  Moon, Pill, TrendingDown, TrendingUp, Minus,
 } from 'lucide-react'
 import { ModuleIcon } from '../components/ui/ModuleIcon'
 import { useNavigate } from 'react-router-dom'
@@ -29,6 +29,7 @@ import { Spinner } from '../components/ui/Spinner'
 import { HandoffNote } from '../components/dashboard/HandoffNote'
 import { DailySchedule } from '../components/schedule/DailySchedule'
 import { useHandoffNote } from '../hooks/useHandoffNote'
+import { useDietSettings } from '../hooks/useDietSettings'
 import { useMyRole, canCreate as _canCreate } from '../hooks/useMyRole'
 import type { AttentionItem } from '../hooks/useDashboard'
 
@@ -119,6 +120,7 @@ export function DashboardPage() {
   // Handoff note
   const myRole = useMyRole(activeProfile?.id ?? null)
   const { data: handoffData, updaterName: handoffUpdater, save: saveHandoff } = useHandoffNote(activeProfile?.id ?? null)
+  const { settings: dietSettings } = useDietSettings(activeProfile?.id ?? null)
 
   // Sheet state
   const [behaviorOpen,    setBehaviorOpen]    = useState(false)
@@ -513,6 +515,7 @@ export function DashboardPage() {
       <BottomSheet open={behaviorOpen} onClose={() => setBehaviorOpen(false)} title="Log behavior">
         <BehaviorLogForm
           profileId={activeProfile.id}
+          date={realTodayStr}
           onSaved={() => setBehaviorOpen(false)}
           onCancel={() => setBehaviorOpen(false)}
         />
@@ -521,6 +524,7 @@ export function DashboardPage() {
       <BottomSheet open={sensoryOpen} onClose={() => setSensoryOpen(false)} title="Log sensory/regulation">
         <SensoryLogForm
           profileId={activeProfile.id}
+          date={realTodayStr}
           onSaved={() => setSensoryOpen(false)}
           onCancel={() => setSensoryOpen(false)}
         />
@@ -529,7 +533,10 @@ export function DashboardPage() {
       <BottomSheet open={dietOpen} onClose={() => setDietOpen(false)} title="Log diet">
         <DietSheet
           profileId={activeProfile.id}
-          onClose={() => setDietOpen(false)}
+          date={realTodayStr}
+          settings={dietSettings}
+          onSaved={() => setDietOpen(false)}
+          onCancel={() => setDietOpen(false)}
         />
       </BottomSheet>
 

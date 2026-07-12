@@ -37,8 +37,10 @@ export function BehaviorFrequencyChart({ data }: Props) {
         <Tooltip
           contentStyle={{ fontSize: 12, borderRadius: 8, border: '1px solid #f0ede8', boxShadow: '0 2px 8px rgba(0,0,0,0.08)' }}
           cursor={{ fill: '#fef3c7', radius: 4 }}
-          formatter={(v: number) => [v, 'incidents']}
-          labelFormatter={(l: string) => `${l}`}
+          // eslint-disable-next-line @typescript-eslint/no-explicit-any
+          formatter={((v: number) => [v, 'incidents']) as any}
+          // eslint-disable-next-line @typescript-eslint/no-explicit-any
+          labelFormatter={((l: string) => `${l}`) as any}
         />
         <Bar dataKey="count" radius={[3, 3, 0, 0]}>
           {data.map((d, i) => (

@@ -97,7 +97,7 @@ async function fetchExportData(
     behavior:      (behaviorRes.data ?? []) as BehaviorLog[],
     sensory:       (sensoryRes.data  ?? []) as SensoryLog[],
     diet:          (dietRes.data     ?? []) as DietLog[],
-    sleep:         (sleepRes.data    ?? []) as SleepLog[],
+    sleep:         (sleepRes.data    ?? []) as unknown as SleepLog[],
     goals:         (goalsRes.data    ?? []) as Goal[],
     progressNotes: (progressRes.data ?? []) as ProgressNote[],
     appointments:  (apptsRes.data    ?? []) as Appointment[],

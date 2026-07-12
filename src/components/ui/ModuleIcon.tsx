@@ -9,6 +9,7 @@
  * lucide-react. Only use ModuleIcon for module-level identification.
  */
 
+import React from 'react'
 import type { CSSProperties } from 'react'
 
 export type ModuleIconName =
@@ -99,7 +100,7 @@ function Appointments() {
 // Map of name → inner component
 // ---------------------------------------------------------------------------
 
-const ICONS: Record<ModuleIconName, () => JSX.Element> = {
+const ICONS: Record<ModuleIconName, () => React.ReactElement> = {
   smoothie:     Smoothie,
   meal:         Meal,
   behavior:     Behavior,

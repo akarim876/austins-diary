@@ -2,7 +2,7 @@ import { useState, useRef, useEffect } from 'react'
 import { differenceInHours, formatDistanceToNow, parseISO } from 'date-fns'
 import { AlertTriangle, Check, Pencil, StickyNote, X } from 'lucide-react'
 import { canCreate } from '../../hooks/useMyRole'
-import type { ProfileRole } from '../../types'
+import type { ProfileRole } from '../../hooks/useMyRole'
 import type { HandoffNoteData } from '../../hooks/useHandoffNote'
 
 interface Props {

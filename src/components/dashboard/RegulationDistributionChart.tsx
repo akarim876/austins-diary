@@ -44,7 +44,7 @@ export function RegulationDistributionChart({ data }: Props) {
         <Tooltip
           contentStyle={{ fontSize: 12, borderRadius: 8, border: '1px solid #f0ede8', boxShadow: '0 2px 8px rgba(0,0,0,0.08)' }}
           cursor={{ fill: '#f3f4f6' }}
-          formatter={(v: number) => [v, 'entries']}
+          formatter={((v: number) => [v, 'entries']) as any}
         />
         <Bar dataKey="count" radius={[0, 4, 4, 0]}>
           {data.map((d, i) => (

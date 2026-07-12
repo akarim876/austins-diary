@@ -4,7 +4,8 @@ import { CalendarClock, Check, X, RefreshCw, Circle, ChevronDown, ChevronUp } fr
 import { useDailySchedule } from '../../hooks/useDailySchedule'
 import { canCreate } from '../../hooks/useMyRole'
 import { Spinner } from '../ui/Spinner'
-import type { DeviationReason, ScheduleDisplayItem, ScheduleItemStatus, ProfileRole } from '../../types'
+import type { DeviationReason, ScheduleDisplayItem, ScheduleItemStatus } from '../../types'
+import type { ProfileRole } from '../../hooks/useMyRole'
 
 const DEVIATION_REASONS: { value: DeviationReason; label: string }[] = [
   { value: 'ran_late',         label: 'Ran late'          },
