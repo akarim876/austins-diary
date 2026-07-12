@@ -1,0 +1,147 @@
+@import url('https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,400;0,9..144,600;0,9..144,700;1,9..144,400&family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap');
+@import "tailwindcss";
+
+/* ─── Design tokens ────────────────────────────────────────────────────────── */
+
+@theme {
+  /* Primary accent — muted sage teal */
+  --color-brand-50:  #f0f5f5;
+  --color-brand-100: #ddeae9;
+  --color-brand-200: #b8d4d3;
+  --color-brand-300: #8fbcbb;
+  --color-brand-400: #6da09f;
+  --color-brand-500: #5B7B7A;
+  --color-brand-600: #4a6a69;
+  --color-brand-700: #3a5454;
+  --color-brand-800: #2d4241;
+  --color-brand-900: #1e2d2d;
+
+  /* Warm neutral backgrounds */
+  --color-warm-50:  #FDFCFB;
+  --color-warm-100: #F7F5F1;
+  --color-warm-200: #EDE9E3;
+  --color-warm-300: #D9D3C9;
+  --color-warm-400: #B8B0A3;
+  --color-warm-500: #9A9187;
+
+  /* Typography families */
+  --font-display: 'Fraunces', Georgia, 'Times New Roman', serif;
+  --font-sans:    'Inter', system-ui, sans-serif;
+  --font-mono:    'JetBrains Mono', 'Fira Mono', monospace;
+
+  /* Shadows — soft, layered, no hard edges */
+  --shadow-xs:   0 1px 4px  rgba(51,50,46,0.05);
+  --shadow-sm:   0 2px 10px rgba(51,50,46,0.07);
+  --shadow-md:   0 4px 20px rgba(51,50,46,0.09);
+  --shadow-lg:   0 8px 32px rgba(51,50,46,0.12);
+  --shadow-sheet: 0 -4px 32px rgba(51,50,46,0.12);
+}
+
+/* ─── Regulation zone colors (5-step gradient, used exclusively for zone indicators) */
+:root {
+  --reg-calm:        #8FB89C;
+  --reg-alert:       #A9C08A;
+  --reg-anxious:     #E8C77E;
+  --reg-dysregulated:#D99A6C;
+  --reg-shutdown:    #C77B6A;
+
+  --text-primary:   #33322E;
+  --text-secondary: #6B6760;
+  --text-muted:     #9A9187;
+}
+
+/* ─── Reset & base ─────────────────────────────────────────────────────────── */
+
+* {
+  -webkit-tap-highlight-color: transparent;
+}
+
+html {
+  font-family: var(--font-sans);
+  color: var(--text-primary);
+  background-color: #F7F5F1;
+}
+
+body {
+  background-color: #F7F5F1;
+  font-family: var(--font-sans);
+  color: #33322E;
+  overscroll-behavior-y: none;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+#root {
+  min-height: 100dvh;
+  display: flex;
+  flex-direction: column;
+}
+
+/* ─── Focus rings — visible and brand-colored ────────────────────────────── */
+
+:focus-visible {
+  outline: 2px solid #5B7B7A;
+  outline-offset: 2px;
+  border-radius: 6px;
+}
+
+/* ─── Typography utilities ──────────────────────────────────────────────── */
+
+.font-display {
+  font-family: var(--font-display);
+}
+
+/* For timestamps, durations, numeric data */
+.font-data {
+  font-family: var(--font-mono);
+  font-size: 0.82em;
+  letter-spacing: 0.01em;
+  font-variant-numeric: tabular-nums;
+}
+
+/* ─── Card surface ──────────────────────────────────────────────────────── */
+
+.card {
+  background: #ffffff;
+  border-radius: 16px;
+  box-shadow: 0 2px 10px rgba(51,50,46,0.07);
+}
+
+.card-sm {
+  background: #ffffff;
+  border-radius: 12px;
+  box-shadow: 0 1px 4px rgba(51,50,46,0.05);
+}
+
+/* ─── Regulation zone utilities ─────────────────────────────────────────── */
+
+.zone-calm        { background-color: var(--reg-calm);         color: #2d4a35; }
+.zone-alert       { background-color: var(--reg-alert);        color: #3a4a20; }
+.zone-anxious     { background-color: var(--reg-anxious);      color: #5a4010; }
+.zone-dysregulated{ background-color: var(--reg-dysregulated); color: #5a2e10; }
+.zone-shutdown    { background-color: var(--reg-shutdown);     color: #4a1f18; }
+
+/* Dot variants (for calendar) */
+.zone-dot-calm        { background-color: var(--reg-calm); }
+.zone-dot-alert       { background-color: var(--reg-alert); }
+.zone-dot-anxious     { background-color: var(--reg-anxious); }
+.zone-dot-dysregulated{ background-color: var(--reg-dysregulated); }
+.zone-dot-shutdown    { background-color: var(--reg-shutdown); }
+
+/* ─── Scroll tweaks ─────────────────────────────────────────────────────── */
+
+.scrollbar-none::-webkit-scrollbar { display: none; }
+.scrollbar-none { -ms-overflow-style: none; scrollbar-width: none; }
+
+.scroll-smooth { scroll-behavior: smooth; }
+
+/* ─── Transition defaults ───────────────────────────────────────────────── */
+
+/* Entry save: gentle fade+slide */
+@keyframes entryFadeIn {
+  from { opacity: 0; transform: translateY(6px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+.entry-appear {
+  animation: entryFadeIn 0.22s ease-out both;
+}
