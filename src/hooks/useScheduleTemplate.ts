@@ -48,21 +48,22 @@ export function useScheduleTemplate(profileId: string | null) {
     await fetch()
   }
 
-  async function moveItem(id: string, direction: 'up' | 'down') {
-    const idx = items.findIndex(i => i.id === id)
-    if (idx < 0) return
-    const swapIdx = direction === 'up' ? idx - 1 : idx + 1
-    if (swapIdx < 0 || swapIdx >= items.length) return
+  /**
+   * Accepts the new desired order as an array of IDs, applies it optimistically,
+   * then persists each item's sort_order to the database in one batch.
+   */
+  async function reorderItems(orderedIds: string[]) {
+    // Optimistic update — reorder local state immediately so the UI feels instant
+    const byId = Object.fromEntries(items.map(i => [i.id, i]))
+    const reordered = orderedIds.map(id => byId[id]).filter(Boolean) as ScheduleTemplateItem[]
+    setItems(reordered)
 
-    const a = items[idx]
-    const b = items[swapIdx]
-
-    await Promise.all([
-      supabase.from('schedule_template_items').update({ sort_order: b.sort_order }).eq('id', a.id),
-      supabase.from('schedule_template_items').update({ sort_order: a.sort_order }).eq('id', b.id),
-    ])
-    await fetch()
+    await Promise.all(
+      orderedIds.map((id, idx) =>
+        supabase.from('schedule_template_items').update({ sort_order: idx }).eq('id', id)
+      )
+    )
   }
 
-  return { items, loading, refetch: fetch, addItem, updateItem, deleteItem, moveItem }
+  return { items, loading, refetch: fetch, addItem, updateItem, deleteItem, reorderItems }
 }
