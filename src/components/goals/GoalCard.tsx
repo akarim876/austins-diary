@@ -36,10 +36,10 @@ export function GoalCard({ goal, progressCount, onClick }: Props) {
 
             {/* Source + status badges */}
             <div className="flex flex-wrap items-center gap-1.5 mt-1.5">
-              <span className={`px-2 py-0.5 rounded-full text-xs font-semibold ${SOURCE_COLORS[goal.source as GoalSource]}`}>
+              <span className={`px-2.5 py-1 rounded-xl text-xs font-semibold ${SOURCE_COLORS[goal.source as GoalSource]}`}>
                 {goal.source}
               </span>
-              <span className={`px-2 py-0.5 rounded-full text-xs font-semibold border ${sm.color}`}>
+              <span className={`px-2.5 py-1 rounded-xl text-xs font-semibold ${sm.color}`}>
                 {sm.label}
               </span>
               {progressCount !== undefined && progressCount > 0 && (

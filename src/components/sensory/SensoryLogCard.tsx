@@ -95,7 +95,7 @@ export function SensoryLogCard({
         {log.sensory_triggers.length > 0 && (
           <div className="flex flex-wrap gap-1">
             {log.sensory_triggers.map(t => (
-              <span key={t} className="px-2 py-0.5 rounded-full bg-violet-50 border border-violet-200 text-xs text-violet-700 font-medium">
+              <span key={t} className="px-2.5 py-1 rounded-xl bg-violet-50 text-xs text-violet-700 font-semibold">
                 {t}
               </span>
             ))}
@@ -110,7 +110,7 @@ export function SensoryLogCard({
           <div className="flex flex-wrap gap-1 items-center">
             <span className="text-xs text-gray-400 mr-0.5">Strategy:</span>
             {log.calming_strategies.map(s => (
-              <span key={s} className="px-2 py-0.5 rounded-full bg-teal-50 border border-teal-200 text-xs text-teal-700 font-medium">
+              <span key={s} className="px-2.5 py-1 rounded-xl bg-teal-50 text-xs text-teal-700 font-semibold">
                 {s}
               </span>
             ))}
@@ -126,7 +126,7 @@ export function SensoryLogCard({
         {helpedMeta && (
           <div className="flex items-center gap-1.5">
             <span className="text-xs text-gray-400">Helped?</span>
-            <span className={`text-xs px-2 py-0.5 rounded-full font-medium border ${helpedMeta.color}`}>
+            <span className={`text-xs px-2.5 py-1 rounded-xl font-semibold ${helpedMeta.color}`}>
               {helpedMeta.label}
             </span>
           </div>
@@ -148,7 +148,7 @@ export function SensoryLogCard({
             <Link2 className="w-3.5 h-3.5 text-amber-600 flex-shrink-0" />
             <div className="flex-1 min-w-0 text-left">
               <span className="text-xs font-semibold text-amber-800 capitalize">{linkedBehaviorLog.behavior}</span>
-              <span className={`ml-2 text-xs px-1.5 py-0.5 rounded-full font-medium ${SEVERITY_LABELS[linkedBehaviorLog.severity]?.bg ?? ''} ${SEVERITY_LABELS[linkedBehaviorLog.severity]?.color ?? ''}`}>
+              <span className={`ml-2 text-xs px-2.5 py-1 rounded-xl font-semibold ${SEVERITY_LABELS[linkedBehaviorLog.severity]?.bg ?? ''} ${SEVERITY_LABELS[linkedBehaviorLog.severity]?.color ?? ''}`}>
                 {SEVERITY_LABELS[linkedBehaviorLog.severity]?.label}
               </span>
             </div>

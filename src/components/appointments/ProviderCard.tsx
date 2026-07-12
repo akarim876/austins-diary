@@ -39,7 +39,7 @@ export function ProviderCard({ provider, appointmentCount, onClick }: Props) {
             </div>
 
             <div className="flex flex-wrap items-center gap-1.5 mt-1.5">
-              <span className={`px-2 py-0.5 rounded-full text-xs font-semibold ${ROLE_COLORS[provider.role as ProviderRole]}`}>
+              <span className={`px-2.5 py-1 rounded-xl text-xs font-semibold ${ROLE_COLORS[provider.role as ProviderRole]}`}>
                 {displayRole}
               </span>
               {appointmentCount !== undefined && appointmentCount > 0 && (

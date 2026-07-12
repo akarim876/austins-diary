@@ -27,7 +27,7 @@ export function ProgressNoteCard({ note, goal, authorName, compact, onClick }: P
         </div>
         <div className="flex-1 min-w-0">
           <div className="flex items-center gap-1.5 flex-wrap">
-            <span className={`px-1.5 py-0.5 rounded-full text-xs font-semibold border ${rm.color}`}>
+            <span className={`px-2.5 py-1 rounded-xl text-xs font-semibold ${rm.color}`}>
               {rm.label}
             </span>
             {goal && (
@@ -69,7 +69,7 @@ export function ProgressNoteCard({ note, goal, authorName, compact, onClick }: P
             <div className="flex items-start justify-between gap-2">
               <div>
                 <div className="flex items-center gap-1.5 flex-wrap">
-                  <span className={`px-2 py-0.5 rounded-full text-xs font-semibold border ${rm.color}`}>
+                  <span className={`px-2.5 py-1 rounded-xl text-xs font-semibold ${rm.color}`}>
                     {rm.label}
                   </span>
                   {goal && (

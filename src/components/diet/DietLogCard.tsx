@@ -61,12 +61,12 @@ function ChecklistDisplay({ checked, omitted, tagBg }: { checked: string[]; omit
   return (
     <div className="flex flex-wrap gap-1">
       {checked.map(i => (
-        <span key={i} className={`px-2 py-0.5 rounded-full border text-xs font-medium ${tagBg}`}>
+        <span key={i} className={`px-2.5 py-1 rounded-xl text-xs font-semibold ${tagBg}`}>
           ✓ {i}
         </span>
       ))}
       {omitted.map(i => (
-        <span key={i} className="px-2 py-0.5 rounded-full bg-gray-50 border border-gray-200 text-xs text-gray-400 line-through">
+        <span key={i} className="px-2.5 py-1 rounded-xl bg-gray-50 text-xs text-gray-400 line-through">
           {i}
         </span>
       ))}
@@ -157,7 +157,7 @@ export function DietLogCard({ log, authorName, onClick, compact = false }: Props
             {log.foods_eaten.length > 0 && (
               <div className="flex flex-wrap gap-1">
                 {log.foods_eaten.map(f => (
-                  <span key={f} className={`px-2 py-0.5 rounded-full border text-xs font-medium ${colors.tagBg}`}>{f}</span>
+                  <span key={f} className={`px-2.5 py-1 rounded-xl text-xs font-semibold ${colors.tagBg}`}>{f}</span>
                 ))}
               </div>
             )}

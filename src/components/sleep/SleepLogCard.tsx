@@ -47,12 +47,12 @@ export function SleepLogCard({ log, authorName, compact, onClick }: Props) {
                 {format(parseISO(log.log_date + 'T12:00:00'), 'MMM d')} night
               </span>
               {isDraft && (
-                <span className="px-1.5 py-0.5 rounded-full bg-amber-100 text-amber-700 text-xs font-semibold">
+                <span className="px-2.5 py-1 rounded-xl bg-amber-100 text-amber-700 text-xs font-semibold">
                   Draft
                 </span>
               )}
               {log.sleep_quality && (
-                <span className={`px-2 py-0.5 rounded-full text-xs font-semibold border ${qualityColor(log.sleep_quality)}`}>
+                <span className={`px-2.5 py-1 rounded-xl text-xs font-semibold ${qualityColor(log.sleep_quality)}`}>
                   {qualityLabel(log.sleep_quality)}
                 </span>
               )}

@@ -33,7 +33,7 @@ export function BehaviorLogCard({
         <div className="flex-1 min-w-0">
           <div className="flex items-center gap-2 flex-wrap">
             <span className="text-xs font-semibold text-amber-700 capitalize">{log.behavior}</span>
-            <span className={`text-xs px-1.5 py-0.5 rounded-full font-medium ${severityMeta.bg} ${severityMeta.color}`}>
+            <span className={`text-xs px-2.5 py-1 rounded-xl font-semibold ${severityMeta.bg} ${severityMeta.color}`}>
               {severityMeta.label}
             </span>
             <span className="text-xs text-gray-400">{timeStr}</span>
@@ -77,7 +77,7 @@ export function BehaviorLogCard({
         {/* Behavior + severity */}
         <div className="flex items-center gap-2 flex-wrap">
           <span className="font-semibold text-gray-900 capitalize text-sm">{log.behavior}</span>
-          <span className={`text-xs px-2 py-0.5 rounded-full font-semibold ${severityMeta.bg} ${severityMeta.color}`}>
+          <span className={`text-xs px-2.5 py-1 rounded-xl font-semibold ${severityMeta.bg} ${severityMeta.color}`}>
             {severityMeta.label}
           </span>
           {log.duration_mins && (
@@ -107,7 +107,7 @@ export function BehaviorLogCard({
         {helpedMeta && (
           <div className="flex items-center gap-1.5">
             <span className="text-xs text-gray-400">Helped?</span>
-            <span className={`text-xs px-2 py-0.5 rounded-full font-medium border ${helpedMeta.color}`}>
+            <span className={`text-xs px-2.5 py-1 rounded-xl font-semibold ${helpedMeta.color}`}>
               {helpedMeta.label}
             </span>
           </div>

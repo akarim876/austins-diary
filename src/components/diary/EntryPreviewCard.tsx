@@ -43,7 +43,7 @@ export function EntryPreviewCard({ entry, authorName, onClick }: Props) {
             {entry.tags.map(tag => (
               <span
                 key={tag}
-                className="px-2 py-0.5 rounded-full bg-brand-50 text-brand-600 text-xs font-medium"
+                className="px-2.5 py-1 rounded-xl bg-brand-50 text-brand-600 text-xs font-semibold"
               >
                 {tag}
               </span>

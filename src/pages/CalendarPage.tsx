@@ -240,7 +240,7 @@ export function CalendarPage() {
                   {selectedEntry.tags.length > 0 && (
                     <div className="flex flex-wrap gap-1.5">
                       {selectedEntry.tags.map(tag => (
-                        <span key={tag} className="px-2.5 py-1 rounded-full bg-brand-50 text-brand-600 text-xs font-medium">{tag}</span>
+                        <span key={tag} className="px-2.5 py-1 rounded-xl bg-brand-50 text-brand-600 text-xs font-semibold">{tag}</span>
                       ))}
                     </div>
                   )}
