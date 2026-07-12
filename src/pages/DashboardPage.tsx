@@ -324,7 +324,7 @@ export function DashboardPage() {
               style={{ color: '#5B7B7A', background: 'rgba(91,123,122,0.08)' }}
             >
               <Settings2 className="w-3 h-3" />
-              Edit template
+              Edit Schedule
             </button>
           }
         >
