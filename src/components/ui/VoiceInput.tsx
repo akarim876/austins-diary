@@ -112,7 +112,19 @@ export function VoiceInput({ onTranscribed, disabled = false }: Props) {
         body: { path },
       })
 
-      if (fnErr) throw new Error(fnErr.message)
+      if (fnErr) {
+        // Try to pull the actual error message out of the response body
+        let detail = fnErr.message
+        try {
+          // FunctionsHttpError exposes .context (the Response object)
+          const ctx = (fnErr as unknown as { context?: Response }).context
+          if (ctx) {
+            const body = await ctx.json().catch(() => null)
+            if (body?.error) detail = body.error as string
+          }
+        } catch { /* ignore parse errors */ }
+        throw new Error(detail)
+      }
       if (data?.error) throw new Error(data.error as string)
       if (!data?.text) throw new Error('No transcription returned from server.')
 
