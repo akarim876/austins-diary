@@ -14,6 +14,7 @@ import {
 import { useDailySchedule } from '../../hooks/useDailySchedule'
 import type { BehaviorLog } from '../../types'
 import { Spinner } from '../ui/Spinner'
+import { VoiceInput } from '../ui/VoiceInput'
 
 const schema = z.object({
   entry_date:       z.string().min(1),
@@ -79,7 +80,7 @@ export function BehaviorLogForm({ profileId, date, existingLog, onSaved, onCance
   // Fetch today's schedule items so we can link one when antecedent = 'schedule change'
   const { items: scheduleItems } = useDailySchedule(profileId, date)
 
-  const { register, handleSubmit, control, reset, watch, setValue, formState: { errors } } =
+  const { register, handleSubmit, control, reset, watch, setValue, getValues, formState: { errors } } =
     useForm<FormValues>({
       resolver: zodResolver(schema),
       defaultValues: {
@@ -405,6 +406,14 @@ export function BehaviorLogForm({ profileId, date, existingLog, onSaved, onCance
           placeholder="What was your response or intervention? (e.g. offered sensory break, moved to quiet room…)"
           className="w-full px-3 py-2.5 rounded-xl border border-gray-200 text-sm placeholder-gray-400 resize-none focus:outline-none focus:ring-2 focus:ring-amber-400 transition"
         />
+        <div className="mt-1.5">
+          <VoiceInput
+            onTranscribed={(text) => {
+              const current = getValues('consequence')
+              setValue('consequence', current ? `${current}\n${text}` : text)
+            }}
+          />
+        </div>
 
         <div>
           <p className="text-xs font-medium text-gray-600 mb-2">Did the response help?</p>
