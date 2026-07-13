@@ -220,6 +220,10 @@ export function CalendarPage() {
 
             <div className="p-4 space-y-3">
               {/* Diary entry section */}
+              <div className="space-y-2">
+                <p className="text-xs font-semibold text-brand-600 uppercase tracking-wide">
+                  Diary note
+                </p>
               {editingDiary ? (
                 <DiaryEntryForm
                   profileId={activeProfile.id}
@@ -267,6 +271,7 @@ export function CalendarPage() {
                   )}
                 </div>
               )}
+              </div>
 
               {/* Behavior logs for selected day */}
               {dayBehavior.length > 0 && (
