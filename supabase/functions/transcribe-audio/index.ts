@@ -72,8 +72,22 @@ Deno.serve(async (req: Request) => {
     storagePath = null // mark cleaned up
 
     if (!whisperRes.ok) {
+      const status  = whisperRes.status
       const errText = await whisperRes.text()
-      throw new Error(`Whisper API error (${whisperRes.status}): ${errText}`)
+
+      // Map common failures to friendly messages
+      let friendly = `Transcription failed (${status}).`
+      if (status === 429) {
+        friendly = 'Transcription service is temporarily unavailable (quota/rate limit). Please try again later.'
+      } else if (status === 401) {
+        friendly = 'Transcription service is misconfigured. Please contact support.'
+      }
+      console.error(`[transcribe] whisper ${status}: ${errText}`)
+
+      return new Response(
+        JSON.stringify({ error: friendly }),
+        { status: 502, headers: { ...corsHeaders, 'Content-Type': 'application/json' } },
+      )
     }
 
     // response_format=text → plain string body, not JSON
@@ -98,6 +112,7 @@ Deno.serve(async (req: Request) => {
     }
 
     const message = err instanceof Error ? err.message : String(err)
+    console.error('[transcribe] error:', message)
     return new Response(
       JSON.stringify({ error: message }),
       { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } },
