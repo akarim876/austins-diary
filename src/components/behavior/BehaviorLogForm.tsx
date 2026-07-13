@@ -406,7 +406,7 @@ export function BehaviorLogForm({ profileId, date, existingLog, onSaved, onCance
           placeholder="What was your response or intervention? (e.g. offered sensory break, moved to quiet room…)"
           className="w-full px-3 py-2.5 rounded-xl border border-gray-200 text-sm placeholder-gray-400 resize-none focus:outline-none focus:ring-2 focus:ring-amber-400 transition"
         />
-        <div className="mt-1.5">
+        <div className="mt-2">
           <VoiceInput
             onTranscribed={(text) => {
               const current = getValues('consequence')

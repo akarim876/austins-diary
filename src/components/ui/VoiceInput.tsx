@@ -35,6 +35,7 @@ function detectMimeType(): string {
 }
 
 const MAX_SECONDS = 180 // 3-minute auto-stop
+const TIP_STORAGE_PREFIX = 'voice-tip-dismissed'
 
 export function VoiceInput({ onTranscribed, disabled = false }: Props) {
   const { user } = useAuth()
@@ -42,6 +43,7 @@ export function VoiceInput({ onTranscribed, disabled = false }: Props) {
   const [phase, setPhase]     = useState<Phase>('idle')
   const [error, setError]     = useState<string | null>(null)
   const [elapsed, setElapsed] = useState(0)
+  const [showTip, setShowTip] = useState(false)
 
   const recorderRef  = useRef<MediaRecorder | null>(null)
   const chunksRef    = useRef<Blob[]>([])
@@ -54,6 +56,22 @@ export function VoiceInput({ onTranscribed, disabled = false }: Props) {
   useEffect(() => { onTranscribedRef.current = onTranscribed }, [onTranscribed])
   const userRef = useRef(user)
   useEffect(() => { userRef.current = user }, [user])
+
+  const tipKey = user ? `${TIP_STORAGE_PREFIX}:${user.id}` : null
+
+  // Show the one-time tip if this user hasn't seen it yet
+  useEffect(() => {
+    if (!tipKey) return
+    try {
+      if (!localStorage.getItem(tipKey)) setShowTip(true)
+    } catch { /* localStorage unavailable */ }
+  }, [tipKey])
+
+  const dismissTip = useCallback(() => {
+    setShowTip(false)
+    if (!tipKey) return
+    try { localStorage.setItem(tipKey, '1') } catch { /* ignore */ }
+  }, [tipKey])
 
   // Cleanup on unmount
   useEffect(() => {
@@ -142,6 +160,7 @@ export function VoiceInput({ onTranscribed, disabled = false }: Props) {
 
   async function startRecording() {
     setError(null)
+    dismissTip() // interacting counts as seeing the tip
     setPhase('requesting')
 
     try {
@@ -192,97 +211,127 @@ export function VoiceInput({ onTranscribed, disabled = false }: Props) {
     setElapsed(0)
   }
 
+  // ── One-time tooltip ─────────────────────────────────────────────────────────
+  const tip = showTip && phase === 'idle' && (
+    <div
+      className="entry-appear relative flex items-start gap-2 mb-2 px-3 py-2 rounded-xl text-xs"
+      style={{ background: 'rgba(91,123,122,0.10)', color: '#4A6564' }}
+      role="status"
+    >
+      <Mic className="w-3.5 h-3.5 flex-shrink-0 mt-0.5" style={{ color: '#5B7B7A' }} />
+      <span className="flex-1 leading-relaxed">Tip: tap the mic to speak instead of type.</span>
+      <button
+        type="button"
+        onClick={dismissTip}
+        aria-label="Dismiss tip"
+        className="flex-shrink-0 -mr-1 -mt-0.5 w-5 h-5 rounded-full flex items-center justify-center transition hover:bg-black/5"
+      >
+        <X className="w-3.5 h-3.5" style={{ color: '#5B7B7A' }} />
+      </button>
+    </div>
+  )
+
   // ── Render ──────────────────────────────────────────────────────────────────
 
   if (phase === 'idle') {
     return (
-      <button
-        type="button"
-        onClick={startRecording}
-        disabled={disabled}
-        title="Tap to dictate"
-        className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-xl text-xs font-medium transition-all hover:opacity-80 disabled:opacity-40 disabled:cursor-not-allowed select-none"
-        style={{ color: '#5B7B7A', background: 'rgba(91,123,122,0.09)' }}
-      >
-        <Mic className="w-3.5 h-3.5" />
-        Dictate
-      </button>
-    )
-  }
-
-  if (phase === 'requesting') {
-    return (
-      <div className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-xl text-xs" style={{ color: '#9A9187' }}>
-        <Mic className="w-3.5 h-3.5 animate-pulse" />
-        <span>Requesting mic…</span>
-      </div>
-    )
-  }
-
-  if (phase === 'recording') {
-    return (
-      <div className="flex items-center gap-2">
-        {/* Pulsing indicator + elapsed */}
-        <span
-          className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-xl text-xs font-medium"
-          style={{ color: '#C77B6A', background: 'rgba(199,123,106,0.10)' }}
-        >
-          <Mic className="w-3.5 h-3.5 animate-pulse" style={{ color: '#C77B6A' }} />
-          {formatTime(elapsed)}
-          {elapsed >= MAX_SECONDS - 30 && (
-            <span className="ml-1 text-[10px] opacity-70">max {formatTime(MAX_SECONDS)}</span>
-          )}
-        </span>
-        {/* Stop button */}
+      <div>
+        {tip}
         <button
           type="button"
-          onClick={stopRecording}
-          className="flex items-center gap-1 px-2.5 py-1.5 rounded-xl text-xs font-semibold text-white transition hover:opacity-90 active:scale-95 select-none"
-          style={{ background: '#C77B6A' }}
+          onClick={startRecording}
+          disabled={disabled}
+          className="w-full flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl text-sm font-semibold text-white transition-all hover:opacity-90 active:scale-[0.99] disabled:opacity-40 disabled:cursor-not-allowed select-none focus:outline-none focus-visible:ring-2 focus-visible:ring-offset-2"
+          style={{ background: '#5B7B7A' }}
         >
-          <Square className="w-3 h-3 fill-current" />
-          Stop
+          <Mic className="w-4 h-4" />
+          Record note
         </button>
       </div>
     )
   }
 
+  if (phase === 'requesting') {
+    return (
+      <button
+        type="button"
+        disabled
+        className="w-full flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl text-sm font-semibold text-white select-none opacity-90"
+        style={{ background: '#5B7B7A' }}
+      >
+        <Mic className="w-4 h-4 animate-pulse" />
+        Requesting mic…
+      </button>
+    )
+  }
+
+  if (phase === 'recording') {
+    const nearMax = elapsed >= MAX_SECONDS - 30
+    return (
+      <button
+        type="button"
+        onClick={stopRecording}
+        className="w-full flex items-center justify-center gap-2.5 px-4 py-2.5 rounded-xl text-sm font-semibold text-white transition-all hover:opacity-90 active:scale-[0.99] select-none focus:outline-none focus-visible:ring-2 focus-visible:ring-offset-2"
+        style={{ background: '#C77B6A' }}
+      >
+        {/* Pulsing dot */}
+        <span className="relative flex h-2.5 w-2.5">
+          <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-white opacity-70" />
+          <span className="relative inline-flex rounded-full h-2.5 w-2.5 bg-white" />
+        </span>
+        <Square className="w-3.5 h-3.5 fill-current" />
+        <span>Stop</span>
+        <span
+          className="tabular-nums text-xs font-medium opacity-90"
+          style={{ fontFamily: '"JetBrains Mono", monospace' }}
+        >
+          {formatTime(elapsed)}{nearMax ? ` / ${formatTime(MAX_SECONDS)}` : ''}
+        </span>
+      </button>
+    )
+  }
+
   if (phase === 'uploading' || phase === 'transcribing') {
     return (
-      <div className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-xl text-xs" style={{ color: '#9A9187' }}>
-        <Loader2 className="w-3.5 h-3.5 animate-spin" />
-        <span>{phase === 'uploading' ? 'Uploading…' : 'Transcribing…'}</span>
-      </div>
+      <button
+        type="button"
+        disabled
+        className="w-full flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl text-sm font-semibold text-white select-none opacity-90 cursor-wait"
+        style={{ background: '#5B7B7A' }}
+      >
+        <Loader2 className="w-4 h-4 animate-spin" />
+        Transcribing…
+      </button>
     )
   }
 
   if (phase === 'error') {
     return (
-      <div className="space-y-1.5">
+      <div className="space-y-2">
         <div
-          className="flex items-start gap-1.5 px-2.5 py-1.5 rounded-xl text-xs"
+          className="flex items-start gap-2 px-3 py-2 rounded-xl text-xs"
           style={{ color: '#C77B6A', background: 'rgba(199,123,106,0.09)' }}
         >
-          <MicOff className="w-3.5 h-3.5 flex-shrink-0 mt-0.5" />
-          <span>{error}</span>
+          <MicOff className="w-4 h-4 flex-shrink-0 mt-0.5" />
+          <span className="leading-relaxed">{error}</span>
         </div>
-        <div className="flex gap-1.5">
+        <div className="flex gap-2">
           <button
             type="button"
             onClick={startRecording}
-            className="flex items-center gap-1 px-2.5 py-1 rounded-xl text-xs font-medium transition hover:opacity-80 select-none"
-            style={{ color: '#5B7B7A', background: 'rgba(91,123,122,0.09)' }}
+            className="flex-1 flex items-center justify-center gap-1.5 px-3 py-2 rounded-xl text-sm font-semibold text-white transition hover:opacity-90 active:scale-[0.99] select-none"
+            style={{ background: '#5B7B7A' }}
           >
-            <RotateCcw className="w-3 h-3" />
+            <RotateCcw className="w-3.5 h-3.5" />
             Try again
           </button>
           <button
             type="button"
             onClick={reset}
-            className="flex items-center gap-1 px-2 py-1 rounded-xl text-xs transition hover:opacity-80 select-none"
+            className="flex items-center justify-center gap-1 px-3 py-2 rounded-xl text-sm font-medium transition hover:bg-black/5 select-none"
             style={{ color: '#9A9187' }}
           >
-            <X className="w-3 h-3" />
+            <X className="w-3.5 h-3.5" />
             Dismiss
           </button>
         </div>

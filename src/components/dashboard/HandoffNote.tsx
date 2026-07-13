@@ -145,15 +145,15 @@ export function HandoffNote({ data, updaterName, myRole, onSave }: Props) {
               }}
               rows={3}
             />
+            <div className="mt-2.5">
+              <VoiceInput
+                onTranscribed={(transcribed) =>
+                  setText(t => t ? `${t}\n${transcribed}` : transcribed)
+                }
+              />
+            </div>
             <div className="flex items-center justify-between mt-2.5">
-              <div className="flex items-center gap-3">
-                <span className="text-[10px]" style={{ color: '#9A9187' }}>⌘ Enter to save</span>
-                <VoiceInput
-                  onTranscribed={(transcribed) =>
-                    setText(t => t ? `${t}\n${transcribed}` : transcribed)
-                  }
-                />
-              </div>
+              <span className="text-[10px]" style={{ color: '#9A9187' }}>⌘ Enter to save</span>
               <div className="flex gap-2">
                 <button
                   onClick={handleCancel}
