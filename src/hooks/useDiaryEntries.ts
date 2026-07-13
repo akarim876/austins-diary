@@ -44,9 +44,11 @@ export function useDiaryEntry(profileId: string | null, date: string) {
       .select('*')
       .eq('profile_id', profileId)
       .eq('entry_date', date)
-      .maybeSingle()
+      .order('created_at', { ascending: false })
+      .limit(1)
 
-    setEntry((data as DiaryEntry | null) ?? null)
+    const rows = (data ?? []) as DiaryEntry[]
+    setEntry(rows[0] ?? null)
     setLoading(false)
   }, [profileId, date])
 
