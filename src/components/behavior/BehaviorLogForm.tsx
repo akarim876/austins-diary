@@ -110,12 +110,12 @@ export function BehaviorLogForm({ profileId, date, existingLog, initialConsequen
       behavior:         existingLog?.behavior        ?? '',
       severity:         existingLog?.severity        ?? 3,
       duration_mins:    existingLog?.duration_mins   ?? null,
-      consequence:      existingLog?.consequence     ?? '',
+      consequence:      existingLog?.consequence     ?? initialConsequence ?? '',
       helped:           existingLog?.helped          ?? 'somewhat',
       schedule_item_id: existingLog?.schedule_item_id ?? null,
     })
     setSelectedScheduleItemId(existingLog?.schedule_item_id ?? null)
-  }, [date, existingLog, reset])
+  }, [date, existingLog, initialConsequence, reset])
 
   const severity = watch('severity')
   const antecedent = watch('antecedent')
