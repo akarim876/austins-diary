@@ -56,7 +56,7 @@ export function CompleteProfilePage({ onComplete }: { onComplete: () => void }) 
   }
 
   return (
-    <div className="min-h-dvh flex flex-col items-center justify-center bg-warm-100 px-5">
+    <div className="min-h-dvh flex flex-col items-center justify-center px-5" style={{ background: 'var(--color-background)' }}>
       <div className="w-full max-w-sm">
         {/* Logo / icon */}
         <div className="flex justify-center mb-6">

@@ -43,7 +43,7 @@ export function ProviderDetailPage() {
 
   if (loading && !provider) {
     return (
-      <div className="flex items-center justify-center min-h-screen bg-warm-50">
+      <div className="flex items-center justify-center min-h-screen" style={{ background: 'var(--color-background)' }}>
         <Spinner className="w-8 h-8 text-rose-400" />
       </div>
     )
@@ -51,7 +51,7 @@ export function ProviderDetailPage() {
 
   if (!provider) {
     return (
-      <div className="flex flex-col items-center justify-center min-h-screen bg-warm-50 gap-4">
+      <div className="flex flex-col items-center justify-center min-h-screen gap-4" style={{ background: 'var(--color-background)' }}>
         <p className="text-gray-500">Provider not found</p>
         <button onClick={() => navigate('/providers')} className="text-rose-500 hover:underline text-sm">
           ← Back to providers
@@ -65,9 +65,9 @@ export function ProviderDetailPage() {
     : provider.role
 
   return (
-    <div className="min-h-screen bg-warm-50 pb-24">
+    <div className="min-h-screen pb-24" style={{ background: 'var(--color-background)' }}>
       {/* Header */}
-      <div className="sticky top-0 z-30 bg-warm-50/95 backdrop-blur border-b border-warm-200">
+      <div className="sticky top-0 z-30 backdrop-blur border-b border-warm-200" style={{ background: 'var(--color-background-blur)' }}>
         <div className="px-4 pt-5 pb-3">
           <div className="flex items-center gap-3">
             <button onClick={() => navigate(-1)}

@@ -49,7 +49,7 @@ function AppShell() {
   }
 
   return (
-    <div className="flex flex-col min-h-dvh bg-warm-100">
+    <div className="flex flex-col min-h-dvh" style={{ background: 'var(--color-background)' }}>
       <AppHeader />
       <main className="flex-1 flex flex-col">
         <Routes>
