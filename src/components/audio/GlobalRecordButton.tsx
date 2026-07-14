@@ -108,10 +108,10 @@ function HandoffSheet({ open, onClose, profileId, initialText }: HandoffSheetPro
 // ── Main component ────────────────────────────────────────────────────────────
 
 export function GlobalRecordButton() {
-  const { user }    = useAuth()
-  const { profile } = useProfile()
-  const myRole      = useMyRole(profile?.id ?? null)
-  const today       = format(new Date(), 'yyyy-MM-dd')
+  const { user }          = useAuth()
+  const { activeProfile } = useProfile()
+  const myRole            = useMyRole(activeProfile?.id ?? null)
+  const today             = format(new Date(), 'yyyy-MM-dd')
 
   const [phase, setPhase]           = useState<Phase>('idle')
   const [elapsed, setElapsed]       = useState(0)
@@ -132,7 +132,7 @@ export function GlobalRecordButton() {
     streamRef.current?.getTracks().forEach(t => t.stop())
   }, [])
 
-  const profileId = profile?.id ?? null
+  const profileId = activeProfile?.id ?? null
   const canLog    = canCreate(myRole)
 
   function startTimer() {
