@@ -281,8 +281,8 @@ export function GlobalRecordButton() {
   return (
     <>
       {/* ── FAB button ─────────────────────────────────────────────────── */}
-      <div className="flex flex-col items-center gap-0.5">
-        {/* Pill matches the w-11 h-8 tab icon pills */}
+      <div className="flex flex-col items-center gap-1">
+        {/* Circle button — visually dominant, matches the screenshot */}
         <button
           type="button"
           onClick={onFabClick}
@@ -292,24 +292,22 @@ export function GlobalRecordButton() {
             isWorking   ? 'Processing…' :
                           'Start voice note'
           }
-          className="relative w-11 h-8 rounded-xl flex items-center justify-center text-white transition-all duration-200 active:scale-95 disabled:cursor-wait focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-white"
+          className="relative w-12 h-12 rounded-full flex items-center justify-center text-white transition-all duration-200 active:scale-95 disabled:cursor-wait focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-white"
           style={{
             background: fabBg,
-            boxShadow:  isRecording
-              ? '0 2px 12px rgba(199,123,106,0.5)'
-              : '0 2px 10px rgba(91,123,122,0.35)',
+            boxShadow: isRecording
+              ? '0 2px 12px rgba(199,123,106,0.45)'
+              : '0 2px 12px rgba(91,123,122,0.35)',
           }}
         >
-          {/* Pulsing ring when recording */}
           {isRecording && (
             <span
-              className="absolute inset-0 rounded-xl animate-ping"
-              style={{ background: 'rgba(199,123,106,0.35)' }}
+              className="absolute inset-0 rounded-full animate-ping"
+              style={{ background: 'rgba(199,123,106,0.3)' }}
             />
           )}
-
           {isWorking ? (
-            <Loader2 className="w-4 h-4 animate-spin" />
+            <Loader2 className="w-5 h-5 animate-spin" />
           ) : isRecording ? (
             <Square className="w-4 h-4 fill-current relative z-10" />
           ) : (
@@ -317,9 +315,8 @@ export function GlobalRecordButton() {
           )}
         </button>
 
-        {/* Sub-label: timer during recording, "Rec" hint otherwise */}
         <span
-          className="text-[10px] font-semibold tabular-nums transition-colors"
+          className="text-[10px] font-semibold tabular-nums"
           style={{
             color: isRecording ? '#C77B6A' : '#9A9187',
             fontFamily: isRecording ? '"JetBrains Mono", monospace' : 'inherit',
