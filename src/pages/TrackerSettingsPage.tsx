@@ -55,17 +55,14 @@ function TrackerForm({ profileId, existing, onSaved, onCancel }: TrackerFormProp
         updated_at:   new Date().toISOString(),
       }
 
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      const tbl = supabase.from('custom_trackers') as any
       if (existing) {
-        const { error } = await supabase
-          .from('custom_trackers')
-          .update(payload as Record<string, unknown>)
-          .eq('id', existing.id)
+        const { error } = await tbl.update(payload).eq('id', existing.id)
         if (error) throw error
         toast.success('Tracker updated')
       } else {
-        const { error } = await supabase
-          .from('custom_trackers')
-          .insert({ ...payload, sort_order: 0 } as Record<string, unknown>)
+        const { error } = await tbl.insert({ ...payload, sort_order: 0 })
         if (error) throw error
         toast.success('Tracker created')
       }
@@ -310,18 +307,18 @@ export function TrackerSettingsPage() {
   }
 
   async function archiveTracker(t: CustomTracker) {
-    const { error } = await supabase
-      .from('custom_trackers')
-      .update({ archived: true, updated_at: new Date().toISOString() } as Record<string, unknown>)
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const { error } = await (supabase.from('custom_trackers') as any)
+      .update({ archived: true, updated_at: new Date().toISOString() })
       .eq('id', t.id)
     if (error) toast.error(getErrorMessage(error))
     else { toast.success(`"${t.name}" archived`); refetch() }
   }
 
   async function restoreTracker(t: CustomTracker) {
-    const { error } = await supabase
-      .from('custom_trackers')
-      .update({ archived: false, updated_at: new Date().toISOString() } as Record<string, unknown>)
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const { error } = await (supabase.from('custom_trackers') as any)
+      .update({ archived: false, updated_at: new Date().toISOString() })
       .eq('id', t.id)
     if (error) toast.error(getErrorMessage(error))
     else { toast.success(`"${t.name}" restored`); refetch() }

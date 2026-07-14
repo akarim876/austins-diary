@@ -125,16 +125,13 @@ export function CustomTrackerLogForm({
         updated_at:       new Date().toISOString(),
       }
 
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      const tbl = supabase.from('custom_tracker_logs') as any
       if (existingLog) {
-        const { error } = await supabase
-          .from('custom_tracker_logs')
-          .update(payload as Record<string, unknown>)
-          .eq('id', existingLog.id)
+        const { error } = await tbl.update(payload).eq('id', existingLog.id)
         if (error) throw error
       } else {
-        const { error } = await supabase
-          .from('custom_tracker_logs')
-          .insert(payload as Record<string, unknown>)
+        const { error } = await tbl.insert(payload)
         if (error) throw error
       }
 
