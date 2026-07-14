@@ -282,6 +282,7 @@ export function GlobalRecordButton() {
     <>
       {/* ── FAB button ─────────────────────────────────────────────────── */}
       <div className="flex flex-col items-center gap-0.5">
+        {/* Pill matches the w-11 h-8 tab icon pills */}
         <button
           type="button"
           onClick={onFabClick}
@@ -291,41 +292,40 @@ export function GlobalRecordButton() {
             isWorking   ? 'Processing…' :
                           'Start voice note'
           }
-          className="relative w-14 h-14 rounded-full flex items-center justify-center text-white transition-all duration-200 active:scale-95 disabled:cursor-wait focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-white"
+          className="relative w-11 h-8 rounded-xl flex items-center justify-center text-white transition-all duration-200 active:scale-95 disabled:cursor-wait focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-white"
           style={{
             background: fabBg,
             boxShadow:  isRecording
-              ? '0 0 0 0 rgba(199,123,106,0.6), 0 4px 20px rgba(199,123,106,0.5)'
-              : '0 4px 16px rgba(91,123,122,0.45), 0 2px 6px rgba(51,50,46,0.18)',
+              ? '0 2px 12px rgba(199,123,106,0.5)'
+              : '0 2px 10px rgba(91,123,122,0.35)',
           }}
         >
           {/* Pulsing ring when recording */}
           {isRecording && (
             <span
-              className="absolute inset-0 rounded-full animate-ping"
+              className="absolute inset-0 rounded-xl animate-ping"
               style={{ background: 'rgba(199,123,106,0.35)' }}
             />
           )}
 
           {isWorking ? (
-            <Loader2 className="w-6 h-6 animate-spin" />
+            <Loader2 className="w-4 h-4 animate-spin" />
           ) : isRecording ? (
-            <Square className="w-5 h-5 fill-current relative z-10" />
+            <Square className="w-4 h-4 fill-current relative z-10" />
           ) : (
-            <Mic className="w-6 h-6 relative z-10" />
+            <Mic className="w-5 h-5 relative z-10" />
           )}
         </button>
 
-        {/* Sub-label: timer during recording, nothing otherwise */}
+        {/* Sub-label: timer during recording, "Rec" hint otherwise */}
         <span
           className="text-[10px] font-semibold tabular-nums transition-colors"
           style={{
             color: isRecording ? '#C77B6A' : '#9A9187',
             fontFamily: isRecording ? '"JetBrains Mono", monospace' : 'inherit',
-            minHeight: 14,
           }}
         >
-          {fabLabel}
+          {isRecording ? fabLabel : 'Record'}
         </span>
       </div>
 

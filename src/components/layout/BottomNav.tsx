@@ -73,12 +73,9 @@ export function BottomNav() {
         {/* Left two tabs */}
         {LEFT_TABS.map(t => <Tab key={t.to} {...t} />)}
 
-        {/* Center FAB slot — the GlobalRecordButton rises above the nav surface */}
+        {/* Center FAB slot — inline with the other tabs */}
         <div className="flex-shrink-0 w-20 flex flex-col items-center justify-center py-1.5">
-          {/* Raise the button 12px above the nav top edge */}
-          <div style={{ marginBottom: 4, transform: 'translateY(-12px)' }}>
-            <GlobalRecordButton />
-          </div>
+          <GlobalRecordButton />
         </div>
 
         {/* Right two tabs */}
