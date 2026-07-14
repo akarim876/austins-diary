@@ -85,8 +85,8 @@ function HandoffSheet({ open, onClose, profileId, initialText }: HandoffSheetPro
           rows={6}
           className="w-full px-3 py-2.5 rounded-xl border text-sm resize-none focus:outline-none focus:ring-2 transition"
           style={{
-            borderColor: 'rgba(91,123,122,0.25)',
-            caretColor: '#5B7B7A',
+            borderColor: 'var(--color-accent-200)',
+            caretColor: 'var(--color-accent)',
           }}
           placeholder="Handoff note content…"
           autoFocus
@@ -343,7 +343,7 @@ export function GlobalRecordButton() {
               type="button"
               onClick={startRecording}
               className="text-[10px] font-semibold px-2 py-1 rounded-lg transition"
-              style={{ color: '#5B7B7A', background: 'rgba(91,123,122,0.10)' }}
+              style={{ color: 'var(--color-accent)', background: 'var(--color-accent-subtle)' }}
             >
               <RotateCcw className="w-3 h-3 inline mr-0.5" />Retry
             </button>

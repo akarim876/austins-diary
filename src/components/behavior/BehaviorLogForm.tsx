@@ -282,7 +282,7 @@ export function BehaviorLogForm({ profileId, date, existingLog, initialConsequen
             className="rounded-xl p-3 space-y-2"
             style={{ background: 'rgba(91,123,122,0.06)', border: '1px solid rgba(91,123,122,0.15)' }}
           >
-            <label className="flex items-center gap-1.5 text-xs font-semibold" style={{ color: '#5B7B7A' }}>
+            <label className="flex items-center gap-1.5 text-xs font-semibold" style={{ color: 'var(--color-accent)' }}>
               <CalendarClock className="w-3.5 h-3.5" />
               Which schedule item changed? (optional)
             </label>

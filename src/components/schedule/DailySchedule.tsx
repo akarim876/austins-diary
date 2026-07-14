@@ -167,7 +167,7 @@ function ItemRow({ item, canEdit, onUpdate, onLogBehavior }: ItemRowProps) {
             <button
               onClick={handleSaveDetail}
               className="px-3 py-1 rounded-full text-[11px] font-semibold text-white"
-              style={{ background: '#5B7B7A' }}
+              style={{ background: 'var(--color-accent)' }}
             >Save</button>
           </div>
         </div>
@@ -226,7 +226,7 @@ export function DailySchedule({ profileId, date, myRole, onLogBehavior, compact 
       <div className="flex flex-col items-center py-4 gap-1 text-center">
         <CalendarClock className="w-6 h-6 text-gray-200" />
         <p className="text-xs text-gray-400">No schedule template yet.</p>
-        <a href="/schedule-settings" className="text-xs font-semibold" style={{ color: '#5B7B7A' }}>
+        <a href="/schedule-settings" className="text-xs font-semibold" style={{ color: 'var(--color-accent)' }}>
           Set up schedule →
         </a>
       </div>
@@ -244,7 +244,7 @@ export function DailySchedule({ profileId, date, myRole, onLogBehavior, compact 
           <div className="flex-1 h-1.5 rounded-full overflow-hidden" style={{ background: 'rgba(51,50,46,0.08)' }}>
             <div
               className="h-full rounded-full transition-all duration-300"
-              style={{ width: `${(doneCount / items.length) * 100}%`, background: '#5B7B7A' }}
+              style={{ width: `${(doneCount / items.length) * 100}%`, background: 'var(--color-accent)' }}
             />
           </div>
           <span className="text-[11px] font-data flex-shrink-0" style={{ color: '#9A9187' }}>

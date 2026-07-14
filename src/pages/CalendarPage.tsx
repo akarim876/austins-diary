@@ -202,7 +202,7 @@ export function CalendarPage() {
                     <button
                       onClick={() => { setEditingProgress(null); setProgressSheetOpen(true) }}
                       className="flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-semibold transition-opacity hover:opacity-80"
-                      style={{ background: 'rgba(91,123,122,0.12)', color: '#5B7B7A', border: '1px solid rgba(91,123,122,0.28)' }}
+                      style={{ background: 'var(--color-accent-subtle)', color: 'var(--color-accent)', border: '1px solid var(--color-accent-200)' }}
                     >
                       <ModuleIcon name="goals" className="w-3 h-3" /> Progress
                     </button>

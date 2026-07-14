@@ -197,11 +197,11 @@ export function LogPage() {
       {/* Goals & Appointments */}
       <TileGroup heading="Goals & Appointments">
         <LogTile
-          icon={<ModuleIcon name="goals" className="w-5 h-5" style={{ color: '#5B7B7A' }} />}
+          icon={<ModuleIcon name="goals" className="w-5 h-5" style={{ color: 'var(--color-accent)' }} />}
           label="Progress Note"
           description="Update an active goal"
 
-          iconBg="rgba(91,123,122,0.13)"
+          iconBg="var(--color-accent-subtle)"
           onClick={() => setSheet('progress')}
         />
         <LogTile

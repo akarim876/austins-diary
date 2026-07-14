@@ -75,8 +75,8 @@ export function HandoffNote({ data, updaterName, myRole, onSave }: Props) {
       className="rounded-xl overflow-hidden transition-opacity"
       style={{
         background:   '#fff',
-        border:       '1px solid rgba(91,123,122,0.25)',
-        borderLeft:   '4px solid #5B7B7A',
+        border:       '1px solid var(--color-accent-200)',
+        borderLeft:   '4px solid var(--color-accent)',
         boxShadow:    '0 2px 12px rgba(51,50,46,0.08)',
         opacity:      isStale && !editing ? 0.72 : 1,
       }}
@@ -87,8 +87,8 @@ export function HandoffNote({ data, updaterName, myRole, onSave }: Props) {
         style={{ borderBottom: '1px solid rgba(91,123,122,0.10)', background: 'rgba(91,123,122,0.04)' }}
       >
         <div className="flex items-center gap-2">
-          <StickyNote className="w-3.5 h-3.5 flex-shrink-0" style={{ color: '#5B7B7A' }} />
-          <span className="text-[11px] font-bold uppercase tracking-widest" style={{ color: '#5B7B7A' }}>
+          <StickyNote className="w-3.5 h-3.5 flex-shrink-0" style={{ color: 'var(--color-accent)' }} />
+          <span className="text-[11px] font-bold uppercase tracking-widest" style={{ color: 'var(--color-accent)' }}>
             Handoff note
           </span>
           {isStale && !editing && (
@@ -115,7 +115,7 @@ export function HandoffNote({ data, updaterName, myRole, onSave }: Props) {
             <button
               onClick={startEdit}
               className="w-6 h-6 rounded-full flex items-center justify-center transition-colors"
-              style={{ color: '#5B7B7A' }}
+              style={{ color: 'var(--color-accent)' }}
               onMouseEnter={e => (e.currentTarget.style.background = 'rgba(91,123,122,0.10)')}
               onMouseLeave={e => (e.currentTarget.style.background = 'transparent')}
               title="Edit handoff note"
@@ -140,7 +140,7 @@ export function HandoffNote({ data, updaterName, myRole, onSave }: Props) {
               style={{
                 color:           '#33322E',
                 minHeight:       72,
-                caretColor:      '#5B7B7A',
+                caretColor:      'var(--color-accent)',
                 fontFamily:      'Inter, sans-serif',
               }}
               rows={3}
@@ -165,7 +165,7 @@ export function HandoffNote({ data, updaterName, myRole, onSave }: Props) {
                   onClick={handleSave}
                   disabled={saving}
                   className="flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-semibold text-white transition disabled:opacity-60"
-                  style={{ background: '#5B7B7A' }}
+                  style={{ background: 'var(--color-accent)' }}
                 >
                   <Check className="w-3 h-3" />
                   {saving ? 'Saving…' : 'Save'}

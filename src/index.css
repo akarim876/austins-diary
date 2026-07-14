@@ -4,17 +4,17 @@
 /* ─── Design tokens ────────────────────────────────────────────────────────── */
 
 @theme {
-  /* Primary accent — muted sage teal */
-  --color-brand-50:  #f0f5f5;
-  --color-brand-100: #ddeae9;
-  --color-brand-200: #b8d4d3;
-  --color-brand-300: #8fbcbb;
-  --color-brand-400: #6da09f;
-  --color-brand-500: #5B7B7A;
-  --color-brand-600: #4a6a69;
-  --color-brand-700: #3a5454;
-  --color-brand-800: #2d4241;
-  --color-brand-900: #1e2d2d;
+  /* Primary accent — points at theme CSS variables so brand-* classes auto-follow the active theme */
+  --color-brand-50:  var(--color-accent-50);
+  --color-brand-100: var(--color-accent-100);
+  --color-brand-200: var(--color-accent-200);
+  --color-brand-300: var(--color-accent-200);
+  --color-brand-400: var(--color-accent);
+  --color-brand-500: var(--color-accent);
+  --color-brand-600: var(--color-accent-dim);
+  --color-brand-700: var(--color-accent-dim);
+  --color-brand-800: var(--color-accent-text);
+  --color-brand-900: var(--color-accent-text);
 
   /* Warm neutral backgrounds */
   --color-warm-50:  #FDFCFB;
@@ -69,7 +69,12 @@
   --color-text:              #33322E;
   --color-text-muted:        #7A7972;
   --color-accent:            #5B7B7A;
+  --color-accent-50:         #f0f5f5;
+  --color-accent-100:        #ddeae9;
+  --color-accent-200:        #b8d4d3;
   --color-accent-subtle:     rgba(91,123,122,0.10);
+  --color-accent-dim:        #4a6a69;
+  --color-accent-text:       #2d4241;
   --color-accent-secondary:  #A6A59D;
 }
 
@@ -81,7 +86,12 @@
   --color-text:              #33322E;
   --color-text-muted:        #7A7972;
   --color-accent:            #5B7B7A;
+  --color-accent-50:         #f0f5f5;
+  --color-accent-100:        #ddeae9;
+  --color-accent-200:        #b8d4d3;
   --color-accent-subtle:     rgba(91,123,122,0.10);
+  --color-accent-dim:        #4a6a69;
+  --color-accent-text:       #2d4241;
   --color-accent-secondary:  #A6A59D;
 }
 
@@ -93,7 +103,12 @@
   --color-text:              #3A2E28;
   --color-text-muted:        #8A7A70;
   --color-accent:            #C1694F;
+  --color-accent-50:         #fbf3f0;
+  --color-accent-100:        #f4ddd7;
+  --color-accent-200:        #e8bbaf;
   --color-accent-subtle:     rgba(193,105,79,0.10);
+  --color-accent-dim:        #a05741;
+  --color-accent-text:       #3d1f17;
   --color-accent-secondary:  #7A9E7E;
 }
 
@@ -105,7 +120,12 @@
   --color-text:              #23302E;
   --color-text-muted:        #728480;
   --color-accent:            #3E7C7C;
+  --color-accent-50:         #edf6f6;
+  --color-accent-100:        #d1eaea;
+  --color-accent-200:        #a4d4d4;
   --color-accent-subtle:     rgba(62,124,124,0.10);
+  --color-accent-dim:        #326464;
+  --color-accent-text:       #1a3232;
   --color-accent-secondary:  #E3A857;
 }
 
@@ -117,7 +137,12 @@
   --color-text:              #2E2A30;
   --color-text-muted:        #8A8087;
   --color-accent:            #7C6A8E;
+  --color-accent-50:         #f3f0f7;
+  --color-accent-100:        #e6dff0;
+  --color-accent-200:        #ccbee0;
   --color-accent-subtle:     rgba(124,106,142,0.10);
+  --color-accent-dim:        #635472;
+  --color-accent-text:       #2d2237;
   --color-accent-secondary:  #93A67C;
 }
 

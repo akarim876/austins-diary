@@ -74,7 +74,7 @@ function TrendIcon({ curr, prev }: { curr: number; prev: number }) {
 
 function AttentionCard({ item, onNavigate }: { item: AttentionItem; onNavigate: () => void }) {
   const cfg: Record<AttentionItem['type'], { icon: React.ElementType; iconColor: string; bg: string }> = {
-    draft_sleep:   { icon: Moon,     iconColor: '#5B7B7A', bg: 'rgba(91,123,122,0.08)'  },
+    draft_sleep:   { icon: Moon,     iconColor: 'var(--color-accent)', bg: 'var(--color-accent-subtle)'  },
     appt_today:    { icon: Calendar, iconColor: '#C77B6A', bg: 'rgba(199,123,106,0.08)' },
     followup_today:{ icon: Bell,     iconColor: '#D99A6C', bg: 'rgba(217,154,108,0.10)' },
   }
@@ -255,7 +255,7 @@ export function DashboardPage() {
               type="button"
               onClick={() => navigate('/log')}
               className="w-full mt-2.5 py-2.5 rounded-xl text-xs font-semibold transition active:scale-[0.98] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-500"
-              style={{ background: 'rgba(91,123,122,0.10)', color: '#5B7B7A' }}
+              style={{ background: 'var(--color-accent-subtle)', color: 'var(--color-accent)' }}
             >
               + All entry types
             </button>
@@ -273,7 +273,7 @@ export function DashboardPage() {
             <button
               onClick={goToday}
               className="flex-shrink-0 px-3 py-1.5 rounded-full text-xs font-semibold text-white transition"
-              style={{ background: '#5B7B7A' }}
+              style={{ background: 'var(--color-accent)' }}
             >
               Go to Today
             </button>
@@ -324,7 +324,7 @@ export function DashboardPage() {
             <button
               onClick={() => navigate('/schedule-settings')}
               className="flex items-center gap-1 px-2 py-1 rounded-lg text-[11px] font-semibold transition-colors hover:opacity-80"
-              style={{ color: '#5B7B7A', background: 'rgba(91,123,122,0.08)' }}
+              style={{ color: 'var(--color-accent)', background: 'var(--color-accent-subtle)' }}
             >
               <Settings2 className="w-3 h-3" />
               Edit Schedule

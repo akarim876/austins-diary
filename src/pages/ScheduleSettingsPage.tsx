@@ -107,7 +107,7 @@ function SortableRow({
           <button
             onClick={onSaveEdit}
             className="w-7 h-7 rounded-full flex items-center justify-center flex-shrink-0"
-            style={{ background: '#5B7B7A' }}
+            style={{ background: 'var(--color-accent)' }}
           >
             <Check className="w-3.5 h-3.5 text-white" />
           </button>
@@ -267,7 +267,7 @@ export function ScheduleSettingsPage() {
           <button
             onClick={() => navigate('/settings')}
             className="w-8 h-8 rounded-full flex items-center justify-center hover:bg-warm-200 transition-colors"
-            style={{ color: '#5B7B7A' }}
+            style={{ color: 'var(--color-accent)' }}
           >
             <ArrowLeft className="w-4 h-4" />
           </button>
@@ -375,7 +375,7 @@ export function ScheduleSettingsPage() {
                 onClick={handleAdd}
                 disabled={!addLabel.trim() || adding}
                 className="flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-semibold text-white transition disabled:opacity-50"
-                style={{ background: '#5B7B7A' }}
+                style={{ background: 'var(--color-accent)' }}
               >
                 <Plus className="w-3.5 h-3.5" />
                 Add

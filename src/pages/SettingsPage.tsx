@@ -572,7 +572,7 @@ function CaregiversSection() {
           {!showInvite ? (
             <button onClick={() => setShowInvite(true)}
               className="w-full flex items-center justify-center gap-2 py-3 rounded-xl text-sm font-semibold text-white transition hover:opacity-90"
-              style={{ background: '#5B7B7A' }}>
+              style={{ background: 'var(--color-accent)' }}>
               <Mail className="w-4 h-4" /> Invite a caregiver
             </button>
           ) : (

@@ -18,7 +18,7 @@ export function UnfiledNotes({ notes, onDelete }: Props) {
           className="flex items-start gap-3 px-4 py-3 rounded-xl"
           style={{ background: 'rgba(91,123,122,0.06)' }}
         >
-          <FileText className="w-4 h-4 flex-shrink-0 mt-0.5" style={{ color: '#5B7B7A' }} />
+          <FileText className="w-4 h-4 flex-shrink-0 mt-0.5" style={{ color: 'var(--color-accent)' }} />
           <div className="flex-1 min-w-0">
             <p className="text-sm leading-relaxed" style={{ color: '#33322E' }}>
               {note.content}

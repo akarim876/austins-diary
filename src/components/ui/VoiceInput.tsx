@@ -215,10 +215,10 @@ export function VoiceInput({ onTranscribed, disabled = false }: Props) {
   const tip = showTip && phase === 'idle' && (
     <div
       className="entry-appear relative flex items-start gap-2 mb-2 px-3 py-2 rounded-xl text-xs"
-      style={{ background: 'rgba(91,123,122,0.10)', color: '#4A6564' }}
+      style={{ background: 'var(--color-accent-subtle)', color: 'var(--color-accent-dim)' }}
       role="status"
     >
-      <Mic className="w-3.5 h-3.5 flex-shrink-0 mt-0.5" style={{ color: '#5B7B7A' }} />
+      <Mic className="w-3.5 h-3.5 flex-shrink-0 mt-0.5" style={{ color: 'var(--color-accent)' }} />
       <span className="flex-1 leading-relaxed">Tip: tap the mic to speak instead of type.</span>
       <button
         type="button"
@@ -226,7 +226,7 @@ export function VoiceInput({ onTranscribed, disabled = false }: Props) {
         aria-label="Dismiss tip"
         className="flex-shrink-0 -mr-1 -mt-0.5 w-5 h-5 rounded-full flex items-center justify-center transition hover:bg-black/5"
       >
-        <X className="w-3.5 h-3.5" style={{ color: '#5B7B7A' }} />
+        <X className="w-3.5 h-3.5" style={{ color: 'var(--color-accent)' }} />
       </button>
     </div>
   )
@@ -242,7 +242,7 @@ export function VoiceInput({ onTranscribed, disabled = false }: Props) {
           onClick={startRecording}
           disabled={disabled}
           className="w-full flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl text-sm font-semibold text-white transition-all hover:opacity-90 active:scale-[0.99] disabled:opacity-40 disabled:cursor-not-allowed select-none focus:outline-none focus-visible:ring-2 focus-visible:ring-offset-2"
-          style={{ background: '#5B7B7A' }}
+          style={{ background: 'var(--color-accent)' }}
         >
           <Mic className="w-4 h-4" />
           Record note
@@ -257,7 +257,7 @@ export function VoiceInput({ onTranscribed, disabled = false }: Props) {
         type="button"
         disabled
         className="w-full flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl text-sm font-semibold text-white select-none opacity-90"
-        style={{ background: '#5B7B7A' }}
+        style={{ background: 'var(--color-accent)' }}
       >
         <Mic className="w-4 h-4 animate-pulse" />
         Requesting mic…
@@ -297,7 +297,7 @@ export function VoiceInput({ onTranscribed, disabled = false }: Props) {
         type="button"
         disabled
         className="w-full flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl text-sm font-semibold text-white select-none opacity-90 cursor-wait"
-        style={{ background: '#5B7B7A' }}
+        style={{ background: 'var(--color-accent)' }}
       >
         <Loader2 className="w-4 h-4 animate-spin" />
         Transcribing…
@@ -320,7 +320,7 @@ export function VoiceInput({ onTranscribed, disabled = false }: Props) {
             type="button"
             onClick={startRecording}
             className="flex-1 flex items-center justify-center gap-1.5 px-3 py-2 rounded-xl text-sm font-semibold text-white transition hover:opacity-90 active:scale-[0.99] select-none"
-            style={{ background: '#5B7B7A' }}
+            style={{ background: 'var(--color-accent)' }}
           >
             <RotateCcw className="w-3.5 h-3.5" />
             Try again
