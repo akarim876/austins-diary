@@ -63,46 +63,61 @@
 /* Default (applied when no data-theme attribute is set, matches Sage) */
 :root {
   --color-background:        #F7F5F1;
+  --color-background-blur:   rgba(247,245,241,0.92);
   --color-surface:           #FFFFFF;
+  --color-surface-blur:      rgba(255,255,255,0.92);
   --color-text:              #33322E;
   --color-text-muted:        #7A7972;
   --color-accent:            #5B7B7A;
+  --color-accent-subtle:     rgba(91,123,122,0.10);
   --color-accent-secondary:  #A6A59D;
 }
 
 [data-theme="sage"] {
   --color-background:        #F7F5F1;
+  --color-background-blur:   rgba(247,245,241,0.92);
   --color-surface:           #FFFFFF;
+  --color-surface-blur:      rgba(255,255,255,0.92);
   --color-text:              #33322E;
   --color-text-muted:        #7A7972;
   --color-accent:            #5B7B7A;
+  --color-accent-subtle:     rgba(91,123,122,0.10);
   --color-accent-secondary:  #A6A59D;
 }
 
 [data-theme="terracotta"] {
   --color-background:        #FAF3EC;
+  --color-background-blur:   rgba(250,243,236,0.92);
   --color-surface:           #FFFFFF;
+  --color-surface-blur:      rgba(255,255,255,0.92);
   --color-text:              #3A2E28;
   --color-text-muted:        #8A7A70;
   --color-accent:            #C1694F;
+  --color-accent-subtle:     rgba(193,105,79,0.10);
   --color-accent-secondary:  #7A9E7E;
 }
 
 [data-theme="coastal"] {
   --color-background:        #F4F7F6;
+  --color-background-blur:   rgba(244,247,246,0.92);
   --color-surface:           #FFFFFF;
+  --color-surface-blur:      rgba(255,255,255,0.92);
   --color-text:              #23302E;
   --color-text-muted:        #728480;
   --color-accent:            #3E7C7C;
+  --color-accent-subtle:     rgba(62,124,124,0.10);
   --color-accent-secondary:  #E3A857;
 }
 
 [data-theme="plum"] {
   --color-background:        #F8F5F3;
+  --color-background-blur:   rgba(248,245,243,0.92);
   --color-surface:           #FFFFFF;
+  --color-surface-blur:      rgba(255,255,255,0.92);
   --color-text:              #2E2A30;
   --color-text-muted:        #8A8087;
   --color-accent:            #7C6A8E;
+  --color-accent-subtle:     rgba(124,106,142,0.10);
   --color-accent-secondary:  #93A67C;
 }
 

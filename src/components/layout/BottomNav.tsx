@@ -39,10 +39,13 @@ function Tab({ to, label, renderIcon }: typeof LEFT_TABS[number]) {
     >
       {({ isActive }) => (
         <>
-          {renderIcon('w-5 h-5 transition-colors', isActive ? '#5B7B7A' : '#9A9187')}
+          {renderIcon(
+            'w-5 h-5 transition-colors',
+            isActive ? 'var(--color-accent)' : 'var(--color-text-muted)',
+          )}
           <span
             className="text-[10px] font-semibold transition-colors"
-            style={{ color: isActive ? '#5B7B7A' : '#9A9187' }}
+            style={{ color: isActive ? 'var(--color-accent)' : 'var(--color-text-muted)' }}
           >
             {label}
           </span>
@@ -58,11 +61,11 @@ export function BottomNav() {
       <div
         className="relative max-w-lg mx-auto flex items-end"
         style={{
-          background:         'rgba(255,255,255,0.92)',
-          backdropFilter:     'blur(16px)',
+          background:           'var(--color-surface-blur)',
+          backdropFilter:       'blur(16px)',
           WebkitBackdropFilter: 'blur(16px)',
-          borderTop:          '1px solid rgba(237,233,227,0.8)',
-          boxShadow:          '0 -2px 20px rgba(51,50,46,0.08)',
+          borderTop:            '1px solid rgba(237,233,227,0.8)',
+          boxShadow:            '0 -2px 20px rgba(51,50,46,0.08)',
         }}
       >
         {/* Left two tabs */}
@@ -78,7 +81,7 @@ export function BottomNav() {
       </div>
 
       {/* iOS safe area fill */}
-      <div className="h-safe-bottom" style={{ background: 'rgba(255,255,255,0.92)' }} />
+      <div className="h-safe-bottom" style={{ background: 'var(--color-surface-blur)' }} />
     </nav>
   )
 }

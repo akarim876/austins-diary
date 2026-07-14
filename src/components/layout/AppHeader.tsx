@@ -32,7 +32,7 @@ export function AppHeader() {
     <header
       className="sticky top-0 z-40"
       style={{
-        background: 'rgba(247,245,241,0.92)',
+        background: 'var(--color-background-blur)',
         backdropFilter: 'blur(16px)',
         WebkitBackdropFilter: 'blur(16px)',
         borderBottom: '1px solid rgba(237,233,227,0.7)',
@@ -42,10 +42,10 @@ export function AppHeader() {
       <div className="flex items-center justify-between px-4 h-14 max-w-lg mx-auto">
         {/* Logo */}
         <div className="flex items-center gap-2">
-          <BookHeart className="w-5 h-5" style={{ color: '#5B7B7A' }} />
+          <BookHeart className="w-5 h-5" style={{ color: 'var(--color-accent)' }} />
           <span
             className="font-display font-semibold text-base tracking-tight"
-            style={{ color: '#33322E' }}
+            style={{ color: 'var(--color-text)' }}
           >
             Austin's Diary
           </span>
@@ -58,7 +58,7 @@ export function AppHeader() {
               <button
                 onClick={() => setShowProfileMenu(s => !s)}
                 className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-sm font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-500"
-                style={{ background: 'rgba(91,123,122,0.10)', color: '#4a6a69' }}
+                style={{ background: 'var(--color-accent-subtle)', color: 'var(--color-accent)' }}
               >
                 <span className="max-w-[100px] truncate">{activeProfile.name}</span>
                 <ChevronDown className="w-3.5 h-3.5 flex-shrink-0" />
@@ -66,7 +66,7 @@ export function AppHeader() {
               {showProfileMenu && (
                 <div
                   className="absolute right-0 top-full mt-1 w-48 rounded-xl overflow-hidden z-50"
-                  style={{ background: '#fff', boxShadow: '0 4px 20px rgba(51,50,46,0.12)' }}
+                  style={{ background: 'var(--color-surface)', boxShadow: '0 4px 20px rgba(51,50,46,0.12)' }}
                 >
                   {profiles.map(p => (
                     <button
@@ -74,8 +74,8 @@ export function AppHeader() {
                       onClick={() => { setActiveProfile(p); setShowProfileMenu(false) }}
                       className="w-full text-left px-4 py-2.5 text-sm transition-colors"
                       style={{
-                        background: p.id === activeProfile.id ? 'rgba(91,123,122,0.08)' : 'transparent',
-                        color: p.id === activeProfile.id ? '#4a6a69' : '#33322E',
+                        background: p.id === activeProfile.id ? 'var(--color-accent-subtle)' : 'transparent',
+                        color: p.id === activeProfile.id ? 'var(--color-accent)' : 'var(--color-text)',
                         fontWeight: p.id === activeProfile.id ? 600 : 400,
                       }}
                     >
@@ -90,7 +90,7 @@ export function AppHeader() {
           {activeProfile && profiles.length === 1 && (
             <span
               className="px-3 py-1.5 rounded-xl text-sm font-medium"
-              style={{ background: 'rgba(91,123,122,0.10)', color: '#4a6a69' }}
+              style={{ background: 'var(--color-accent-subtle)', color: 'var(--color-accent)' }}
             >
               {activeProfile.name}
             </span>
@@ -111,28 +111,28 @@ export function AppHeader() {
             <button
               onClick={() => setShowUserMenu(s => !s)}
               className="w-8 h-8 rounded-full flex items-center justify-center text-xs font-bold transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-500"
-              style={{ background: '#5B7B7A', color: '#fff' }}
+              style={{ background: 'var(--color-accent)', color: '#fff' }}
             >
               {avatarInitials}
             </button>
             {showUserMenu && (
               <div
                 className="absolute right-0 top-full mt-1 w-48 rounded-xl overflow-hidden z-50"
-                style={{ background: '#fff', boxShadow: '0 4px 20px rgba(51,50,46,0.12)' }}
+                style={{ background: 'var(--color-surface)', boxShadow: '0 4px 20px rgba(51,50,46,0.12)' }}
               >
-                <div className="px-4 py-3" style={{ borderBottom: '1px solid #EDE9E3' }}>
-                  <p className="text-xs font-semibold truncate" style={{ color: '#33322E' }}>{displayName}</p>
-                  <p className="text-xs truncate mt-0.5" style={{ color: '#9A9187' }}>{user?.email}</p>
+                <div className="px-4 py-3" style={{ borderBottom: '1px solid rgba(237,233,227,0.8)' }}>
+                  <p className="text-xs font-semibold truncate" style={{ color: 'var(--color-text)' }}>{displayName}</p>
+                  <p className="text-xs truncate mt-0.5" style={{ color: 'var(--color-text-muted)' }}>{user?.email}</p>
                 </div>
                 <button
                   onClick={() => { setShowUserMenu(false); navigate('/settings') }}
                   className="w-full flex items-center gap-2 px-4 py-2.5 text-sm transition-colors hover:bg-gray-50 focus-visible:outline-none"
-                  style={{ color: '#33322E' }}
+                  style={{ color: 'var(--color-text)' }}
                 >
                   <Settings className="w-4 h-4" style={{ color: '#9A9187' }} />
                   Settings
                 </button>
-                <div style={{ borderTop: '1px solid #EDE9E3' }} />
+                <div style={{ borderTop: '1px solid rgba(237,233,227,0.8)' }} />
                 <button
                   onClick={handleSignOut}
                   className="w-full flex items-center gap-2 px-4 py-2.5 text-sm text-red-600 hover:bg-red-50 transition-colors focus-visible:outline-none"

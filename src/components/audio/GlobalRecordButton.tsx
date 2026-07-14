@@ -96,7 +96,7 @@ function HandoffSheet({ open, onClose, profileId, initialText }: HandoffSheetPro
           onClick={handleSave}
           disabled={saving || !text.trim()}
           className="w-full py-2.5 rounded-xl text-sm font-semibold text-white transition disabled:opacity-50"
-          style={{ background: '#5B7B7A' }}
+          style={{ background: 'var(--color-accent)' }}
         >
           {saving ? 'Saving…' : 'Save handoff note'}
         </button>
@@ -260,7 +260,7 @@ export function GlobalRecordButton() {
     ? '#C77B6A'
     : phase === 'error'
     ? '#C77B6A'
-    : '#5B7B7A'
+    : 'var(--color-accent)'
 
   const fabLabel = isRecording
     ? formatTime(elapsed)
@@ -395,8 +395,8 @@ export function GlobalRecordButton() {
               emoji: '📋',
               label: 'Handoff note',
               sub: 'Replaces today\'s handoff note',
-              color: 'rgba(91,123,122,0.09)',
-              accent: '#5B7B7A',
+              color: 'var(--color-accent-subtle)',
+              accent: 'var(--color-accent)',
             },
             {
               dest: 'quick' as Destination,
