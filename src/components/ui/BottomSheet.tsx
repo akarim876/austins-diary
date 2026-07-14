@@ -1,4 +1,5 @@
 import { type ReactNode, useEffect, useRef, useState } from 'react'
+import { createPortal } from 'react-dom'
 import { X } from 'lucide-react'
 
 interface Props {
@@ -83,7 +84,7 @@ export function BottomSheet({ open, onClose, title, children }: Props) {
 
   if (!mounted) return null
 
-  return (
+  return createPortal(
     <div className="fixed inset-0 z-[60] flex flex-col justify-end">
       {/* Backdrop — fades in/out in parallel */}
       <div
@@ -133,6 +134,7 @@ export function BottomSheet({ open, onClose, title, children }: Props) {
           {children}
         </div>
       </div>
-    </div>
+    </div>,
+    document.body,
   )
 }
