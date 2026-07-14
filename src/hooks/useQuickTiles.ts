@@ -2,6 +2,8 @@ import { useCallback, useEffect, useState } from 'react'
 import { DEFAULT_TILES, TILE_DEFS } from '../lib/tileConstants'
 import type { TileId } from '../lib/tileConstants'
 
+export type QuickTileId = TileId | `tracker:${string}`
+
 const MIN_TILES = 2
 const MAX_TILES = 6
 
@@ -9,15 +11,18 @@ function storageKey(userId: string) {
   return `quick_tiles_v1_${userId}`
 }
 
-function readFromStorage(userId: string): TileId[] {
+function isValidTileId(id: string): id is QuickTileId {
+  const knownIds = new Set<string>(TILE_DEFS.map(t => t.id))
+  return knownIds.has(id) || id.startsWith('tracker:')
+}
+
+function readFromStorage(userId: string): QuickTileId[] {
   try {
     const raw = localStorage.getItem(storageKey(userId))
     if (!raw) return DEFAULT_TILES
     const parsed = JSON.parse(raw) as unknown
     if (!Array.isArray(parsed)) return DEFAULT_TILES
-    // Filter to only known tile IDs (guards against stale data)
-    const knownIds = new Set(TILE_DEFS.map(t => t.id))
-    const valid = (parsed as string[]).filter(id => knownIds.has(id as TileId)) as TileId[]
+    const valid = (parsed as string[]).filter(isValidTileId)
     if (valid.length < MIN_TILES) return DEFAULT_TILES
     return valid.slice(0, MAX_TILES)
   } catch {
@@ -25,7 +30,7 @@ function readFromStorage(userId: string): TileId[] {
   }
 }
 
-function writeToStorage(userId: string, tiles: TileId[]) {
+function writeToStorage(userId: string, tiles: QuickTileId[]) {
   try {
     localStorage.setItem(storageKey(userId), JSON.stringify(tiles))
   } catch {
@@ -34,7 +39,7 @@ function writeToStorage(userId: string, tiles: TileId[]) {
 }
 
 export function useQuickTiles(userId: string | null) {
-  const [tiles, setTilesState] = useState<TileId[]>(
+  const [tiles, setTilesState] = useState<QuickTileId[]>(
     userId ? readFromStorage(userId) : DEFAULT_TILES,
   )
 
@@ -43,22 +48,22 @@ export function useQuickTiles(userId: string | null) {
     if (userId) setTilesState(readFromStorage(userId))
   }, [userId])
 
-  const setTiles = useCallback((next: TileId[]) => {
+  const setTiles = useCallback((next: QuickTileId[]) => {
     const clamped = next.slice(0, MAX_TILES)
     setTilesState(clamped)
     if (userId) writeToStorage(userId, clamped)
   }, [userId])
 
-  const addTile = useCallback((id: TileId) => {
+  const addTile = useCallback((id: QuickTileId) => {
     setTiles([...tiles, id])
   }, [tiles, setTiles])
 
-  const removeTile = useCallback((id: TileId) => {
+  const removeTile = useCallback((id: QuickTileId) => {
     if (tiles.length <= MIN_TILES) return   // enforce minimum
     setTiles(tiles.filter(t => t !== id))
   }, [tiles, setTiles])
 
-  const moveTile = useCallback((id: TileId, direction: 'up' | 'down') => {
+  const moveTile = useCallback((id: QuickTileId, direction: 'up' | 'down') => {
     const idx = tiles.indexOf(id)
     if (idx < 0) return
     const next = [...tiles]

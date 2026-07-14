@@ -10,10 +10,13 @@ import { SleepLogForm } from '../components/sleep/SleepLogForm'
 import { DiaryEntryForm } from '../components/diary/DiaryEntryForm'
 import { AppointmentForm } from '../components/appointments/AppointmentForm'
 import { ProgressNoteForm } from '../components/goals/ProgressNoteForm'
+import { CustomTrackerLogForm } from '../components/tracker/CustomTrackerLogForm'
 import { useProfile } from '../contexts/ProfileContext'
 import { useProviders } from '../hooks/useProviders'
 import { useGoals } from '../hooks/useGoals'
 import { useDietSettings } from '../hooks/useDietSettings'
+import { useCustomTrackers } from '../hooks/useCustomTrackers'
+import { getTrackerIcon, trackerIconBg } from '../lib/trackerIcons'
 import { format } from 'date-fns'
 import { useNavigate } from 'react-router-dom'
 
@@ -93,6 +96,8 @@ export function LogPage() {
   const { goals }     = useGoals(activeProfile?.id ?? null)
   const activeGoals   = goals.filter(g => g.status === 'active')
   const { settings: dietSettings } = useDietSettings(activeProfile?.id ?? null)
+  const { trackers: customTrackers } = useCustomTrackers(activeProfile?.id ?? null)
+  const [trackerLogOpen, setTrackerLogOpen] = useState<string | null>(null)
 
   if (!activeProfile) return null
 
@@ -214,6 +219,25 @@ export function LogPage() {
         />
       </TileGroup>
 
+      {/* Custom trackers */}
+      {customTrackers.length > 0 && (
+        <TileGroup heading="Custom Trackers">
+          {customTrackers.map(tracker => {
+            const TrIcon = getTrackerIcon(tracker.icon_name)
+            return (
+              <LogTile
+                key={tracker.id}
+                icon={<TrIcon className="w-5 h-5" style={{ color: tracker.color }} />}
+                label={tracker.name}
+                description={tracker.tracker_type.replace('_', ' ') + ' tracker'}
+                iconBg={trackerIconBg(tracker.color)}
+                onClick={() => setTrackerLogOpen(tracker.id)}
+              />
+            )
+          })}
+        </TileGroup>
+      )}
+
       {/* ── Sheets ────────────────────────────────────────────────────────── */}
 
       <BottomSheet open={sheet === 'behavior'} onClose={close} title="Log behavior">
@@ -283,6 +307,26 @@ export function LogPage() {
           onCancel={close}
         />
       </BottomSheet>
+
+      {/* Custom tracker sheet */}
+      {trackerLogOpen && (() => {
+        const tracker = customTrackers.find(t => t.id === trackerLogOpen)
+        if (!tracker) return null
+        return (
+          <BottomSheet
+            open
+            onClose={() => setTrackerLogOpen(null)}
+            title={`Log: ${tracker.name}`}
+          >
+            <CustomTrackerLogForm
+              tracker={tracker}
+              profileId={activeProfile.id}
+              onSaved={() => setTrackerLogOpen(null)}
+              onCancel={() => setTrackerLogOpen(null)}
+            />
+          </BottomSheet>
+        )
+      })()}
 
     </div>
   )

@@ -13,7 +13,9 @@ import { useDashboard } from '../hooks/useDashboard'
 import { useQuickTiles } from '../hooks/useQuickTiles'
 import { useGoals } from '../hooks/useGoals'
 import { useProviders } from '../hooks/useProviders'
+import { useCustomTrackers } from '../hooks/useCustomTrackers'
 import { getTileDef } from '../lib/tileConstants'
+import { getTrackerIcon, trackerIconBg } from '../lib/trackerIcons'
 import { qualityLabel } from '../lib/sleepConstants'
 import { BottomSheet } from '../components/ui/BottomSheet'
 import { BehaviorLogForm } from '../components/behavior/BehaviorLogForm'
@@ -22,6 +24,7 @@ import { DietSheet } from '../components/diet/DietSheet'
 import { SleepLogForm } from '../components/sleep/SleepLogForm'
 import { ProgressNoteForm } from '../components/goals/ProgressNoteForm'
 import { AppointmentForm } from '../components/appointments/AppointmentForm'
+import { CustomTrackerLogForm } from '../components/tracker/CustomTrackerLogForm'
 import { BehaviorFrequencyChart } from '../components/dashboard/BehaviorFrequencyChart'
 import { SleepDurationChart } from '../components/dashboard/SleepDurationChart'
 import { RegulationDistributionChart } from '../components/dashboard/RegulationDistributionChart'
@@ -116,6 +119,9 @@ export function DashboardPage() {
   // Per-user quick tiles config
   const { tiles: quickTileIds } = useQuickTiles(user?.id ?? null)
 
+  // Custom trackers (for quick tiles + day panel)
+  const { trackers: customTrackers } = useCustomTrackers(activeProfile?.id ?? null)
+
   // Data needed for optional tiles
   const { goals }     = useGoals(activeProfile?.id ?? null)
   const { providers } = useProviders(activeProfile?.id ?? null)
@@ -134,6 +140,7 @@ export function DashboardPage() {
   const [progressOpen,    setProgressOpen]    = useState(false)
   const [appointmentOpen, setAppointmentOpen] = useState(false)
   const [chartsOpen,      setChartsOpen]      = useState(false)
+  const [trackerLogOpen,  setTrackerLogOpen]  = useState<string | null>(null) // tracker ID
 
   const today     = new Date()
   const weekStart = format(startOfWeek(today, { weekStartsOn: 0 }), 'MMM d')
@@ -218,7 +225,7 @@ export function DashboardPage() {
 
       {/* ── Quick-log tiles (today only) / locked notice (past days) ───────── */}
       {isViewingToday ? (() => {
-        const tileHandlers: Record<string, () => void> = {
+        const staticHandlers: Record<string, () => void> = {
           smoothie:    () => setDietOpen(true),
           meal:        () => setDietOpen(true),
           behavior:    () => setBehaviorOpen(true),
@@ -234,12 +241,32 @@ export function DashboardPage() {
             <p className="text-[10px] font-bold uppercase tracking-widest mb-2.5" style={{ color: '#9A9187' }}>Quick log</p>
             <div className="grid gap-2.5" style={{ gridTemplateColumns: `repeat(${cols}, minmax(0, 1fr))` }}>
               {quickTileIds.map(id => {
-                const def = getTileDef(id)
+                if (id.startsWith('tracker:')) {
+                  const tracker = customTrackers.find(t => t.id === id.slice(8))
+                  if (!tracker) return null
+                  const TrIcon = getTrackerIcon(tracker.icon_name)
+                  return (
+                    <button
+                      key={id}
+                      type="button"
+                      onClick={() => setTrackerLogOpen(tracker.id)}
+                      className="flex flex-col items-center gap-2 py-3 px-1 rounded-xl active:scale-95 transition-transform duration-100 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-500"
+                      style={{ background: '#fff', boxShadow: '0 2px 10px rgba(51,50,46,0.07)' }}
+                    >
+                      <span className="w-9 h-9 rounded-xl flex items-center justify-center" style={{ background: trackerIconBg(tracker.color) }}>
+                        <TrIcon className="w-4 h-4" style={{ color: tracker.color }} />
+                      </span>
+                      <span className="text-[11px] font-semibold text-center leading-tight" style={{ color: '#33322E' }}>{tracker.name}</span>
+                    </button>
+                  )
+                }
+                const def = getTileDef(id as import('../lib/tileConstants').TileId)
+                if (!def) return null
                 return (
                   <button
                     key={id}
                     type="button"
-                    onClick={tileHandlers[id]}
+                    onClick={staticHandlers[id]}
                     className="flex flex-col items-center gap-2 py-3 px-1 rounded-xl active:scale-95 transition-transform duration-100 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-500"
                     style={{ background: '#fff', boxShadow: '0 2px 10px rgba(51,50,46,0.07)' }}
                   >
@@ -598,6 +625,26 @@ export function DashboardPage() {
           onCancel={() => setAppointmentOpen(false)}
         />
       </BottomSheet>
+
+      {/* Custom tracker log sheet */}
+      {trackerLogOpen && (() => {
+        const tracker = customTrackers.find(t => t.id === trackerLogOpen)
+        if (!tracker) return null
+        return (
+          <BottomSheet
+            open
+            onClose={() => setTrackerLogOpen(null)}
+            title={`Log: ${tracker.name}`}
+          >
+            <CustomTrackerLogForm
+              tracker={tracker}
+              profileId={activeProfile.id}
+              onSaved={() => setTrackerLogOpen(null)}
+              onCancel={() => setTrackerLogOpen(null)}
+            />
+          </BottomSheet>
+        )
+      })()}
     </div>
   )
 }

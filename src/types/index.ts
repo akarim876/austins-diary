@@ -278,6 +278,40 @@ export interface DietLog {
   updated_at: string
 }
 
+// ─── Custom Trackers ──────────────────────────────────────────────────────────
+
+export type TrackerType = 'duration' | 'counter' | 'yes_no' | 'rating'
+
+export interface CustomTracker {
+  id: string
+  profile_id: string
+  name: string
+  icon_name: string
+  color: string
+  tracker_type: TrackerType
+  archived: boolean
+  sort_order: number
+  created_at: string
+  updated_at: string
+}
+
+export interface CustomTrackerLog {
+  id: string
+  tracker_id: string
+  profile_id: string
+  author_id: string
+  entry_date: string
+  duration_minutes: number | null
+  started_at: string | null
+  ended_at: string | null
+  counter_value: number | null
+  yes_no_value: boolean | null
+  rating_value: number | null
+  notes: string | null
+  created_at: string
+  updated_at: string
+}
+
 export interface QuickNote {
   id: string
   profile_id: string

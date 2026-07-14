@@ -21,6 +21,7 @@ import { ProfileSetupPage } from './components/profile/ProfileSetupPage'
 import { AcceptInvitePage } from './pages/AcceptInvitePage'
 import { DietSettingsPage } from './pages/DietSettingsPage'
 import { ScheduleSettingsPage } from './pages/ScheduleSettingsPage'
+import { TrackerSettingsPage } from './pages/TrackerSettingsPage'
 import { CompleteProfilePage } from './pages/CompleteProfilePage'
 import { Spinner } from './components/ui/Spinner'
 
@@ -64,6 +65,7 @@ function AppShell() {
           <Route path="/settings"           element={<SettingsPage />} />
           <Route path="/diet-settings"      element={<DietSettingsPage />} />
           <Route path="/schedule-settings"  element={<ScheduleSettingsPage />} />
+          <Route path="/tracker-settings"  element={<TrackerSettingsPage />} />
           <Route path="/export"             element={<ExportPage />} />
           {/* Redirects */}
           <Route path="/profile"            element={<Navigate to="/settings" replace />} />

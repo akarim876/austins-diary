@@ -1,10 +1,12 @@
 import JSZip from 'jszip'
 import type {
+  CustomTracker, CustomTrackerLog,
   DiaryEntry, BehaviorLog, SensoryLog, DietLog, SleepLog,
   Goal, ProgressNote, Appointment, Provider,
 } from '../types'
 import { qualityLabel } from './sleepConstants'
 import { ratingMeta } from './goalConstants'
+import { formatTrackerValue } from './trackerIcons'
 
 // ─── Utilities ────────────────────────────────────────────────────────────────
 
@@ -185,6 +187,8 @@ export interface CSVExportParams {
   progressNotes: ProgressNote[]
   appointments: Appointment[]
   providers: Provider[]
+  customTrackers?: CustomTracker[]
+  customTrackerLogs?: CustomTrackerLog[]
 }
 
 function slug(name: string) {
@@ -216,6 +220,20 @@ export async function downloadCSV(params: CSVExportParams): Promise<void> {
   }
   if (params.modules.includes('appointments') && params.appointments.length > 0)
     files.push({ name: 'appointments.csv', content: appointmentsCSV(params.appointments, providerMap) })
+
+  // Custom trackers — one CSV file per selected tracker
+  for (const tracker of (params.customTrackers ?? [])) {
+    if (!params.modules.includes(`tracker:${tracker.id}`)) continue
+    const logs = (params.customTrackerLogs ?? []).filter(l => l.tracker_id === tracker.id)
+    if (logs.length === 0) continue
+    const header = row('Date', 'Value', 'Notes')
+    const body = logs.map(l => row(
+      l.entry_date,
+      formatTrackerValue(tracker.tracker_type, l),
+      l.notes ?? '',
+    )).join('\n')
+    files.push({ name: `${slug(tracker.name)}.csv`, content: `${header}\n${body}` })
+  }
 
   if (files.length === 0) {
     throw new Error('No data found for the selected date range and modules.')

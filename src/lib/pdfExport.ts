@@ -1,6 +1,7 @@
 import jsPDF from 'jspdf'
 import { format, parseISO } from 'date-fns'
 import type {
+  CustomTracker, CustomTrackerLog,
   DiaryEntry, BehaviorLog, SensoryLog, DietLog, SleepLog,
   Goal, ProgressNote, Appointment, Provider,
 } from '../types'
@@ -8,6 +9,7 @@ import { qualityLabel } from './sleepConstants'
 import { ratingMeta, statusMeta } from './goalConstants'
 import { SEVERITY_LABELS } from './behaviorConstants'
 import { REGULATION_LABEL } from './sensoryConstants'
+import { formatTrackerValue } from './trackerIcons'
 
 // ─── Layout constants ─────────────────────────────────────────────────────────
 
@@ -468,6 +470,34 @@ function renderCover(w: PDFWriter, params: PDFExportParams) {
   }
 }
 
+// ─── Custom tracker renderer ──────────────────────────────────────────────────
+
+function renderCustomTracker(w: PDFWriter, tracker: CustomTracker, logs: CustomTrackerLog[]) {
+  w.sectionHeader(tracker.name.toUpperCase(), C.teal)
+  w.gap(4)
+
+  if (logs.length === 0) {
+    w.line('No entries in this date range.', { size: 10, color: C.light })
+    w.gap(4)
+    return
+  }
+
+  const typeLabel = tracker.tracker_type.replace('_', ' ')
+  w.line(`Type: ${typeLabel.charAt(0).toUpperCase() + typeLabel.slice(1)}  |  ${logs.length} entries`, { size: 9, color: C.mid })
+  w.gap(3)
+
+  for (const log of logs) {
+    w.check(12)
+    const value   = formatTrackerValue(tracker.tracker_type, log)
+    const dateStr = fmtDate(log.entry_date)
+    w.line(`${dateStr}: ${value}`, { size: 10, color: C.dark })
+    if (log.notes) {
+      w.wrapped(log.notes, { size: 9, color: C.mid, indent: 4 })
+    }
+    w.gap(2)
+  }
+}
+
 // ─── Main entry point ─────────────────────────────────────────────────────────
 
 export interface PDFExportParams {
@@ -485,6 +515,8 @@ export interface PDFExportParams {
   progressNotes: ProgressNote[]
   appointments: Appointment[]
   providers: Provider[]
+  customTrackers?: CustomTracker[]
+  customTrackerLogs?: CustomTrackerLog[]
 }
 
 export async function generatePDF(params: PDFExportParams): Promise<Blob> {
@@ -508,6 +540,14 @@ export async function generatePDF(params: PDFExportParams): Promise<Blob> {
     if (mod === 'sleep')        renderSleep(w, params.sleep)
     if (mod === 'goals')        renderGoals(w, params.goals, params.progressNotes)
     if (mod === 'appointments') renderAppointments(w, params.appointments, params.providers)
+  }
+
+  // ── Custom tracker pages ─────────────────────────────────────────────────────
+  for (const tracker of (params.customTrackers ?? [])) {
+    if (!params.modules.includes(`tracker:${tracker.id}`)) continue
+    const logs = (params.customTrackerLogs ?? []).filter(l => l.tracker_id === tracker.id)
+    w.newPage()
+    renderCustomTracker(w, tracker, logs)
   }
 
   w.drawPageFooter()

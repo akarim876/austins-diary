@@ -1,8 +1,8 @@
 import { useEffect, useState } from 'react'
 import { format, parseISO } from 'date-fns'
 import {
-  CalendarClock, Check, ChevronDown, ChevronRight, ChevronUp, Clock, Crown, Eye, LogOut, Mail,
-  Palette, Pencil, Plus, Settings, Shield, Trash2, User, Users, Utensils, X,
+  Activity, CalendarClock, Check, ChevronDown, ChevronRight, ChevronUp, Clock, Crown, Eye, LogOut,
+  Mail, Palette, Pencil, Plus, Settings, Shield, Trash2, User, Users, Utensils, X,
 } from 'lucide-react'
 import toast from 'react-hot-toast'
 import { useNavigate } from 'react-router-dom'
@@ -13,9 +13,12 @@ import { useAuth } from '../contexts/AuthContext'
 import { useProfile } from '../contexts/ProfileContext'
 import { useUserProfile } from '../hooks/useUserProfile'
 import { useQuickTiles } from '../hooks/useQuickTiles'
+import type { QuickTileId } from '../hooks/useQuickTiles'
+import { useCustomTrackers } from '../hooks/useCustomTrackers'
 import { useTheme, THEMES } from '../hooks/useTheme'
 import { TILE_DEFS, DEFAULT_TILES, getTileDef } from '../lib/tileConstants'
 import type { TileId } from '../lib/tileConstants'
+import { getTrackerIcon, trackerIconBg } from '../lib/trackerIcons'
 import { ModuleIcon } from '../components/ui/ModuleIcon'
 import { supabase } from '../lib/supabase'
 import { getErrorMessage } from '../lib/errors'
@@ -620,11 +623,35 @@ function CaregiversSection() {
 
 function QuickTilesSection() {
   const { user } = useAuth()
+  const { activeProfile } = useProfile()
   const { tiles, setTiles, addTile, removeTile, moveTile, canAdd, canRemove } = useQuickTiles(user?.id ?? null)
+  const { trackers: customTrackers } = useCustomTrackers(activeProfile?.id ?? null)
   const [showAdd, setShowAdd] = useState(false)
 
-  const selectedSet = new Set(tiles)
-  const available = TILE_DEFS.filter(t => !selectedSet.has(t.id))
+  const selectedSet = new Set<string>(tiles)
+  const availableStatic   = TILE_DEFS.filter(t => !selectedSet.has(t.id))
+  const availableTrackers = customTrackers.filter(t => !selectedSet.has(`tracker:${t.id}`))
+
+  /** Get display info for any tile ID (static or custom tracker). */
+  function tileDisplay(id: string): { label: string; iconEl: React.ReactNode; bg: string } | null {
+    if (id.startsWith('tracker:')) {
+      const tracker = customTrackers.find(t => t.id === id.slice(8))
+      if (!tracker) return null
+      const TrIcon = getTrackerIcon(tracker.icon_name)
+      return {
+        label:  tracker.name,
+        bg:     trackerIconBg(tracker.color),
+        iconEl: <TrIcon className="w-4 h-4" style={{ color: tracker.color }} />,
+      }
+    }
+    const def = getTileDef(id as TileId)
+    if (!def) return null
+    return {
+      label:  def.label,
+      bg:     def.iconBg,
+      iconEl: <ModuleIcon name={def.icon} className="w-4 h-4" style={{ color: def.accent }} />,
+    }
+  }
 
   return (
     <section>
@@ -634,25 +661,25 @@ function QuickTilesSection() {
       <div className="bg-white rounded-xl shadow-sm overflow-hidden">
         <div className="px-4 py-3 border-b border-warm-100">
           <p className="text-xs text-gray-500 leading-relaxed">
-            Choose 2–5 entry types to show as quick-add tiles on the dashboard. Your selection is personal — it won't affect other caregivers.
+            Choose 2–6 entry types to show as quick-add tiles on the dashboard. Your selection is personal — it won't affect other caregivers.
           </p>
         </div>
 
         {/* Selected tiles list */}
         <ul className="divide-y divide-warm-100">
           {tiles.map((id, idx) => {
-            const def = getTileDef(id)
+            const display = tileDisplay(id)
+            if (!display) return null
             return (
               <li key={id} className="flex items-center gap-3 px-4 py-3">
-                {/* Icon preview */}
                 <span
                   className="w-8 h-8 rounded-xl flex items-center justify-center flex-shrink-0"
-                  style={{ background: def.iconBg }}
+                  style={{ background: display.bg }}
                 >
-                  <ModuleIcon name={def.icon} className="w-4 h-4" style={{ color: def.accent }} />
+                  {display.iconEl}
                 </span>
 
-                <span className="flex-1 text-sm font-medium text-gray-900">{def.label}</span>
+                <span className="flex-1 text-sm font-medium text-gray-900">{display.label}</span>
 
                 {/* Reorder */}
                 <div className="flex flex-col gap-0.5">
@@ -682,7 +709,7 @@ function QuickTilesSection() {
                   onClick={() => removeTile(id)}
                   disabled={!canRemove}
                   className="p-1.5 rounded-lg text-gray-300 hover:text-red-400 hover:bg-red-50 disabled:opacity-25 transition"
-                  aria-label={`Remove ${def.label}`}
+                  aria-label={`Remove ${display.label}`}
                 >
                   <X className="w-4 h-4" />
                 </button>
@@ -698,37 +725,64 @@ function QuickTilesSection() {
               <button
                 type="button"
                 onClick={() => setShowAdd(true)}
-                className="w-full flex items-center gap-2 px-4 py-3 text-sm text-brand-600 font-medium hover:bg-brand-50 transition"
+                className="w-full flex items-center gap-2 px-4 py-3 text-sm font-medium hover:bg-brand-50 transition"
+                style={{ color: 'var(--color-accent)' }}
               >
                 <Plus className="w-4 h-4" />
                 Add tile ({tiles.length}/6 selected)
               </button>
             ) : (
               <div className="p-3 space-y-1">
-                {available.length === 0 ? (
+                {availableStatic.length === 0 && availableTrackers.length === 0 ? (
                   <p className="text-xs text-gray-400 text-center py-2">All types already added</p>
                 ) : (
-                  available.map(def => {
-                    return (
-                      <button
-                        key={def.id}
-                        type="button"
-                        onClick={() => { addTile(def.id as TileId); setShowAdd(false) }}
-                        className="w-full flex items-center gap-3 px-3 py-2.5 rounded-xl hover:bg-warm-50 text-left transition"
-                      >
-                        <span
-                          className="w-7 h-7 rounded-lg flex items-center justify-center flex-shrink-0"
-                          style={{ background: def.iconBg }}
-                        >
-                          <ModuleIcon name={def.icon} className="w-3.5 h-3.5" style={{ color: def.accent }} />
-                        </span>
-                        <div>
-                          <p className="text-sm font-medium text-gray-900">{def.label}</p>
-                          <p className="text-xs text-gray-400">{def.description}</p>
-                        </div>
-                      </button>
-                    )
-                  })
+                  <>
+                    {availableStatic.length > 0 && (
+                      <>
+                        <p className="text-[10px] font-bold text-gray-400 uppercase tracking-wider px-1 pt-1">Built-in</p>
+                        {availableStatic.map(def => (
+                          <button
+                            key={def.id}
+                            type="button"
+                            onClick={() => { addTile(def.id as QuickTileId); setShowAdd(false) }}
+                            className="w-full flex items-center gap-3 px-3 py-2.5 rounded-xl hover:bg-warm-50 text-left transition"
+                          >
+                            <span className="w-7 h-7 rounded-lg flex items-center justify-center flex-shrink-0" style={{ background: def.iconBg }}>
+                              <ModuleIcon name={def.icon} className="w-3.5 h-3.5" style={{ color: def.accent }} />
+                            </span>
+                            <div>
+                              <p className="text-sm font-medium text-gray-900">{def.label}</p>
+                              <p className="text-xs text-gray-400">{def.description}</p>
+                            </div>
+                          </button>
+                        ))}
+                      </>
+                    )}
+                    {availableTrackers.length > 0 && (
+                      <>
+                        <p className="text-[10px] font-bold text-gray-400 uppercase tracking-wider px-1 pt-2">Custom trackers</p>
+                        {availableTrackers.map(tracker => {
+                          const TrIcon = getTrackerIcon(tracker.icon_name)
+                          return (
+                            <button
+                              key={tracker.id}
+                              type="button"
+                              onClick={() => { addTile(`tracker:${tracker.id}` as QuickTileId); setShowAdd(false) }}
+                              className="w-full flex items-center gap-3 px-3 py-2.5 rounded-xl hover:bg-warm-50 text-left transition"
+                            >
+                              <span className="w-7 h-7 rounded-lg flex items-center justify-center flex-shrink-0" style={{ background: trackerIconBg(tracker.color) }}>
+                                <TrIcon className="w-3.5 h-3.5" style={{ color: tracker.color }} />
+                              </span>
+                              <div>
+                                <p className="text-sm font-medium text-gray-900">{tracker.name}</p>
+                                <p className="text-xs text-gray-400">{tracker.tracker_type.replace('_', ' ')}</p>
+                              </div>
+                            </button>
+                          )
+                        })}
+                      </>
+                    )}
+                  </>
                 )}
                 <button
                   type="button"
@@ -896,6 +950,28 @@ export function SettingsPage() {
               <div className="flex-1">
                 <p className="text-sm font-semibold text-gray-900">Schedule Template</p>
                 <p className="text-xs text-gray-400 mt-0.5">Build the typical daily routine checklist</p>
+              </div>
+              <ChevronRight className="w-4 h-4 text-gray-300 flex-shrink-0" />
+            </button>
+          </section>
+        )}
+
+        {/* Custom trackers link */}
+        {activeProfile && (
+          <section>
+            <h2 className="text-xs font-semibold text-gray-400 uppercase tracking-wider mb-3 px-1">
+              Custom Trackers
+            </h2>
+            <button
+              onClick={() => navigate('/tracker-settings')}
+              className="w-full flex items-center gap-3 py-3 px-4 rounded-xl bg-white border border-warm-200 shadow-sm hover:shadow-md hover:border-brand-200 transition-all text-left"
+            >
+              <div className="w-9 h-9 rounded-xl bg-brand-50 flex items-center justify-center flex-shrink-0">
+                <Activity className="w-4 h-4 text-brand-600" />
+              </div>
+              <div className="flex-1">
+                <p className="text-sm font-semibold text-gray-900">Custom Trackers</p>
+                <p className="text-xs text-gray-400 mt-0.5">Create duration, counter, yes/no, and rating trackers</p>
               </div>
               <ChevronRight className="w-4 h-4 text-gray-300 flex-shrink-0" />
             </button>

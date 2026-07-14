@@ -9,9 +9,12 @@ import {
 import toast from 'react-hot-toast'
 import { supabase } from '../lib/supabase'
 import { useProfile } from '../contexts/ProfileContext'
+import { useCustomTrackers } from '../hooks/useCustomTrackers'
+import { getTrackerIcon, trackerIconBg } from '../lib/trackerIcons'
 import { downloadCSV }  from '../lib/csvExport'
 import { downloadPDF }  from '../lib/pdfExport'
 import type {
+  CustomTracker, CustomTrackerLog,
   DiaryEntry, BehaviorLog, SensoryLog, DietLog, SleepLog,
   Goal, ProgressNote, Appointment, Provider,
 } from '../types'
@@ -29,7 +32,7 @@ const PRESETS: { id: Preset; label: string }[] = [
   { id: 'custom',    label: 'Custom range' },
 ]
 
-const ALL_MODULES = [
+const STATIC_MODULES = [
   { id: 'diary',        label: 'Diary',              desc: 'Daily notes and photos' },
   { id: 'behavior',     label: 'Behavior',           desc: 'Incidents, severity, antecedents' },
   { id: 'sensory',      label: 'Sensory / Regulation', desc: 'Zone, triggers, strategies' },
@@ -58,10 +61,11 @@ async function fetchExportData(
   modules: string[],
 ) {
   const inc = (m: string) => modules.includes(m)
+  const trackerIds = modules.filter(m => m.startsWith('tracker:')).map(m => m.slice(8))
 
   const [
     diaryRes, behaviorRes, sensoryRes, dietRes,
-    sleepRes, goalsRes, progressRes, apptsRes, providersRes,
+    sleepRes, goalsRes, progressRes, apptsRes, providersRes, trackerLogsRes,
   ] = await Promise.all([
     inc('diary')
       ? supabase.from('diary_entries').select('*').eq('profile_id', profileId).gte('entry_date', start).lte('entry_date', end)
@@ -90,18 +94,22 @@ async function fetchExportData(
     inc('appointments')
       ? supabase.from('providers').select('*').eq('profile_id', profileId)
       : Promise.resolve({ data: [] }),
+    trackerIds.length > 0
+      ? supabase.from('custom_tracker_logs').select('*').eq('profile_id', profileId).in('tracker_id', trackerIds).gte('entry_date', start).lte('entry_date', end).order('entry_date')
+      : Promise.resolve({ data: [] }),
   ])
 
   return {
-    diary:         (diaryRes.data    ?? []) as DiaryEntry[],
-    behavior:      (behaviorRes.data ?? []) as BehaviorLog[],
-    sensory:       (sensoryRes.data  ?? []) as SensoryLog[],
-    diet:          (dietRes.data     ?? []) as DietLog[],
-    sleep:         (sleepRes.data    ?? []) as unknown as SleepLog[],
-    goals:         (goalsRes.data    ?? []) as Goal[],
-    progressNotes: (progressRes.data ?? []) as ProgressNote[],
-    appointments:  (apptsRes.data    ?? []) as Appointment[],
-    providers:     (providersRes.data ?? []) as Provider[],
+    diary:          (diaryRes.data       ?? []) as DiaryEntry[],
+    behavior:       (behaviorRes.data    ?? []) as BehaviorLog[],
+    sensory:        (sensoryRes.data     ?? []) as SensoryLog[],
+    diet:           (dietRes.data        ?? []) as DietLog[],
+    sleep:          (sleepRes.data       ?? []) as unknown as SleepLog[],
+    goals:          (goalsRes.data       ?? []) as Goal[],
+    progressNotes:  (progressRes.data    ?? []) as ProgressNote[],
+    appointments:   (apptsRes.data       ?? []) as Appointment[],
+    providers:      (providersRes.data   ?? []) as Provider[],
+    customTrackerLogs: (trackerLogsRes.data ?? []) as CustomTrackerLog[],
   }
 }
 
@@ -111,11 +119,22 @@ type Status = 'idle' | 'fetching' | 'generating' | 'done' | 'error'
 
 export function ExportPage() {
   const { activeProfile } = useProfile()
+  const { trackers: customTrackers } = useCustomTrackers(activeProfile?.id ?? null)
+
+  const ALL_MODULES = [
+    ...STATIC_MODULES,
+    ...customTrackers.map(t => ({
+      id:   `tracker:${t.id}`,
+      label: t.name,
+      desc: `${t.tracker_type.replace('_', ' ')} tracker`,
+      tracker: t,
+    })),
+  ]
 
   const [preset,     setPreset]     = useState<Preset>('last30')
   const [customStart, setCustomStart] = useState(format(subDays(new Date(), 29), 'yyyy-MM-dd'))
   const [customEnd,   setCustomEnd]   = useState(TODAY)
-  const [modules,    setModules]    = useState<string[]>(ALL_MODULES.map(m => m.id))
+  const [modules,    setModules]    = useState<string[]>(STATIC_MODULES.map(m => m.id))
   const [exportFmt,  setExportFmt]  = useState<'pdf' | 'csv'>('pdf')
   const [status,     setStatus]     = useState<Status>('idle')
   const [errorMsg,   setErrorMsg]   = useState('')
@@ -148,12 +167,17 @@ export function ExportPage() {
 
       setStatus('generating')
 
+      const selectedTrackers = customTrackers.filter(t =>
+        modules.includes(`tracker:${t.id}`),
+      )
+
       const common = {
-        childName:  activeProfile.name,
-        startDate:  range.start,
-        endDate:    range.end,
+        childName:    activeProfile.name,
+        startDate:    range.start,
+        endDate:      range.end,
         modules,
         ...data,
+        customTrackers: selectedTrackers,
       }
 
       if (exportFmt === 'csv') {
@@ -256,7 +280,12 @@ export function ExportPage() {
         </div>
         <div className="space-y-1">
           {ALL_MODULES.map(m => {
-            const checked = modules.includes(m.id)
+            const checked  = modules.includes(m.id)
+            const isTracker = m.id.startsWith('tracker:')
+            const tracker = isTracker
+              ? customTrackers.find(t => t.id === m.id.slice(8))
+              : null
+            const TrIcon = tracker ? getTrackerIcon(tracker.icon_name) : null
             return (
               <button
                 key={m.id}
@@ -268,6 +297,14 @@ export function ExportPage() {
                   ? <CheckSquare className="w-5 h-5 text-brand-600 flex-shrink-0" />
                   : <Square className="w-5 h-5 text-gray-300 flex-shrink-0" />
                 }
+                {tracker && TrIcon && (
+                  <span
+                    className="w-6 h-6 rounded-lg flex items-center justify-center flex-shrink-0"
+                    style={{ background: trackerIconBg(tracker.color) }}
+                  >
+                    <TrIcon className="w-3.5 h-3.5" style={{ color: tracker.color }} />
+                  </span>
+                )}
                 <div>
                   <p className="text-sm font-semibold text-gray-800">{m.label}</p>
                   <p className="text-xs text-gray-400">{m.desc}</p>

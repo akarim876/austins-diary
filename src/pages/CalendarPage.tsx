@@ -38,7 +38,12 @@ import { FollowupReminderCard } from '../components/appointments/FollowupReminde
 import { BottomSheet } from '../components/ui/BottomSheet'
 import { Spinner } from '../components/ui/Spinner'
 import { SecureImage } from '../components/ui/SecureImage'
-import type { Appointment, BehaviorLog, DietLog, DietSettings, ProgressNote, SensoryLog, SleepLog } from '../types'
+import { useCustomTrackers } from '../hooks/useCustomTrackers'
+import { useCustomTrackerLogsForDate } from '../hooks/useCustomTrackerLogs'
+import { CustomTrackerLogForm } from '../components/tracker/CustomTrackerLogForm'
+import { CustomTrackerLogCard } from '../components/tracker/CustomTrackerLogCard'
+import { getTrackerIcon, trackerIconBg } from '../lib/trackerIcons'
+import type { Appointment, BehaviorLog, CustomTrackerLog, DietLog, DietSettings, ProgressNote, SensoryLog, SleepLog } from '../types'
 
 export function CalendarPage() {
   const navigate = useNavigate()
@@ -70,6 +75,8 @@ export function CalendarPage() {
   const [convertingFromFollowup, setConvertingFromFollowup] = useState<Appointment | null>(null)
 
   const [feedOpen, setFeedOpen] = useState(false)
+  const [trackerLogOpen, setTrackerLogOpen] = useState<string | null>(null)
+  const [editingTrackerLog, setEditingTrackerLog] = useState<CustomTrackerLog | null>(null)
 
   const { entries, loading: entriesLoading, refetch: refetchEntries } = useDiaryEntries(activeProfile?.id ?? null)
   const { logs: allBehavior, loading: behaviorLoading, refetch: refetchAllBehavior } = useBehaviorLogs(activeProfile?.id ?? null)
@@ -87,6 +94,8 @@ export function CalendarPage() {
   const { logs: daySensory, refetch: refetchDaySensory } = useSensoryLogsForDate(activeProfile?.id ?? null, selectedDate)
   const { logs: dayDiet, refetch: refetchDayDiet } = useDietLogsForDate(activeProfile?.id ?? null, selectedDate)
   const { log: daySleep, refetch: refetchDaySleep } = useSleepLogForDate(activeProfile?.id ?? null, selectedDate)
+  const { trackers: customTrackers } = useCustomTrackers(activeProfile?.id ?? null)
+  const { logs: dayTrackerLogs, refetch: refetchTrackerLogs } = useCustomTrackerLogsForDate(activeProfile?.id ?? null, selectedDate)
   const { notes: dayProgress, refetch: refetchDayProgress } = useProgressNotesForDate(activeProfile?.id ?? null, selectedDate)
   const { appointments: dayAppts, refetch: refetchDayAppts } = useAppointmentsForDate(activeProfile?.id ?? null, selectedDate)
   const goalById     = new Map(goals.map(g => [g.id, g]))
@@ -214,6 +223,23 @@ export function CalendarPage() {
                   >
                     <ModuleIcon name="appointments" className="w-3 h-3" /> Appt
                   </button>
+                  {customTrackers.map(tracker => {
+                    const TrIcon = getTrackerIcon(tracker.icon_name)
+                    return (
+                      <button
+                        key={tracker.id}
+                        onClick={() => { setEditingTrackerLog(null); setTrackerLogOpen(tracker.id) }}
+                        className="flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-semibold transition-opacity hover:opacity-80"
+                        style={{
+                          background: trackerIconBg(tracker.color),
+                          color: tracker.color,
+                          border: `1px solid ${tracker.color}44`,
+                        }}
+                      >
+                        <TrIcon className="w-3 h-3" /> {tracker.name}
+                      </button>
+                    )
+                  })}
                 </div>
               )}
             </div>
@@ -424,6 +450,30 @@ export function CalendarPage() {
                       }}
                     />
                   ))}
+                </div>
+              )}
+
+              {/* Custom tracker logs for selected day */}
+              {dayTrackerLogs.length > 0 && (
+                <div className="space-y-2 pt-1 border-t border-warm-200">
+                  <p className="text-xs font-semibold uppercase tracking-wide pt-1" style={{ color: 'var(--color-accent)' }}>
+                    Custom trackers ({dayTrackerLogs.length})
+                  </p>
+                  {dayTrackerLogs.map(log => {
+                    const tracker = customTrackers.find(t => t.id === log.tracker_id)
+                    if (!tracker) return null
+                    return (
+                      <CustomTrackerLogCard
+                        key={log.id}
+                        log={log}
+                        tracker={tracker}
+                        onClick={canCreate(myRole) ? () => {
+                          setEditingTrackerLog(log)
+                          setTrackerLogOpen(tracker.id)
+                        } : undefined}
+                      />
+                    )
+                  })}
                 </div>
               )}
 
@@ -725,6 +775,27 @@ export function CalendarPage() {
           }}
         />
       </BottomSheet>
+      {/* Custom tracker log sheet */}
+      {trackerLogOpen && (() => {
+        const tracker = customTrackers.find(t => t.id === trackerLogOpen)
+        if (!tracker) return null
+        return (
+          <BottomSheet
+            open
+            onClose={() => { setTrackerLogOpen(null); setEditingTrackerLog(null) }}
+            title={editingTrackerLog ? `Edit: ${tracker.name}` : `Log: ${tracker.name}`}
+          >
+            <CustomTrackerLogForm
+              tracker={tracker}
+              profileId={activeProfile.id}
+              date={selectedDate}
+              existingLog={editingTrackerLog}
+              onSaved={() => { setTrackerLogOpen(null); setEditingTrackerLog(null); refetchTrackerLogs() }}
+              onCancel={() => { setTrackerLogOpen(null); setEditingTrackerLog(null) }}
+            />
+          </BottomSheet>
+        )
+      })()}
     </>
   )
 }
