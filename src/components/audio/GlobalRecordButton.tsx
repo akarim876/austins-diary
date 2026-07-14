@@ -5,6 +5,7 @@
  *  idle → tap → requesting mic → recording → stop → uploading → transcribing
  *  → done: show "Save to…" destination sheet
  *    ├── Behavior log  → BehaviorLogForm pre-filled with transcribed text
+ *    ├── Diary note    → DiaryEntryForm pre-filled with transcribed text
  *    ├── Handoff note  → Inline handoff editor pre-filled
  *    └── Quick note    → Save immediately as unfiled, toast confirmation
  */
@@ -19,9 +20,10 @@ import { useProfile } from '../../contexts/ProfileContext'
 import { useMyRole, canCreate } from '../../hooks/useMyRole'
 import { BottomSheet } from '../ui/BottomSheet'
 import { BehaviorLogForm } from '../behavior/BehaviorLogForm'
+import { DiaryEntryForm } from '../diary/DiaryEntryForm'
 
 type Phase = 'idle' | 'requesting' | 'recording' | 'uploading' | 'transcribing' | 'done' | 'error'
-type Destination = 'behavior' | 'handoff' | 'quick' | null
+type Destination = 'behavior' | 'handoff' | 'diary' | 'quick' | null
 
 function detectMimeType(): string {
   const candidates = [
@@ -391,6 +393,14 @@ export function GlobalRecordButton() {
               accent: '#c47a35',
             },
             {
+              dest: 'diary' as Destination,
+              emoji: '📖',
+              label: 'Diary note',
+              sub: "Added to today's diary entry",
+              color: 'rgba(91,143,120,0.10)',
+              accent: '#3a6b52',
+            },
+            {
               dest: 'handoff' as Destination,
               emoji: '📋',
               label: 'Handoff note',
@@ -454,6 +464,25 @@ export function GlobalRecordButton() {
             onSaved={() => { toast.success('Behavior log saved'); reset() }}
             onCancel={reset}
           />
+        </BottomSheet>
+      )}
+
+      {/* ── Diary note sub-sheet ───────────────────────────────────────── */}
+      {profileId && (
+        <BottomSheet
+          open={phase === 'done' && destination === 'diary'}
+          onClose={reset}
+          title="Diary note"
+        >
+          <div className="px-4 pt-2 pb-6">
+            <DiaryEntryForm
+              profileId={profileId}
+              date={today}
+              existingEntry={null}
+              initialNote={transcribed ?? ''}
+              onSaved={() => { toast.success('Diary note saved'); reset() }}
+            />
+          </div>
         </BottomSheet>
       )}
 

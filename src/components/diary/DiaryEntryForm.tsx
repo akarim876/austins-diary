@@ -25,10 +25,12 @@ interface Props {
   profileId: string
   date: string
   existingEntry: DiaryEntry | null
+  /** Pre-fill the note field — used when opening from the global voice recorder */
+  initialNote?: string
   onSaved: () => void
 }
 
-export function DiaryEntryForm({ profileId, date, existingEntry, onSaved }: Props) {
+export function DiaryEntryForm({ profileId, date, existingEntry, initialNote, onSaved }: Props) {
   const { user } = useAuth()
   const [submitting, setSubmitting] = useState(false)
   const [deleting, setDeleting] = useState(false)
@@ -38,7 +40,7 @@ export function DiaryEntryForm({ profileId, date, existingEntry, onSaved }: Prop
     resolver: zodResolver(schema),
     defaultValues: {
       entry_date: date,
-      note: existingEntry?.note ?? '',
+      note: existingEntry?.note ?? initialNote ?? '',
       tags: existingEntry?.tags ?? [],
       photo: null,
     },
@@ -48,7 +50,7 @@ export function DiaryEntryForm({ profileId, date, existingEntry, onSaved }: Prop
   useEffect(() => {
     reset({
       entry_date: date,
-      note: existingEntry?.note ?? '',
+      note: existingEntry?.note ?? initialNote ?? '',
       tags: existingEntry?.tags ?? [],
       photo: null,
     })
