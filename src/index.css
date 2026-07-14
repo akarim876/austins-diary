@@ -37,17 +37,73 @@
   --shadow-sheet: 0 -4px 32px rgba(51,50,46,0.12);
 }
 
-/* ─── Regulation zone colors (5-step gradient, used exclusively for zone indicators) */
+/* ─── Regulation zone colors — fixed across ALL themes ──────────────────── */
+/* These sit on :root intentionally and are NOT overridden by [data-theme] selectors */
 :root {
-  --reg-calm:        #8FB89C;
-  --reg-alert:       #A9C08A;
-  --reg-anxious:     #E8C77E;
-  --reg-dysregulated:#D99A6C;
-  --reg-shutdown:    #C77B6A;
+  --regulation-calm:        #8FB89C;
+  --regulation-alert:       #A9C08A;
+  --regulation-anxious:     #E8C77E;
+  --regulation-dysregulated:#D99A6C;
+  --regulation-shutdown:    #C77B6A;
+
+  /* Legacy aliases for existing zone-* utilities */
+  --reg-calm:        var(--regulation-calm);
+  --reg-alert:       var(--regulation-alert);
+  --reg-anxious:     var(--regulation-anxious);
+  --reg-dysregulated:var(--regulation-dysregulated);
+  --reg-shutdown:    var(--regulation-shutdown);
 
   --text-primary:   #33322E;
   --text-secondary: #6B6760;
   --text-muted:     #9A9187;
+}
+
+/* ─── Swappable color themes ─────────────────────────────────────────────── */
+
+/* Default (applied when no data-theme attribute is set, matches Sage) */
+:root {
+  --color-background:        #F7F5F1;
+  --color-surface:           #FFFFFF;
+  --color-text:              #33322E;
+  --color-text-muted:        #7A7972;
+  --color-accent:            #5B7B7A;
+  --color-accent-secondary:  #A6A59D;
+}
+
+[data-theme="sage"] {
+  --color-background:        #F7F5F1;
+  --color-surface:           #FFFFFF;
+  --color-text:              #33322E;
+  --color-text-muted:        #7A7972;
+  --color-accent:            #5B7B7A;
+  --color-accent-secondary:  #A6A59D;
+}
+
+[data-theme="terracotta"] {
+  --color-background:        #FAF3EC;
+  --color-surface:           #FFFFFF;
+  --color-text:              #3A2E28;
+  --color-text-muted:        #8A7A70;
+  --color-accent:            #C1694F;
+  --color-accent-secondary:  #7A9E7E;
+}
+
+[data-theme="coastal"] {
+  --color-background:        #F4F7F6;
+  --color-surface:           #FFFFFF;
+  --color-text:              #23302E;
+  --color-text-muted:        #728480;
+  --color-accent:            #3E7C7C;
+  --color-accent-secondary:  #E3A857;
+}
+
+[data-theme="plum"] {
+  --color-background:        #F8F5F3;
+  --color-surface:           #FFFFFF;
+  --color-text:              #2E2A30;
+  --color-text-muted:        #8A8087;
+  --color-accent:            #7C6A8E;
+  --color-accent-secondary:  #93A67C;
 }
 
 /* ─── Reset & base ─────────────────────────────────────────────────────────── */
@@ -58,14 +114,14 @@
 
 html {
   font-family: var(--font-sans);
-  color: var(--text-primary);
-  background-color: #F7F5F1;
+  color: var(--color-text);
+  background-color: var(--color-background);
 }
 
 body {
-  background-color: #F7F5F1;
+  background-color: var(--color-background);
   font-family: var(--font-sans);
-  color: #33322E;
+  color: var(--color-text);
   overscroll-behavior-y: none;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
@@ -80,7 +136,7 @@ body {
 /* ─── Focus rings — visible and brand-colored ────────────────────────────── */
 
 :focus-visible {
-  outline: 2px solid #5B7B7A;
+  outline: 2px solid var(--color-accent);
   outline-offset: 2px;
   border-radius: 6px;
 }
@@ -102,13 +158,13 @@ body {
 /* ─── Card surface ──────────────────────────────────────────────────────── */
 
 .card {
-  background: #ffffff;
+  background: var(--color-surface);
   border-radius: 16px;
   box-shadow: 0 2px 10px rgba(51,50,46,0.07);
 }
 
 .card-sm {
-  background: #ffffff;
+  background: var(--color-surface);
   border-radius: 12px;
   box-shadow: 0 1px 4px rgba(51,50,46,0.05);
 }

@@ -2,6 +2,7 @@ import type { ReactNode } from 'react'
 import { Navigate, Route, Routes, useLocation } from 'react-router-dom'
 import { Toaster } from 'react-hot-toast'
 import { useAuth } from './contexts/AuthContext'
+import { useTheme } from './hooks/useTheme'
 import { useProfile } from './contexts/ProfileContext'
 import { AuthPage } from './components/auth/AuthPage'
 import { AppHeader } from './components/layout/AppHeader'
@@ -74,6 +75,12 @@ function AppShell() {
   )
 }
 
+/** Reads the user's stored theme and applies data-theme to <html> on mount/auth-change. */
+function ThemeApplier() {
+  useTheme()
+  return null
+}
+
 export default function App() {
   const { session, loading } = useAuth()
   const location = useLocation()
@@ -97,6 +104,7 @@ export default function App() {
 
   return (
     <>
+      <ThemeApplier />
       <Toaster
         position="top-center"
         toastOptions={{

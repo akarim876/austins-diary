@@ -2,7 +2,7 @@ import { useEffect, useState } from 'react'
 import { format, parseISO } from 'date-fns'
 import {
   CalendarClock, Check, ChevronDown, ChevronRight, ChevronUp, Clock, Crown, Eye, LogOut, Mail,
-  Pencil, Plus, Settings, Shield, Trash2, User, Users, Utensils, X,
+  Palette, Pencil, Plus, Settings, Shield, Trash2, User, Users, Utensils, X,
 } from 'lucide-react'
 import toast from 'react-hot-toast'
 import { useNavigate } from 'react-router-dom'
@@ -13,6 +13,7 @@ import { useAuth } from '../contexts/AuthContext'
 import { useProfile } from '../contexts/ProfileContext'
 import { useUserProfile } from '../hooks/useUserProfile'
 import { useQuickTiles } from '../hooks/useQuickTiles'
+import { useTheme, THEMES } from '../hooks/useTheme'
 import { TILE_DEFS, DEFAULT_TILES, getTileDef } from '../lib/tileConstants'
 import type { TileId } from '../lib/tileConstants'
 import { ModuleIcon } from '../components/ui/ModuleIcon'
@@ -762,6 +763,75 @@ function QuickTilesSection() {
   )
 }
 
+// ─── Theme section ─────────────────────────────────────────────────────────────
+
+function ThemeSection() {
+  const { theme, setTheme } = useTheme()
+
+  return (
+    <section>
+      <h2 className="text-xs font-semibold text-gray-400 uppercase tracking-wider mb-3 px-1">
+        Appearance
+      </h2>
+      <div className="bg-white rounded-xl shadow-sm border border-warm-200 overflow-hidden">
+        <div className="px-4 pt-3 pb-2 flex items-center gap-2 border-b border-warm-100">
+          <Palette className="w-4 h-4 text-gray-400" />
+          <p className="text-sm font-semibold text-gray-800">Color theme</p>
+        </div>
+        <div className="p-3 grid grid-cols-2 gap-2.5">
+          {THEMES.map(t => {
+            const active = theme === t.id
+            return (
+              <button
+                key={t.id}
+                onClick={() => setTheme(t.id)}
+                className="relative flex items-center gap-3 p-3 rounded-xl border-2 transition-all duration-150 text-left"
+                style={{
+                  background: t.bg,
+                  borderColor: active ? t.accent : 'transparent',
+                  boxShadow: active ? `0 0 0 1px ${t.accent}22` : '0 1px 3px rgba(0,0,0,0.06)',
+                }}
+              >
+                {/* Color swatch stack */}
+                <div className="relative w-8 h-8 rounded-lg flex-shrink-0 overflow-hidden">
+                  <div className="absolute inset-0" style={{ background: t.bg }} />
+                  <div
+                    className="absolute bottom-0 right-0 w-5 h-5 rounded-tl-lg"
+                    style={{ background: t.accent }}
+                  />
+                  <div
+                    className="absolute bottom-0 right-5 w-3 h-3 rounded-tr-sm"
+                    style={{ background: t.secondary }}
+                  />
+                </div>
+
+                <span
+                  className="text-[13px] font-semibold leading-tight"
+                  style={{ color: t.text }}
+                >
+                  {t.label}
+                </span>
+
+                {active && (
+                  <span
+                    className="absolute top-2 right-2 w-4 h-4 rounded-full flex items-center justify-center"
+                    style={{ background: t.accent }}
+                  >
+                    <Check className="w-2.5 h-2.5 text-white" strokeWidth={3} />
+                  </span>
+                )}
+              </button>
+            )
+          })}
+        </div>
+        <p className="px-4 pb-3 text-[11px] text-gray-400">
+          This is personal to your account — other caregivers keep their own theme.
+        </p>
+      </div>
+    </section>
+  )
+}
+
 // ─── Page ──────────────────────────────────────────────────────────────────────
 
 export function SettingsPage() {
@@ -783,6 +853,7 @@ export function SettingsPage() {
 
       <div className="max-w-lg mx-auto px-4 py-6 pb-28 space-y-6">
         <AccountSection />
+        <ThemeSection />
         <QuickTilesSection />
         <ChildProfilesSection />
         <CaregiversSection />
