@@ -16,6 +16,7 @@ import {
 import { LOCATIONS } from '../../lib/behaviorConstants'
 import type { SensoryLog, BehaviorLog, RegulationLevel } from '../../types'
 import { Spinner } from '../ui/Spinner'
+import { TimeChipPicker } from '../ui/TimeChipPicker'
 
 const schema = z.object({
   entry_date:               z.string().min(1),
@@ -263,28 +264,28 @@ export function SensoryLogForm({
           When &amp; Where
         </h3>
 
-        <div className="grid grid-cols-2 gap-3">
-          <div>
-            <label className="flex items-center gap-1 text-xs font-medium text-gray-600 mb-1.5">
-              <Clock className="w-3 h-3" /> Time
-            </label>
-            <input
-              type="time"
-              {...register('time_of_day')}
-              className="w-full px-3 py-2.5 rounded-xl border border-gray-200 text-sm focus:outline-none focus:ring-2 focus:ring-violet-400 transition"
-            />
-            {errors.time_of_day && (
-              <p className="mt-1 text-xs text-red-500">{errors.time_of_day.message}</p>
-            )}
-          </div>
-          <div>
-            <label className="block text-xs font-medium text-gray-600 mb-1.5">Date</label>
-            <input
-              type="date"
-              {...register('entry_date')}
-              className="w-full px-3 py-2.5 rounded-xl border border-gray-200 text-sm focus:outline-none focus:ring-2 focus:ring-violet-400 transition"
-            />
-          </div>
+        <div>
+          <label className="flex items-center gap-1 text-xs font-medium text-gray-600 mb-1.5">
+            <Clock className="w-3 h-3" /> Time
+          </label>
+          <TimeChipPicker
+            value={watch('time_of_day')}
+            onChange={(t) => setValue('time_of_day', t, { shouldValidate: true })}
+            accentColor="#8B5CF6"
+            isEditing={!!existingLog}
+          />
+          {errors.time_of_day && (
+            <p className="mt-1 text-xs text-red-500">{errors.time_of_day.message}</p>
+          )}
+        </div>
+
+        <div>
+          <label className="block text-xs font-medium text-gray-600 mb-1.5">Date</label>
+          <input
+            type="date"
+            {...register('entry_date')}
+            className="w-full px-3 py-2.5 rounded-xl border border-gray-200 text-sm focus:outline-none focus:ring-2 focus:ring-violet-400 transition"
+          />
         </div>
 
         <div>
