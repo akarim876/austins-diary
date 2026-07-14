@@ -1,6 +1,6 @@
-import { BookHeart, LogOut, ChevronDown, Download } from 'lucide-react'
+import { BookHeart, LogOut, ChevronDown, Download, Settings } from 'lucide-react'
 import { useState } from 'react'
-import { Link } from 'react-router-dom'
+import { Link, useNavigate } from 'react-router-dom'
 import { useAuth } from '../../contexts/AuthContext'
 import { useProfile } from '../../contexts/ProfileContext'
 import toast from 'react-hot-toast'
@@ -8,6 +8,7 @@ import toast from 'react-hot-toast'
 export function AppHeader() {
   const { user, signOut, userProfile } = useAuth()
   const { activeProfile, profiles, setActiveProfile } = useProfile()
+  const navigate = useNavigate()
 
   const avatarInitials = userProfile
     ? `${userProfile.first_name.charAt(0)}${userProfile.last_name.charAt(0)}`.toUpperCase()
@@ -123,6 +124,15 @@ export function AppHeader() {
                   <p className="text-xs font-semibold truncate" style={{ color: '#33322E' }}>{displayName}</p>
                   <p className="text-xs truncate mt-0.5" style={{ color: '#9A9187' }}>{user?.email}</p>
                 </div>
+                <button
+                  onClick={() => { setShowUserMenu(false); navigate('/settings') }}
+                  className="w-full flex items-center gap-2 px-4 py-2.5 text-sm transition-colors hover:bg-gray-50 focus-visible:outline-none"
+                  style={{ color: '#33322E' }}
+                >
+                  <Settings className="w-4 h-4" style={{ color: '#9A9187' }} />
+                  Settings
+                </button>
+                <div style={{ borderTop: '1px solid #EDE9E3' }} />
                 <button
                   onClick={handleSignOut}
                   className="w-full flex items-center gap-2 px-4 py-2.5 text-sm text-red-600 hover:bg-red-50 transition-colors focus-visible:outline-none"

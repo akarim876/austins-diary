@@ -1,6 +1,6 @@
 import type { ReactElement } from 'react'
 import { NavLink } from 'react-router-dom'
-import { CalendarDays, LayoutDashboard, Settings } from 'lucide-react'
+import { CalendarDays, LayoutDashboard, Plus } from 'lucide-react'
 import { ModuleIcon } from '../ui/ModuleIcon'
 import { GlobalRecordButton } from '../audio/GlobalRecordButton'
 
@@ -25,9 +25,9 @@ const RIGHT_TABS: typeof LEFT_TABS = [
     renderIcon: (cls, col) => <CalendarDays className={cls} style={{ color: col }} />,
   },
   {
-    to: '/settings',
-    label: 'Settings',
-    renderIcon: (cls, col) => <Settings className={cls} style={{ color: col }} />,
+    to: '/log',
+    label: 'Log',
+    renderIcon: (cls, col) => <Plus className={cls} style={{ color: col }} />,
   },
 ]
 
