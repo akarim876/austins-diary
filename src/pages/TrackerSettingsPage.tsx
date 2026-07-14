@@ -58,14 +58,14 @@ function TrackerForm({ profileId, existing, onSaved, onCancel }: TrackerFormProp
       if (existing) {
         const { error } = await supabase
           .from('custom_trackers')
-          .update(payload)
+          .update(payload as Record<string, unknown>)
           .eq('id', existing.id)
         if (error) throw error
         toast.success('Tracker updated')
       } else {
         const { error } = await supabase
           .from('custom_trackers')
-          .insert({ ...payload, sort_order: 0 })
+          .insert({ ...payload, sort_order: 0 } as Record<string, unknown>)
         if (error) throw error
         toast.success('Tracker created')
       }
@@ -312,7 +312,7 @@ export function TrackerSettingsPage() {
   async function archiveTracker(t: CustomTracker) {
     const { error } = await supabase
       .from('custom_trackers')
-      .update({ archived: true, updated_at: new Date().toISOString() })
+      .update({ archived: true, updated_at: new Date().toISOString() } as Record<string, unknown>)
       .eq('id', t.id)
     if (error) toast.error(getErrorMessage(error))
     else { toast.success(`"${t.name}" archived`); refetch() }
@@ -321,7 +321,7 @@ export function TrackerSettingsPage() {
   async function restoreTracker(t: CustomTracker) {
     const { error } = await supabase
       .from('custom_trackers')
-      .update({ archived: false, updated_at: new Date().toISOString() })
+      .update({ archived: false, updated_at: new Date().toISOString() } as Record<string, unknown>)
       .eq('id', t.id)
     if (error) toast.error(getErrorMessage(error))
     else { toast.success(`"${t.name}" restored`); refetch() }

@@ -128,13 +128,13 @@ export function CustomTrackerLogForm({
       if (existingLog) {
         const { error } = await supabase
           .from('custom_tracker_logs')
-          .update(payload)
+          .update(payload as Record<string, unknown>)
           .eq('id', existingLog.id)
         if (error) throw error
       } else {
         const { error } = await supabase
           .from('custom_tracker_logs')
-          .insert(payload)
+          .insert(payload as Record<string, unknown>)
         if (error) throw error
       }
 

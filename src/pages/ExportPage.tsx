@@ -14,7 +14,7 @@ import { getTrackerIcon, trackerIconBg } from '../lib/trackerIcons'
 import { downloadCSV }  from '../lib/csvExport'
 import { downloadPDF }  from '../lib/pdfExport'
 import type {
-  CustomTracker, CustomTrackerLog,
+  CustomTrackerLog,
   DiaryEntry, BehaviorLog, SensoryLog, DietLog, SleepLog,
   Goal, ProgressNote, Appointment, Provider,
 } from '../types'
