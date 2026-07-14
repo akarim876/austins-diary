@@ -35,12 +35,12 @@ function Tab({ to, label, renderIcon }: typeof LEFT_TABS[number]) {
   return (
     <NavLink
       to={to}
-      className="flex-1 flex flex-col items-center justify-end pb-2 pt-1 gap-0.5 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white rounded-xl"
+      className="flex-1 flex flex-col items-center justify-end pb-1.5 pt-1 gap-0.5 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white rounded-xl"
     >
       {({ isActive }) => (
         <>
           <span
-            className="w-12 h-9 rounded-xl flex items-center justify-center transition-all duration-150"
+            className="w-11 h-8 rounded-xl flex items-center justify-center transition-all duration-150"
             style={{ background: isActive ? '#5B7B7A' : 'transparent' }}
           >
             {renderIcon('w-5 h-5 transition-colors', isActive ? '#fff' : '#9A9187')}
@@ -74,9 +74,9 @@ export function BottomNav() {
         {LEFT_TABS.map(t => <Tab key={t.to} {...t} />)}
 
         {/* Center FAB slot — the GlobalRecordButton rises above the nav surface */}
-        <div className="flex-shrink-0 w-20 flex flex-col items-center justify-end pb-2">
-          {/* Raise the button 20px above the nav top edge */}
-          <div style={{ marginBottom: 4, transform: 'translateY(-20px)' }}>
+        <div className="flex-shrink-0 w-20 flex flex-col items-center justify-end pb-1.5">
+          {/* Raise the button 12px above the nav top edge */}
+          <div style={{ marginBottom: 4, transform: 'translateY(-12px)' }}>
             <GlobalRecordButton />
           </div>
         </div>
