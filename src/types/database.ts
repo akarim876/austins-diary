@@ -615,6 +615,32 @@ export interface Database {
         }
         Relationships: []
       }
+      quick_notes: {
+        Row: {
+          id: string
+          profile_id: string
+          author_id: string
+          content: string
+          created_at: string
+          updated_at: string
+        }
+        Insert: {
+          id?: string
+          profile_id: string
+          author_id: string
+          content: string
+          created_at?: string
+          updated_at?: string
+        }
+        Update: {
+          id?: string
+          profile_id?: string
+          author_id?: string
+          content?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
       daily_schedule_entries: {
         Row: {
           id: string

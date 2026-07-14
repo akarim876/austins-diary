@@ -28,8 +28,10 @@ import { RegulationDistributionChart } from '../components/dashboard/RegulationD
 import { Spinner } from '../components/ui/Spinner'
 import { HandoffNote } from '../components/dashboard/HandoffNote'
 import { DailySchedule } from '../components/schedule/DailySchedule'
+import { UnfiledNotes } from '../components/dashboard/UnfiledNotes'
 import { useHandoffNote } from '../hooks/useHandoffNote'
 import { useDietSettings } from '../hooks/useDietSettings'
+import { useQuickNotes } from '../hooks/useQuickNotes'
 import { useMyRole, canCreate as _canCreate } from '../hooks/useMyRole'
 import type { AttentionItem } from '../hooks/useDashboard'
 
@@ -122,6 +124,7 @@ export function DashboardPage() {
   const myRole = useMyRole(activeProfile?.id ?? null)
   const { data: handoffData, updaterName: handoffUpdater, save: saveHandoff } = useHandoffNote(activeProfile?.id ?? null)
   const { settings: dietSettings } = useDietSettings(activeProfile?.id ?? null)
+  const { notes: quickNotes, remove: removeQuickNote } = useQuickNotes(activeProfile?.id ?? null)
 
   // Sheet state
   const [behaviorOpen,    setBehaviorOpen]    = useState(false)
@@ -521,6 +524,23 @@ export function DashboardPage() {
             </div>
           )}
         </section>
+
+        {/* ── Unfiled voice notes ──────────────────────────────────────────────── */}
+        {quickNotes.length > 0 && (
+          <section
+            className="overflow-hidden"
+            style={{ background: '#fff', borderRadius: 10, boxShadow: '0 2px 10px rgba(51,50,46,0.07)' }}
+          >
+            <div className="px-4 pt-4 pb-1">
+              <h2 className="text-[10px] font-bold uppercase tracking-widest" style={{ color: '#9A9187' }}>
+                Unfiled notes
+              </h2>
+            </div>
+            <div className="px-4 pb-4">
+              <UnfiledNotes notes={quickNotes} onDelete={removeQuickNote} />
+            </div>
+          </section>
+        )}
 
       </div>
 

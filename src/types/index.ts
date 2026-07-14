@@ -278,6 +278,15 @@ export interface DietLog {
   updated_at: string
 }
 
+export interface QuickNote {
+  id: string
+  profile_id: string
+  author_id: string
+  content: string
+  created_at: string
+  updated_at: string
+}
+
 export type RegulationLevel = 'calm' | 'alert' | 'anxious' | 'dysregulated' | 'shutdown'
 
 export interface SensoryLog {

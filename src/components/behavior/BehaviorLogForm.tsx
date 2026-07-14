@@ -41,6 +41,8 @@ interface Props {
   profileId: string
   date: string
   existingLog?: BehaviorLog | null
+  /** Pre-fill the consequence/response field — used when opening from the global voice button */
+  initialConsequence?: string
   onSaved: () => void
   onCancel: () => void
 }
@@ -69,7 +71,7 @@ function ChipRow({
   )
 }
 
-export function BehaviorLogForm({ profileId, date, existingLog, onSaved, onCancel }: Props) {
+export function BehaviorLogForm({ profileId, date, existingLog, initialConsequence, onSaved, onCancel }: Props) {
   const { user } = useAuth()
   const [submitting, setSubmitting] = useState(false)
   const [deleting, setDeleting] = useState(false)
@@ -92,7 +94,7 @@ export function BehaviorLogForm({ profileId, date, existingLog, onSaved, onCance
         behavior:         existingLog?.behavior        ?? '',
         severity:         existingLog?.severity        ?? 3,
         duration_mins:    existingLog?.duration_mins   ?? null,
-        consequence:      existingLog?.consequence     ?? '',
+        consequence:      existingLog?.consequence     ?? initialConsequence ?? '',
         helped:           existingLog?.helped          ?? 'somewhat',
         schedule_item_id: existingLog?.schedule_item_id ?? null,
       },
