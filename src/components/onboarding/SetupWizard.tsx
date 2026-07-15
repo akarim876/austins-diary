@@ -1,6 +1,7 @@
 import { createPortal } from 'react-dom'
 import { useEffect, useRef, useState } from 'react'
-import { ArrowLeft, BookOpen, X, Check, Plus, Trash2, Clock } from 'lucide-react'
+import { ArrowLeft, X, Check, Plus, Trash2, Clock } from 'lucide-react'
+import { AppLogo } from '../ui/AppLogo'
 import { supabase } from '../../lib/supabase'
 import { TagInput } from '../ui/TagInput'
 import { TRACKER_COLORS, TRACKER_TYPE_OPTIONS } from '../../lib/trackerIcons'
@@ -117,9 +118,7 @@ function IntroStep({
 }) {
   return (
     <div className="flex flex-col items-center text-center space-y-6 py-4">
-      <div className="w-16 h-16 rounded-2xl bg-[var(--color-accent)]/15 flex items-center justify-center">
-        <BookOpen className="w-8 h-8 text-[var(--color-accent)]" />
-      </div>
+      <AppLogo className="h-16" />
 
       <div className="space-y-3">
         <h1 className="text-2xl font-bold text-[var(--color-text)]">

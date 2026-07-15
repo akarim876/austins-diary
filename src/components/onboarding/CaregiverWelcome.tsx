@@ -1,5 +1,6 @@
 import { createPortal } from 'react-dom'
 import { X, StickyNote, LayoutGrid, Check } from 'lucide-react'
+import { AppLogo } from '../ui/AppLogo'
 import { useQuickTiles } from '../../hooks/useQuickTiles'
 import { useTheme } from '../../hooks/useTheme'
 import { TILE_DEFS } from '../../lib/tileConstants'
@@ -52,19 +53,23 @@ function WelcomeStep({
   onSkip: () => void
 }) {
   return (
-    <WelcomeStepShell
-      icon={<span className="text-2xl font-bold text-[var(--color-accent)]">Hi!</span>}
-      title={`Welcome to ${profileName}'s Diary`}
-    >
-      <p className="text-sm text-[var(--color-text-muted)] leading-relaxed text-center">
-        You've been invited into something personal — a shared record of how {profileName}'s days
-        go, what helps them, and what they need from the people around them.
-      </p>
-      <p className="text-sm text-[var(--color-text-muted)] leading-relaxed text-center">
-        Take a look around, and thank you for being here for them.
-      </p>
+    <div className="flex flex-col items-center text-center space-y-5">
+      <AppLogo className="h-16" />
 
-      <div className="pt-2 space-y-2">
+      <div className="space-y-3">
+        <h2 className="text-xl font-bold text-[var(--color-text)]">
+          Welcome to {profileName}'s Diary
+        </h2>
+        <p className="text-sm text-[var(--color-text-muted)] leading-relaxed">
+          You've been invited into something personal — a shared record of how {profileName}'s days
+          go, what helps them, and what they need from the people around them.
+        </p>
+        <p className="text-sm text-[var(--color-text-muted)] leading-relaxed">
+          Take a look around, and thank you for being here for them.
+        </p>
+      </div>
+
+      <div className="w-full pt-2 space-y-2">
         <button
           onClick={onContinue}
           className="w-full py-3 rounded-xl font-semibold text-white bg-[var(--color-accent)] hover:opacity-90 active:scale-[0.98] transition-all"
@@ -78,7 +83,7 @@ function WelcomeStep({
           Skip
         </button>
       </div>
-    </WelcomeStepShell>
+    </div>
   )
 }
 
