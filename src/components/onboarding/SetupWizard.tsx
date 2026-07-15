@@ -5,6 +5,7 @@ import { supabase } from '../../lib/supabase'
 import { TagInput } from '../ui/TagInput'
 import { TRACKER_COLORS, TRACKER_TYPE_OPTIONS } from '../../lib/trackerIcons'
 import type { TrackerType } from '../../types'
+import { useStepTransition } from '../../hooks/useStepTransition'
 
 // ─── Types ───────────────────────────────────────────────────────────────────
 
@@ -855,74 +856,87 @@ export function SetupWizard({
   onClose,
   onComplete,
 }: SetupWizardProps) {
-  const [step, setStep] = useState(Math.max(0, Math.min(initialStep, TOTAL_CONTENT_STEPS + 1)))
+  const clampedInitial = Math.max(0, Math.min(initialStep, TOTAL_CONTENT_STEPS + 1))
+  const { displayStep, isAnimating, navigate, getStyle } = useStepTransition(clampedInitial)
   const [displayName, setDisplayName] = useState(profileName)
+
+  const isDone = displayStep > TOTAL_CONTENT_STEPS
 
   function advance(data?: { displayName?: string }) {
     if (data?.displayName) setDisplayName(data.displayName)
-    setStep(s => s + 1)
+    const next = displayStep + 1
+    // Steps 8+ show the completion card (still inside the wizard)
+    navigate(next, 'forward')
   }
 
   function goBack() {
-    setStep(s => Math.max(0, s - 1))
+    navigate(Math.max(0, displayStep - 1), 'backward')
   }
 
   function handleClose() {
-    onClose(step)
+    onClose(displayStep)
   }
 
-  const isDone = step > TOTAL_CONTENT_STEPS
+  const isIntro = displayStep === 0
 
   const content = (
     <div className="fixed inset-0 z-[9999] flex flex-col bg-[var(--color-background)]">
       {/* Header */}
       <div className="flex items-center justify-between px-4 py-3 border-b border-black/10 flex-shrink-0">
         <button
-          onClick={step > 0 && !isDone ? goBack : handleClose}
-          className="p-2 rounded-lg hover:bg-black/5 transition-colors"
-          aria-label={step > 0 ? 'Go back' : 'Close'}
+          onClick={displayStep > 0 && !isDone ? goBack : handleClose}
+          disabled={isAnimating}
+          className="p-2 rounded-lg hover:bg-black/5 transition-colors disabled:opacity-0"
+          aria-label={displayStep > 0 ? 'Go back' : 'Close'}
         >
-          {step > 0 && !isDone
+          {displayStep > 0 && !isDone
             ? <ArrowLeft className="w-5 h-5 text-[var(--color-text-muted)]" />
             : <X className="w-5 h-5 text-[var(--color-text-muted)]" />
           }
         </button>
 
         <span className="text-sm font-medium text-[var(--color-text-muted)]">
-          {step === 0 || isDone ? '' : `Step ${step} of ${TOTAL_CONTENT_STEPS}`}
+          {isIntro || isDone ? '' : `Step ${displayStep} of ${TOTAL_CONTENT_STEPS}`}
         </span>
 
         <button
           onClick={handleClose}
-          className="text-sm text-[var(--color-text-muted)] hover:text-[var(--color-text)] transition-colors"
+          disabled={isAnimating}
+          className="text-sm text-[var(--color-text-muted)] hover:text-[var(--color-text)] transition-colors disabled:opacity-0"
         >
           {isDone ? '' : 'Save & exit'}
         </button>
       </div>
 
       {/* Progress bar */}
-      {step > 0 && !isDone && (
+      {displayStep > 0 && !isDone && (
         <div className="h-1 bg-black/5 flex-shrink-0">
           <div
             className="h-full bg-[var(--color-accent)] transition-all duration-300"
-            style={{ width: `${(step / TOTAL_CONTENT_STEPS) * 100}%` }}
+            style={{ width: `${(displayStep / TOTAL_CONTENT_STEPS) * 100}%` }}
           />
         </div>
       )}
 
-      {/* Content */}
+      {/* Animated content */}
       <div className="flex-1 overflow-y-auto">
-        <div className="max-w-md mx-auto px-4 py-6">
+        <div
+          className="max-w-md mx-auto px-4 py-6"
+          style={{
+            ...getStyle(isIntro),
+            pointerEvents: isAnimating ? 'none' : 'auto',
+          }}
+        >
           {isDone && (
             <CompletionCard displayName={displayName} onDone={onComplete} />
           )}
-          {step === 0 && (
+          {displayStep === 0 && (
             <IntroStep
               displayName={displayName || 'your family'}
-              onGetStarted={() => setStep(1)}
+              onGetStarted={() => navigate(1, 'forward')}
             />
           )}
-          {step === 1 && (
+          {displayStep === 1 && (
             <ChildInfoStep
               profileId={profileId}
               profileName={displayName}
@@ -930,7 +944,7 @@ export function SetupWizard({
               onSkip={advance}
             />
           )}
-          {step === 2 && (
+          {displayStep === 2 && (
             <CareNotesStep
               profileId={profileId}
               userId={userId}
@@ -938,39 +952,39 @@ export function SetupWizard({
               onSkip={advance}
             />
           )}
-          {step === 3 && (
+          {displayStep === 3 && (
             <FoodListStep
               profileId={profileId}
               onSaved={advance}
               onSkip={advance}
             />
           )}
-          {step === 4 && (
+          {displayStep === 4 && (
             <MedsStep
               profileId={profileId}
               onSaved={advance}
               onSkip={advance}
             />
           )}
-          {step === 5 && (
+          {displayStep === 5 && (
             <SmoothiesStep
               profileId={profileId}
               onSaved={advance}
               onSkip={advance}
             />
           )}
-          {step === 6 && (
+          {displayStep === 6 && (
             <TrackersStep
               profileId={profileId}
               onSaved={advance}
               onSkip={advance}
             />
           )}
-          {step === 7 && (
+          {displayStep === 7 && (
             <ScheduleStep
               profileId={profileId}
-              onSaved={onComplete}
-              onSkip={onComplete}
+              onSaved={advance}
+              onSkip={advance}
             />
           )}
         </div>

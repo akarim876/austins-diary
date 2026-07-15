@@ -1,11 +1,11 @@
 import { createPortal } from 'react-dom'
-import { useState } from 'react'
 import { X, StickyNote, LayoutGrid, Check } from 'lucide-react'
 import { useQuickTiles } from '../../hooks/useQuickTiles'
 import { useTheme } from '../../hooks/useTheme'
 import { TILE_DEFS } from '../../lib/tileConstants'
 import { ModuleIcon } from '../ui/ModuleIcon'
 import type { QuickTileId } from '../../hooks/useQuickTiles'
+import { useStepTransition } from '../../hooks/useStepTransition'
 
 // ─── Types ───────────────────────────────────────────────────────────────────
 
@@ -270,39 +270,45 @@ export function CaregiverWelcome({
   userId,
   onClose,
 }: CaregiverWelcomeProps) {
-  const [step, setStep] = useState(0)
+  const { displayStep, isAnimating, navigate, getStyle } = useStepTransition(0)
 
-  function advance() { setStep(s => Math.min(s + 1, TOTAL_STEPS - 1 + 1)) }
-  function goBack() { setStep(s => Math.max(0, s - 1)) }
-
-  const isDone = step >= TOTAL_STEPS
-
-  if (isDone) {
-    onClose()
-    return null
+  function advance() {
+    const next = displayStep + 1
+    if (next >= TOTAL_STEPS) {
+      onClose()
+    } else {
+      navigate(next, 'forward')
+    }
   }
+
+  function goBack() {
+    navigate(Math.max(0, displayStep - 1), 'backward')
+  }
+
+  const isIntro = displayStep === 0
 
   const content = (
     <div className="fixed inset-0 z-[9999] flex flex-col bg-[var(--color-background)]">
       {/* Header */}
       <div className="flex items-center justify-between px-4 py-3 border-b border-black/10 flex-shrink-0">
         <button
-          onClick={step > 0 ? goBack : onClose}
-          className="p-2 rounded-lg hover:bg-black/5 transition-colors"
+          onClick={displayStep > 0 ? goBack : onClose}
+          disabled={isAnimating}
+          className="p-2 rounded-lg hover:bg-black/5 transition-colors disabled:opacity-0"
         >
           <X className="w-5 h-5 text-[var(--color-text-muted)]" />
         </button>
 
-        {/* Dot indicators */}
+        {/* Dot indicators — width animates with the step */}
         <div className="flex items-center gap-1.5">
           {Array.from({ length: TOTAL_STEPS }).map((_, i) => (
             <div
               key={i}
               className="rounded-full transition-all duration-300"
               style={{
-                width: i === step ? 20 : 6,
+                width: i === displayStep ? 20 : 6,
                 height: 6,
-                background: i === step ? 'var(--color-accent)' : 'rgba(0,0,0,0.15)',
+                background: i === displayStep ? 'var(--color-accent)' : 'rgba(0,0,0,0.15)',
               }}
             />
           ))}
@@ -310,30 +316,37 @@ export function CaregiverWelcome({
 
         <button
           onClick={onClose}
-          className="text-sm text-[var(--color-text-muted)] hover:text-[var(--color-text)] transition-colors"
+          disabled={isAnimating}
+          className="text-sm text-[var(--color-text-muted)] hover:text-[var(--color-text)] transition-colors disabled:opacity-0"
         >
           Skip
         </button>
       </div>
 
-      {/* Content */}
+      {/* Animated content */}
       <div className="flex-1 overflow-y-auto">
-        <div className="max-w-md mx-auto px-4 py-6">
-          {step === 0 && (
+        <div
+          className="max-w-md mx-auto px-4 py-6"
+          style={{
+            ...getStyle(isIntro),
+            pointerEvents: isAnimating ? 'none' : 'auto',
+          }}
+        >
+          {displayStep === 0 && (
             <WelcomeStep
               profileName={profileName}
               onContinue={advance}
               onSkip={onClose}
             />
           )}
-          {step === 1 && (
+          {displayStep === 1 && (
             <HandoffStep
               profileName={profileName}
               onContinue={advance}
               onSkip={onClose}
             />
           )}
-          {step === 2 && (
+          {displayStep === 2 && (
             <PersonalizeStep
               userId={userId}
               onDone={onClose}
