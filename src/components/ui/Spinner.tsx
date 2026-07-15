@@ -1,7 +1,10 @@
-export function Spinner({ className = '' }: { className?: string }) {
+import type { CSSProperties } from 'react'
+
+export function Spinner({ className = '', style }: { className?: string; style?: CSSProperties }) {
   return (
     <svg
       className={`animate-spin text-brand-500 ${className}`}
+      style={style}
       xmlns="http://www.w3.org/2000/svg"
       fill="none"
       viewBox="0 0 24 24"

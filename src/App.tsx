@@ -32,6 +32,20 @@ import { CompleteProfilePage } from './pages/CompleteProfilePage'
 import { ResetPasswordPage } from './pages/ResetPasswordPage'
 import { Spinner } from './components/ui/Spinner'
 import { InstallPrompt } from './components/ui/InstallPrompt'
+import { AppLogo } from './components/ui/AppLogo'
+
+/** Full-screen branded loading screen: logo above a small spinner. */
+function FullScreenLoader() {
+  return (
+    <div
+      className="flex flex-col items-center justify-center gap-5 min-h-dvh"
+      style={{ background: 'var(--color-background)' }}
+    >
+      <AppLogo className="h-16" />
+      <Spinner className="w-5 h-5" style={{ color: 'var(--color-accent)' }} />
+    </div>
+  )
+}
 
 /**
  * Manages the first-time setup wizard (owners) and caregiver welcome flow.
@@ -95,11 +109,7 @@ function AppShell() {
   const combinedLoading = loading || !userProfileLoaded
 
   if (combinedLoading) {
-    return (
-      <div className="flex items-center justify-center min-h-dvh">
-        <Spinner className="w-10 h-10" />
-      </div>
-    )
+    return <FullScreenLoader />
   }
 
   // First-time user: must set their name before anything else
@@ -174,11 +184,7 @@ export default function App() {
   const location = useLocation()
 
   if (loading) {
-    return (
-      <div className="flex items-center justify-center min-h-dvh">
-        <Spinner className="w-10 h-10" />
-      </div>
-    )
+    return <FullScreenLoader />
   }
 
   const { isPasswordRecovery } = useAuth()
