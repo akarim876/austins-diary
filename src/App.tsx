@@ -29,6 +29,7 @@ import { DietSettingsPage } from './pages/DietSettingsPage'
 import { ScheduleSettingsPage } from './pages/ScheduleSettingsPage'
 import { TrackerSettingsPage } from './pages/TrackerSettingsPage'
 import { CompleteProfilePage } from './pages/CompleteProfilePage'
+import { ResetPasswordPage } from './pages/ResetPasswordPage'
 import { Spinner } from './components/ui/Spinner'
 
 /**
@@ -157,8 +158,13 @@ export default function App() {
     )
   }
 
+  const { isPasswordRecovery } = useAuth()
+
   let content: ReactNode
-  if (!session) {
+  if (isPasswordRecovery) {
+    // User arrived via a password-reset link — show the reset form regardless of session state
+    content = <ResetPasswordPage />
+  } else if (!session) {
     content = <AuthPage />
   } else if (location.pathname === '/accept-invite') {
     content = <AcceptInvitePage />

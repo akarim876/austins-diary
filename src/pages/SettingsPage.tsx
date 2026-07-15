@@ -1,8 +1,8 @@
 import { useEffect, useState } from 'react'
 import { format, parseISO } from 'date-fns'
 import {
-  Activity, CalendarClock, Check, ChevronDown, ChevronRight, ChevronUp, Clock, Crown, Eye, LogOut,
-  Mail, Palette, Pencil, Plus, Settings, Shield, Trash2, User, Users, Utensils, X, Wand2,
+  Activity, CalendarClock, Check, ChevronDown, ChevronRight, ChevronUp, Clock, Crown, Eye, EyeOff,
+  LogOut, Mail, Palette, Pencil, Plus, Settings, Shield, Trash2, User, Users, Utensils, X, Wand2,
 } from 'lucide-react'
 import toast from 'react-hot-toast'
 import { useNavigate } from 'react-router-dom'
@@ -820,6 +820,104 @@ function QuickTilesSection() {
   )
 }
 
+// ─── Change password section ────────────────────────────────────────────────────
+
+function ChangePasswordSection() {
+  const { updatePassword } = useAuth()
+  const [open, setOpen]               = useState(false)
+  const [showPw, setShowPw]           = useState(false)
+  const [newPassword, setNewPassword] = useState('')
+  const [confirm, setConfirm]         = useState('')
+  const [saving, setSaving]           = useState(false)
+  const [err, setErr]                 = useState('')
+
+  async function handleSave() {
+    setErr('')
+    if (newPassword.length < 8) { setErr('Password must be at least 8 characters'); return }
+    if (newPassword !== confirm) { setErr('Passwords do not match'); return }
+    setSaving(true)
+    try {
+      await updatePassword(newPassword)
+      toast.success('Password updated')
+      setOpen(false)
+      setNewPassword('')
+      setConfirm('')
+    } catch (e) {
+      setErr(getErrorMessage(e, 'Could not update password'))
+    } finally {
+      setSaving(false)
+    }
+  }
+
+  return (
+    <section>
+      <div className="bg-white rounded-xl border border-warm-200 shadow-sm overflow-hidden">
+        <div className="flex items-center gap-3 px-4 py-4">
+          <div className="w-9 h-9 rounded-full bg-gray-100 flex items-center justify-center flex-shrink-0">
+            <User className="w-4 h-4 text-gray-400" />
+          </div>
+          <div className="flex-1">
+            <p className="text-sm font-medium text-gray-900">Password</p>
+            <p className="text-xs text-gray-400">Change your sign-in password</p>
+          </div>
+          <button
+            onClick={() => setOpen(o => !o)}
+            className="text-xs text-brand-600 font-medium px-2 py-1 rounded-lg hover:bg-brand-50 transition"
+          >
+            {open ? 'Cancel' : 'Change'}
+          </button>
+        </div>
+
+        {open && (
+          <div className="px-4 pb-4 space-y-3 border-t border-gray-100">
+            <div className="pt-3">
+              <div className="flex items-center justify-between mb-1.5">
+                <label className="text-xs font-medium text-gray-600">New password</label>
+                <button
+                  type="button"
+                  onClick={() => setShowPw(s => !s)}
+                  className="text-xs text-gray-400 hover:text-gray-600 flex items-center gap-1"
+                >
+                  {showPw ? <EyeOff className="w-3 h-3" /> : <Eye className="w-3 h-3" />}
+                  {showPw ? 'Hide' : 'Show'}
+                </button>
+              </div>
+              <input
+                type={showPw ? 'text' : 'password'}
+                value={newPassword}
+                onChange={e => setNewPassword(e.target.value)}
+                autoComplete="new-password"
+                placeholder="••••••••"
+                className="w-full px-3 py-2.5 rounded-xl border border-gray-200 text-sm focus:outline-none focus:ring-2 focus:ring-brand-400 transition"
+              />
+            </div>
+            <div>
+              <label className="block text-xs font-medium text-gray-600 mb-1.5">Confirm password</label>
+              <input
+                type={showPw ? 'text' : 'password'}
+                value={confirm}
+                onChange={e => setConfirm(e.target.value)}
+                autoComplete="new-password"
+                placeholder="••••••••"
+                className="w-full px-3 py-2.5 rounded-xl border border-gray-200 text-sm focus:outline-none focus:ring-2 focus:ring-brand-400 transition"
+              />
+            </div>
+            {err && <p className="text-xs text-red-500">{err}</p>}
+            <button
+              onClick={handleSave}
+              disabled={saving || !newPassword || !confirm}
+              className="w-full py-2.5 rounded-xl text-sm font-semibold text-white disabled:opacity-50 transition flex items-center justify-center gap-2"
+              style={{ background: 'var(--color-accent)' }}
+            >
+              {saving ? <Spinner className="w-4 h-4" /> : 'Update password'}
+            </button>
+          </div>
+        )}
+      </div>
+    </section>
+  )
+}
+
 // ─── Theme section ─────────────────────────────────────────────────────────────
 
 function ThemeSection() {
@@ -951,6 +1049,7 @@ export function SettingsPage() {
         )}
 
         <AccountSection />
+        <ChangePasswordSection />
         <ThemeSection />
         <QuickTilesSection />
         <ChildProfilesSection />
