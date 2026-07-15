@@ -42,7 +42,15 @@ export function AppHeader() {
     >
       <div className="flex items-center justify-between px-4 h-14 max-w-lg mx-auto">
         {/* Logo */}
-        <AppLogo className="h-7" />
+        <div className="flex items-center gap-2">
+          <AppLogo className="h-7" />
+          <span
+            className="font-display font-semibold text-base tracking-tight"
+            style={{ color: 'var(--color-text)' }}
+          >
+            Austin's Diary
+          </span>
+        </div>
 
         <div className="flex items-center gap-1.5">
           {/* Profile switcher */}
