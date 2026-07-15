@@ -1,4 +1,4 @@
-import { LogOut, ChevronDown, Download, Settings } from 'lucide-react'
+import { LogOut, ChevronDown, Download, Settings, Share2 } from 'lucide-react'
 import { AppLogo } from '../ui/AppLogo'
 import { useState } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
@@ -26,6 +26,25 @@ export function AppHeader() {
       await signOut()
     } catch {
       toast.error('Failed to sign out')
+    }
+  }
+
+  async function handleShare() {
+    setShowUserMenu(false)
+    const shareData = {
+      title: "Austin's Diary",
+      text: "A private caregiving journal for tracking daily routines, behaviors, sleep, and more.",
+      url: window.location.origin,
+    }
+    try {
+      if (navigator.share) {
+        await navigator.share(shareData)
+      } else {
+        await navigator.clipboard.writeText(window.location.origin)
+        toast.success('Link copied to clipboard')
+      }
+    } catch {
+      // User cancelled share — no error needed
     }
   }
 
@@ -132,6 +151,14 @@ export function AppHeader() {
                 >
                   <Settings className="w-4 h-4" style={{ color: '#9A9187' }} />
                   Settings
+                </button>
+                <button
+                  onClick={handleShare}
+                  className="w-full flex items-center gap-2 px-4 py-2.5 text-sm transition-colors hover:bg-gray-50 focus-visible:outline-none"
+                  style={{ color: 'var(--color-text)' }}
+                >
+                  <Share2 className="w-4 h-4" style={{ color: '#9A9187' }} />
+                  Share app
                 </button>
                 <div style={{ borderTop: '1px solid rgba(237,233,227,0.8)' }} />
                 <button
