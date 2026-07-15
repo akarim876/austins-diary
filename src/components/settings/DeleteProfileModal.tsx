@@ -24,12 +24,18 @@ export function DeleteProfileModal({ profileId, profileName, onClose, onDeleted 
     if (!confirmed) return
     setDeleting(true)
     try {
-      const { error } = await supabase
+      const { data, error } = await supabase
         .from('child_profiles')
         .delete()
         .eq('id', profileId)
+        .select('id')
 
       if (error) throw error
+
+      // If RLS silently blocked the delete, data will be an empty array
+      if (!data || data.length === 0) {
+        throw new Error('Could not delete — you may not have permission, or the profile no longer exists.')
+      }
 
       toast.success(`${profileName}'s diary has been deleted.`)
       onDeleted()
