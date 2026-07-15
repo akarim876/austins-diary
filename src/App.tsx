@@ -31,6 +31,7 @@ import { TrackerSettingsPage } from './pages/TrackerSettingsPage'
 import { CompleteProfilePage } from './pages/CompleteProfilePage'
 import { ResetPasswordPage } from './pages/ResetPasswordPage'
 import { Spinner } from './components/ui/Spinner'
+import { InstallPrompt } from './components/ui/InstallPrompt'
 
 /**
  * Manages the first-time setup wizard (owners) and caregiver welcome flow.
@@ -136,13 +137,35 @@ function AppShell() {
         </Routes>
       </main>
       <BottomNav />
+      <InstallPrompt />
     </div>
   )
 }
 
-/** Reads the user's stored theme and applies data-theme to <html> on mount/auth-change. */
+/**
+ * Reads the user's stored theme, applies data-theme to <html>, and keeps the
+ * PWA theme-color meta tag in sync so the browser chrome matches the active theme.
+ */
 function ThemeApplier() {
   useTheme()
+
+  useEffect(() => {
+    const observer = new MutationObserver(() => {
+      const accent = getComputedStyle(document.documentElement)
+        .getPropertyValue('--color-accent')
+        .trim()
+      if (accent) {
+        const meta = document.querySelector('meta[name="theme-color"]')
+        if (meta) meta.setAttribute('content', accent)
+      }
+    })
+    observer.observe(document.documentElement, {
+      attributes: true,
+      attributeFilter: ['data-theme'],
+    })
+    return () => observer.disconnect()
+  }, [])
+
   return null
 }
 
