@@ -624,6 +624,11 @@ function TrackersStep({
                 </button>
               ))}
             </div>
+            {draftType && (
+              <p className="mt-2 text-xs text-[var(--color-text-muted)]">
+                {TRACKER_TYPE_OPTIONS.find(o => o.id === draftType)?.description}
+              </p>
+            )}
           </div>
 
           <div>
