@@ -2,7 +2,8 @@ import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { supabase } from '../lib/supabase'
 import { format, parseISO, compareDesc, subDays } from 'date-fns'
-import { CalendarDays, ChevronDown, PenLine, X } from 'lucide-react'
+import { CalendarDays, ChevronDown, ChevronUp, PenLine, X } from 'lucide-react'
+import { WeekStrip } from '../components/calendar/WeekStrip'
 import { ModuleIcon } from '../components/ui/ModuleIcon'
 import { useProfile } from '../contexts/ProfileContext'
 import { useAuth } from '../contexts/AuthContext'
@@ -74,6 +75,7 @@ export function CalendarPage() {
   /** Set when the appointment form is being opened to convert a follow-up into a new appointment. */
   const [convertingFromFollowup, setConvertingFromFollowup] = useState<Appointment | null>(null)
 
+  const [monthExpanded, setMonthExpanded] = useState(false)
   const [feedOpen, setFeedOpen] = useState(false)
   const [trackerLogOpen, setTrackerLogOpen] = useState<string | null>(null)
   const [editingTrackerLog, setEditingTrackerLog] = useState<CustomTrackerLog | null>(null)
@@ -130,6 +132,24 @@ export function CalendarPage() {
   )
   const dayBehaviorById = new Map(dayBehavior.map(b => [b.id, b]))
 
+  // Dot data for WeekStrip — derived from already-loaded data
+  const calendarDotsByDate: Record<string, string[]> = {}
+  const DOT_SOURCES: { dates: Set<string>; color: string }[] = [
+    { dates: new Set(allBehavior.map(l => l.entry_date)), color: '#D4A843' },
+    { dates: new Set(allSensory.map(l => l.entry_date)),  color: '#9B8EC4' },
+    { dates: new Set(allDiet.map(l => l.entry_date)),     color: '#7CB48F' },
+    { dates: new Set(allSleep.map(l => l.log_date)),      color: '#6875C8' },
+    { dates: new Set(entries.map(e => e.entry_date)),     color: '#5B7B7A' },
+    { dates: new Set(allAppts.map(a => a.appt_date)),     color: '#C77B6A' },
+    { dates: new Set(allProgress.map(n => n.note_date)),  color: '#2E7D60' },
+  ]
+  for (const { dates, color } of DOT_SOURCES) {
+    for (const d of dates) {
+      if (!calendarDotsByDate[d]) calendarDotsByDate[d] = []
+      if (calendarDotsByDate[d].length < 3) calendarDotsByDate[d].push(color)
+    }
+  }
+
   // Interleaved recent feed
   const recentFeed = [
     ...entries.map(e => ({ type: 'diary' as const, date: e.entry_date, item: e })),
@@ -152,17 +172,45 @@ export function CalendarPage() {
     <>
       <div className="flex-1 overflow-y-auto">
         <div className="max-w-lg mx-auto px-4 py-6 pb-28 space-y-4">
-          <CalendarView
-            entries={entries}
-            behaviorLogs={allBehavior}
-            sensoryLogs={allSensory}
-            dietLogs={allDiet}
-            sleepLogs={allSleep}
-            progressNotes={allProgress}
-            appointments={allAppts}
-            selectedDate={selectedDate}
-            onSelectDate={handleSelectDate}
-          />
+
+          {/* Week strip — always visible */}
+          <div
+            className="rounded-xl px-2 py-3"
+            style={{ background: '#fff', boxShadow: '0 2px 10px rgba(51,50,46,0.07)' }}
+          >
+            <WeekStrip
+              selectedDate={selectedDate}
+              onSelectDate={handleSelectDate}
+              dotsByDate={calendarDotsByDate}
+            />
+          </div>
+
+          {/* Expand / collapse to full month grid */}
+          <button
+            onClick={() => setMonthExpanded(e => !e)}
+            className="w-full flex items-center justify-center gap-1.5 py-2 rounded-xl text-xs font-semibold transition-colors hover:bg-black/5"
+            style={{ color: 'var(--color-text-muted)' }}
+          >
+            {monthExpanded
+              ? <><ChevronUp className="w-3.5 h-3.5" /> Week view</>
+              : <><ChevronDown className="w-3.5 h-3.5" /> Month view</>
+            }
+          </button>
+
+          {/* Full monthly calendar — expandable */}
+          {monthExpanded && (
+            <CalendarView
+              entries={entries}
+              behaviorLogs={allBehavior}
+              sensoryLogs={allSensory}
+              dietLogs={allDiet}
+              sleepLogs={allSleep}
+              progressNotes={allProgress}
+              appointments={allAppts}
+              selectedDate={selectedDate}
+              onSelectDate={handleSelectDate}
+            />
+          )}
 
           {/* Selected day panel */}
           <div className="bg-white rounded-xl border border-warm-200 shadow-sm overflow-hidden">

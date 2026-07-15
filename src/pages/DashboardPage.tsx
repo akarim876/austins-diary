@@ -1,10 +1,12 @@
 import { useState } from 'react'
-import { format, startOfWeek, endOfWeek, addDays, subDays, parseISO } from 'date-fns'
+import { format, startOfWeek, endOfWeek, parseISO } from 'date-fns'
 import {
   AlertTriangle, Bell, BookOpen, Calendar,
-  ChevronDown, ChevronUp, ChevronLeft, ChevronRight,
+  ChevronDown, ChevronUp,
   Moon, Pill, Settings2, TrendingDown, TrendingUp, Minus,
 } from 'lucide-react'
+import { WeekStrip } from '../components/calendar/WeekStrip'
+import { useWeekDots } from '../hooks/useWeekDots'
 import { ModuleIcon } from '../components/ui/ModuleIcon'
 import { useNavigate } from 'react-router-dom'
 import { useProfile } from '../contexts/ProfileContext'
@@ -110,9 +112,7 @@ export function DashboardPage() {
   const [viewDate, setViewDate] = useState(realTodayStr)
   const isViewingToday = viewDate === realTodayStr
 
-  function goBack()    { setViewDate(d => format(subDays(parseISO(d), 1), 'yyyy-MM-dd')) }
-  function goForward() { if (!isViewingToday) setViewDate(d => format(addDays(parseISO(d), 1), 'yyyy-MM-dd')) }
-  function goToday()   { setViewDate(realTodayStr) }
+  const weekDots = useWeekDots(activeProfile?.id ?? null, viewDate)
 
   const db = useDashboard(activeProfile?.id ?? null, viewDate)
 
@@ -179,37 +179,20 @@ export function DashboardPage() {
   return (
     <div className="pb-28 w-full">
 
-      {/* ── Page heading with date navigation ────────────────────────────────── */}
-      <div className="px-4 pt-5 pb-3 flex flex-col items-center">
-        <h1 className="font-display text-2xl font-semibold" style={{ color: '#33322E' }}>
-          {isViewingToday ? 'Today' : format(parseISO(viewDate), 'EEEE')}
+      {/* ── Page heading + week strip navigation ─────────────────────────────── */}
+      <div className="pt-5 pb-1">
+        <h1
+          className="font-display text-2xl font-semibold text-center mb-4"
+          style={{ color: '#33322E' }}
+        >
+          {isViewingToday ? 'Today' : format(parseISO(viewDate), 'EEEE, MMM d')}
         </h1>
-        <div className="flex items-center gap-3 mt-1">
-          <button
-            onClick={goBack}
-            className="w-7 h-7 rounded-full flex items-center justify-center transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-500"
-            style={{ color: '#9A9187', background: 'rgba(255,255,255,0.6)' }}
-            aria-label="Previous day"
-          >
-            <ChevronLeft className="w-4 h-4" />
-          </button>
-          <p
-            className="text-sm font-data select-none"
-            style={{ color: '#9A9187', cursor: !isViewingToday ? 'pointer' : 'default' }}
-            onClick={!isViewingToday ? goToday : undefined}
-            title={!isViewingToday ? 'Tap to go back to today' : undefined}
-          >
-            {format(parseISO(viewDate), 'MMMM d, yyyy')}
-          </p>
-          <button
-            onClick={goForward}
-            disabled={isViewingToday}
-            className="w-7 h-7 rounded-full flex items-center justify-center transition-colors disabled:opacity-30 disabled:cursor-not-allowed focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-500"
-            style={{ color: '#9A9187', background: 'rgba(255,255,255,0.6)' }}
-            aria-label="Next day"
-          >
-            <ChevronRight className="w-4 h-4" />
-          </button>
+        <div className="px-2">
+          <WeekStrip
+            selectedDate={viewDate}
+            onSelectDate={setViewDate}
+            dotsByDate={weekDots}
+          />
         </div>
       </div>
 
@@ -298,7 +281,7 @@ export function DashboardPage() {
               Viewing {format(parseISO(viewDate), 'MMMM d')} — go to Today to log new entries.
             </p>
             <button
-              onClick={goToday}
+              onClick={() => setViewDate(realTodayStr)}
               className="flex-shrink-0 px-3 py-1.5 rounded-full text-xs font-semibold text-white transition"
               style={{ background: 'var(--color-accent)' }}
             >
