@@ -3,7 +3,7 @@ import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { z } from 'zod'
 import toast from 'react-hot-toast'
-import { Baby, Plus, ChevronRight } from 'lucide-react'
+import { Baby, Plus, ChevronRight, LogOut } from 'lucide-react'
 import { supabase } from '../../lib/supabase'
 import { getErrorMessage } from '../../lib/errors'
 import { useAuth } from '../../contexts/AuthContext'
@@ -18,8 +18,12 @@ const schema = z.object({
 type FormValues = z.infer<typeof schema>
 
 export function ProfileSetupPage() {
-  const { user } = useAuth()
+  const { user, signOut } = useAuth()
   const { profiles, setActiveProfile, refresh, loading } = useProfile()
+
+  async function handleSignOut() {
+    try { await signOut() } catch { toast.error('Failed to sign out') }
+  }
   const [showForm, setShowForm] = useState(false)
   const [submitting, setSubmitting] = useState(false)
 
@@ -84,7 +88,19 @@ export function ProfileSetupPage() {
 
   return (
     <div className="min-h-dvh bg-warm-100 flex flex-col px-4 py-12">
-      <div className="max-w-sm mx-auto w-full">
+      {/* Top bar with signed-in identity + sign-out */}
+      <div className="fixed top-0 inset-x-0 flex items-center justify-between px-4 py-3 bg-warm-100/80 backdrop-blur-sm z-10">
+        <span className="text-xs text-gray-400 truncate max-w-[220px]">{user?.email}</span>
+        <button
+          onClick={handleSignOut}
+          className="flex items-center gap-1.5 text-xs font-medium text-gray-500 hover:text-gray-800 transition-colors"
+        >
+          <LogOut className="w-3.5 h-3.5" />
+          Sign out
+        </button>
+      </div>
+
+      <div className="max-w-sm mx-auto w-full pt-8">
         {/* Header */}
         <div className="flex flex-col items-center gap-3 mb-8">
           <div className="w-14 h-14 rounded-xl bg-brand-500 flex items-center justify-center shadow-lg">
@@ -185,3 +201,4 @@ export function ProfileSetupPage() {
     </div>
   )
 }
+
