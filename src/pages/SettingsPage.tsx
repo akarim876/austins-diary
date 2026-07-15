@@ -6,6 +6,7 @@ import {
   AlertTriangle,
 } from 'lucide-react'
 import { DeleteAccountModal } from '../components/settings/DeleteAccountModal'
+import { DeleteProfileModal } from '../components/settings/DeleteProfileModal'
 import toast from 'react-hot-toast'
 import { useNavigate } from 'react-router-dom'
 import { useForm } from 'react-hook-form'
@@ -993,13 +994,14 @@ function ThemeSection() {
 
 export function SettingsPage() {
   const { signOut, user } = useAuth()
-  const { activeProfile } = useProfile()
+  const { activeProfile, refresh: refreshProfiles } = useProfile()
   const navigate = useNavigate()
   const myRole = useMyRole(activeProfile?.id ?? null)
   const isOwner = myRole === 'owner'
   const { isResumable, savedStep, markDone, dismiss } = useSetupWizard(activeProfile?.id ?? null)
-  const [showWizard, setShowWizard]           = useState(false)
-  const [showDeleteModal, setShowDeleteModal] = useState(false)
+  const [showWizard, setShowWizard]                   = useState(false)
+  const [showDeleteModal, setShowDeleteModal]         = useState(false)
+  const [showDeleteProfileModal, setShowDeleteProfileModal] = useState(false)
 
   async function handleSignOut() {
     try { await signOut() } catch { toast.error('Failed to sign out') }
@@ -1132,6 +1134,32 @@ export function SettingsPage() {
           <LogOut className="w-4 h-4" /> Sign out
         </button>
 
+        {/* Delete profile — owner only */}
+        {isOwner && activeProfile && (
+          <section className="pb-2">
+            <div className="rounded-xl border border-red-100 bg-red-50/40 p-4">
+              <div className="flex items-start gap-3">
+                <div className="w-8 h-8 rounded-lg bg-red-100 flex items-center justify-center flex-shrink-0 mt-0.5">
+                  <Trash2 className="w-4 h-4 text-red-500" />
+                </div>
+                <div className="flex-1 min-w-0">
+                  <p className="text-sm font-semibold text-gray-900">Delete this diary</p>
+                  <p className="text-xs text-gray-500 mt-0.5 leading-relaxed">
+                    Permanently deletes {activeProfile.name}'s entire diary — all logs, goals,
+                    appointments, and caregiver access. This cannot be undone.
+                  </p>
+                  <button
+                    onClick={() => setShowDeleteProfileModal(true)}
+                    className="mt-2.5 text-xs font-semibold text-red-600 hover:text-red-700 transition"
+                  >
+                    Delete {activeProfile.name}'s diary →
+                  </button>
+                </div>
+              </div>
+            </div>
+          </section>
+        )}
+
         {/* Delete account */}
         <section className="pb-2">
           <div className="rounded-xl border border-red-100 bg-red-50/40 p-4">
@@ -1159,6 +1187,19 @@ export function SettingsPage() {
 
       {showDeleteModal && (
         <DeleteAccountModal onClose={() => setShowDeleteModal(false)} />
+      )}
+
+      {showDeleteProfileModal && activeProfile && (
+        <DeleteProfileModal
+          profileId={activeProfile.id}
+          profileName={activeProfile.name}
+          onClose={() => setShowDeleteProfileModal(false)}
+          onDeleted={() => {
+            setShowDeleteProfileModal(false)
+            refreshProfiles()
+            navigate('/')
+          }}
+        />
       )}
     </div>
   )
