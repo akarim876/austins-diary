@@ -1,6 +1,6 @@
 import { createPortal } from 'react-dom'
 import { useEffect, useRef, useState } from 'react'
-import { ArrowLeft, X, Check, Plus, Trash2, Clock } from 'lucide-react'
+import { ArrowLeft, X, Check, Plus, Trash2, Clock, Users, ChevronDown } from 'lucide-react'
 import { AppLogo } from '../ui/AppLogo'
 import { supabase } from '../../lib/supabase'
 import { TagInput } from '../ui/TagInput'
@@ -848,9 +848,190 @@ function CompletionCard({ displayName, onDone }: { displayName: string; onDone: 
   )
 }
 
+// ─── Step 8: Invite Caregivers ───────────────────────────────────────────────
+
+interface PendingInvite {
+  email: string
+  role: 'editor' | 'viewer'
+}
+
+function CaregiversStep({
+  profileId,
+  userId,
+  displayName,
+  onSaved,
+  onSkip,
+}: {
+  profileId: string
+  userId: string
+  displayName: string
+  onSaved: () => void
+  onSkip: () => void
+}) {
+  const [invites, setInvites] = useState<PendingInvite[]>([{ email: '', role: 'editor' }])
+  const [saving, setSaving] = useState(false)
+  const [openRoleIdx, setOpenRoleIdx] = useState<number | null>(null)
+
+  function updateInvite(idx: number, field: keyof PendingInvite, value: string) {
+    setInvites(prev => prev.map((inv, i) => i === idx ? { ...inv, [field]: value } : inv))
+  }
+
+  function addRow() {
+    setInvites(prev => [...prev, { email: '', role: 'editor' }])
+  }
+
+  function removeRow(idx: number) {
+    setInvites(prev => prev.filter((_, i) => i !== idx))
+  }
+
+  const validInvites = invites.filter(inv => /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(inv.email.trim()))
+
+  async function handleSend() {
+    if (validInvites.length === 0) { onSkip(); return }
+    setSaving(true)
+    let successCount = 0
+    for (const inv of validInvites) {
+      try {
+        const { data, error } = await supabase.functions.invoke('send-invite', {
+          body: { profile_id: profileId, email: inv.email.toLowerCase().trim(), role: inv.role },
+        })
+        if (error) {
+          await supabase.from('profile_invites').upsert(
+            { profile_id: profileId, invited_by: userId, email: inv.email.toLowerCase().trim(), role: inv.role },
+            { onConflict: 'profile_id,email' }
+          )
+        } else if (data?.ok || data?.saved) {
+          successCount++
+        }
+      } catch {
+        // best-effort — move on
+      }
+    }
+    setSaving(false)
+    onSaved()
+  }
+
+  const ROLE_OPTIONS = [
+    { value: 'editor' as const, label: 'Editor', desc: 'Can add and edit entries' },
+    { value: 'viewer' as const, label: 'Viewer', desc: 'Can view entries only' },
+  ]
+
+  return (
+    <div className="space-y-5">
+      <div className="flex flex-col items-center text-center gap-2">
+        <div className="w-12 h-12 rounded-2xl bg-[var(--color-accent)]/15 flex items-center justify-center">
+          <Users className="w-6 h-6 text-[var(--color-accent)]" />
+        </div>
+        <h2 className="text-xl font-bold text-[var(--color-text)]">Invite caregivers</h2>
+        <p className="text-sm text-[var(--color-text-muted)] leading-relaxed max-w-xs">
+          Anyone you invite will be able to log entries and view {displayName}'s diary.
+          You can always manage access later in Settings.
+        </p>
+      </div>
+
+      <div className="space-y-2">
+        {invites.map((inv, idx) => (
+          <div key={idx} className="flex items-center gap-2">
+            {/* Email */}
+            <input
+              type="email"
+              inputMode="email"
+              placeholder="email@example.com"
+              value={inv.email}
+              onChange={e => updateInvite(idx, 'email', e.target.value)}
+              className="flex-1 min-w-0 px-3 py-2.5 rounded-xl border text-sm focus:outline-none focus:ring-2"
+              style={{
+                background: 'var(--color-surface)',
+                borderColor: 'rgba(0,0,0,0.12)',
+                color: 'var(--color-text)',
+              }}
+            />
+
+            {/* Role picker */}
+            <div className="relative">
+              <button
+                type="button"
+                onClick={() => setOpenRoleIdx(openRoleIdx === idx ? null : idx)}
+                className="flex items-center gap-1 px-2.5 py-2.5 rounded-xl border text-sm font-medium whitespace-nowrap"
+                style={{
+                  background: 'var(--color-surface)',
+                  borderColor: 'rgba(0,0,0,0.12)',
+                  color: 'var(--color-accent)',
+                }}
+              >
+                {ROLE_OPTIONS.find(r => r.value === inv.role)?.label}
+                <ChevronDown className="w-3 h-3 flex-shrink-0" />
+              </button>
+              {openRoleIdx === idx && (
+                <div
+                  className="absolute right-0 top-full mt-1 w-44 rounded-xl overflow-hidden z-10"
+                  style={{ background: 'var(--color-surface)', boxShadow: '0 4px 16px rgba(0,0,0,0.12)' }}
+                >
+                  {ROLE_OPTIONS.map(opt => (
+                    <button
+                      key={opt.value}
+                      type="button"
+                      onClick={() => { updateInvite(idx, 'role', opt.value); setOpenRoleIdx(null) }}
+                      className="w-full text-left px-3 py-2.5 text-sm transition-colors hover:bg-black/5"
+                      style={{ color: 'var(--color-text)' }}
+                    >
+                      <span className="font-medium">{opt.label}</span>
+                      <span className="block text-xs mt-0.5" style={{ color: 'var(--color-text-muted)' }}>{opt.desc}</span>
+                    </button>
+                  ))}
+                </div>
+              )}
+            </div>
+
+            {/* Remove row */}
+            {invites.length > 1 && (
+              <button
+                type="button"
+                onClick={() => removeRow(idx)}
+                className="w-8 h-8 flex items-center justify-center rounded-lg hover:bg-black/5 flex-shrink-0"
+                style={{ color: 'var(--color-text-muted)' }}
+              >
+                <X className="w-3.5 h-3.5" />
+              </button>
+            )}
+          </div>
+        ))}
+
+        {invites.length < 5 && (
+          <button
+            type="button"
+            onClick={addRow}
+            className="flex items-center gap-1.5 text-sm font-medium px-2 py-1"
+            style={{ color: 'var(--color-accent)' }}
+          >
+            <Plus className="w-3.5 h-3.5" />
+            Add another
+          </button>
+        )}
+      </div>
+
+      <div className="space-y-2 pt-1">
+        <button
+          onClick={handleSend}
+          disabled={saving}
+          className="w-full py-3 rounded-xl font-semibold text-white bg-[var(--color-accent)] hover:opacity-90 active:scale-[0.98] transition-all disabled:opacity-60"
+        >
+          {saving ? 'Sending…' : validInvites.length > 0 ? `Send ${validInvites.length === 1 ? 'invite' : `${validInvites.length} invites`}` : 'Send invites'}
+        </button>
+        <button
+          onClick={onSkip}
+          className="w-full py-2.5 text-sm text-[var(--color-text-muted)] hover:text-[var(--color-text)] transition-colors"
+        >
+          Skip for now
+        </button>
+      </div>
+    </div>
+  )
+}
+
 // ─── Main SetupWizard component ───────────────────────────────────────────────
 
-const TOTAL_CONTENT_STEPS = 7  // steps 1–7 (step 0 is intro)
+const TOTAL_CONTENT_STEPS = 8  // steps 1–8 (step 0 is intro)
 
 export function SetupWizard({
   profileId,
@@ -987,6 +1168,15 @@ export function SetupWizard({
           {displayStep === 7 && (
             <ScheduleStep
               profileId={profileId}
+              onSaved={advance}
+              onSkip={advance}
+            />
+          )}
+          {displayStep === 8 && (
+            <CaregiversStep
+              profileId={profileId}
+              userId={userId}
+              displayName={displayName || profileName}
               onSaved={advance}
               onSkip={advance}
             />
