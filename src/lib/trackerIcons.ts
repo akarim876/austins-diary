@@ -92,10 +92,30 @@ export function trackerIconBg(color: string): string {
 export type TrackerType = 'duration' | 'counter' | 'yes_no' | 'rating'
 
 export const TRACKER_TYPE_OPTIONS: { id: TrackerType; label: string; description: string }[] = [
-  { id: 'duration', label: 'Duration',  description: 'Track time in minutes (manual or timer)'     },
-  { id: 'counter',  label: 'Counter',   description: 'Increment / decrement a tally'               },
-  { id: 'yes_no',   label: 'Yes / No',  description: 'Single daily on/off toggle'                  },
-  { id: 'rating',   label: 'Rating',    description: 'Score from 1 to 5'                           },
+  {
+    id: 'duration',
+    label: 'Duration',
+    description:
+      'Log how long something lasted — screen time, a meltdown, outdoor play, a therapy session. Enter minutes manually or use a start/stop timer. Each entry stores a duration, an optional start time, and a notes field. Great for tracking anything where length matters more than a simple count.',
+  },
+  {
+    id: 'counter',
+    label: 'Counter',
+    description:
+      'Tally how many times something happens in a day — bites at a meal, requests for a break, self-injurious behaviors, positive interactions. Tap + to increment, − to decrement. Each log entry records the count at that moment with an optional note. Ideal for frequency tracking where you want a running total.',
+  },
+  {
+    id: 'yes_no',
+    label: 'Yes / No',
+    description:
+      'Record whether something happened at all on a given day — Did they take their medication? Did they sleep in their own bed? Did a challenging behavior occur? One toggle per day with an optional note. Simple and fast for routines and daily check-ins where a true/false answer is all you need.',
+  },
+  {
+    id: 'rating',
+    label: 'Rating',
+    description:
+      'Capture a subjective level or quality on a 1–5 scale — mood, pain, appetite, cooperation, anxiety. Each entry stores the score, an optional time, and a notes field. Useful when "good day / bad day" is too vague but a full behavior log is more than you need. Trends show up clearly in the History charts over time.',
+  },
 ]
 
 export function trackerTypeLabel(t: TrackerType): string {
