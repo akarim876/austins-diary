@@ -3,7 +3,8 @@ import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { z } from 'zod'
 import toast from 'react-hot-toast'
-import { ArrowLeft, BookHeart, Eye, EyeOff } from 'lucide-react'
+import { ArrowLeft, Eye, EyeOff } from 'lucide-react'
+import { AppLogo } from '../ui/AppLogo'
 import { useAuth } from '../../contexts/AuthContext'
 import { getErrorMessage } from '../../lib/errors'
 import { Spinner } from '../ui/Spinner'
@@ -160,9 +161,7 @@ export function AuthPage() {
     <div className="min-h-dvh bg-warm-100 flex flex-col items-center justify-center px-4 py-12">
       {/* Logo */}
       <div className="mb-8 flex flex-col items-center gap-3">
-        <div className="w-16 h-16 rounded-xl bg-brand-500 flex items-center justify-center shadow-lg">
-          <BookHeart className="w-8 h-8 text-white" />
-        </div>
+        <AppLogo className="h-16" />
         <div className="text-center">
           <h1 className="text-2xl font-bold text-gray-900 tracking-tight">Austin's Diary</h1>
           <p className="text-sm text-gray-500 mt-1">A private caregiving journal</p>
