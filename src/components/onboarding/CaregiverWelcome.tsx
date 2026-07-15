@@ -57,12 +57,11 @@ function WelcomeStep({
       title={`Welcome to ${profileName}'s Diary`}
     >
       <p className="text-sm text-[var(--color-text-muted)] leading-relaxed text-center">
-        You've been invited to help track {profileName}'s daily care — behaviors, meals, sleep,
-        sensory regulation, and more — alongside the rest of the care team.
+        You've been invited into something personal — a shared record of how {profileName}'s days
+        go, what helps them, and what they need from the people around them.
       </p>
       <p className="text-sm text-[var(--color-text-muted)] leading-relaxed text-center">
-        Everything you log is shared with the team instantly, so handoffs are smooth and nothing
-        falls through the cracks. Let's take a quick look at how it works.
+        Take a look around, and thank you for being here for them.
       </p>
 
       <div className="pt-2 space-y-2">

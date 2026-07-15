@@ -122,18 +122,16 @@ function IntroStep({
 
       <div className="space-y-3">
         <h1 className="text-2xl font-bold text-[var(--color-text)]">
-          About {displayName}'s Diary
+          About {displayName === 'your family' ? "your family's diary" : `${displayName}'s Diary`}
         </h1>
         <p className="text-sm text-[var(--color-text-muted)] leading-relaxed max-w-xs mx-auto">
-          This is a shared, private diary and tracker for {displayName}'s daily care — behaviors,
-          sensory regulation, diet, sleep, and progress toward goals, all in one place.
+          This is {displayName}'s story, kept close. A place to notice the small wins, understand
+          the hard moments, and hold onto the details that matter — the things that comfort them,
+          the things that overwhelm them, and the strategies that actually help.
         </p>
         <p className="text-sm text-[var(--color-text-muted)] leading-relaxed max-w-xs mx-auto">
-          Every caregiver sees the same picture, so handoffs are smooth and nothing falls through
-          the cracks. Set up your profile once and the whole team benefits.
-        </p>
-        <p className="text-sm text-[var(--color-text-muted)] leading-relaxed max-w-xs mx-auto">
-          Let's take a few minutes to personalize things — it only needs to be done once.
+          Built so that anyone caring for {displayName}, in any moment, can step in knowing what
+          they need. Everything here stays private, just for the people who love them.
         </p>
       </div>
 
@@ -920,7 +918,7 @@ export function SetupWizard({
           )}
           {step === 0 && (
             <IntroStep
-              displayName={displayName || 'your child'}
+              displayName={displayName || 'your family'}
               onGetStarted={() => setStep(1)}
             />
           )}
