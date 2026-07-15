@@ -7,6 +7,7 @@ import { useAuth } from '../../contexts/AuthContext'
 import { getErrorMessage } from '../../lib/errors'
 import { Spinner } from '../ui/Spinner'
 
+
 interface Props {
   onClose: () => void
 }
@@ -24,14 +25,9 @@ export function DeleteAccountModal({ onClose }: Props) {
     if (!confirmed) return
     setDeleting(true)
     try {
-      const { data: { session } } = await supabase.auth.getSession()
-      if (!session) throw new Error('Not authenticated')
-
-      const res = await supabase.functions.invoke('delete-account', {
-        headers: { Authorization: `Bearer ${session.access_token}` },
-      })
-
-      if (res.error) throw res.error
+      // supabase.functions.invoke automatically attaches the session token
+      const { error } = await supabase.functions.invoke('delete-account')
+      if (error) throw error
 
       toast.success('Your account has been deleted.')
       await signOut()
