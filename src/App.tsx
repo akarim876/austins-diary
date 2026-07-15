@@ -1,9 +1,15 @@
 import type { ReactNode } from 'react'
+import { useEffect, useState } from 'react'
 import { Navigate, Route, Routes, useLocation } from 'react-router-dom'
 import { Toaster } from 'react-hot-toast'
 import { useAuth } from './contexts/AuthContext'
 import { useTheme } from './hooks/useTheme'
 import { useProfile } from './contexts/ProfileContext'
+import { useMyRole } from './hooks/useMyRole'
+import { useSetupWizard } from './hooks/useSetupWizard'
+import { useCaregiverWelcome } from './hooks/useCaregiverWelcome'
+import { SetupWizard } from './components/onboarding/SetupWizard'
+import { CaregiverWelcome } from './components/onboarding/CaregiverWelcome'
 import { AuthPage } from './components/auth/AuthPage'
 import { AppHeader } from './components/layout/AppHeader'
 import { BottomNav } from './components/layout/BottomNav'
@@ -24,6 +30,61 @@ import { ScheduleSettingsPage } from './pages/ScheduleSettingsPage'
 import { TrackerSettingsPage } from './pages/TrackerSettingsPage'
 import { CompleteProfilePage } from './pages/CompleteProfilePage'
 import { Spinner } from './components/ui/Spinner'
+
+/**
+ * Manages the first-time setup wizard (owners) and caregiver welcome flow.
+ * Rendered inside AppShell so it has access to auth + profile context.
+ */
+function WizardController() {
+  const { user } = useAuth()
+  const { activeProfile } = useProfile()
+  const myRole = useMyRole(activeProfile?.id ?? null)
+  const isOwner = myRole === 'owner'
+
+  const { shouldAutoShow, savedStep, markDone, dismiss } = useSetupWizard(activeProfile?.id ?? null)
+  const { shouldShow: showCaregiverWelcome, markSeen } = useCaregiverWelcome(
+    user?.id ?? null,
+    activeProfile?.id ?? null
+  )
+
+  const [ownerWizardOpen, setOwnerWizardOpen] = useState(false)
+  const [caregiverOpen, setCaregiverOpen] = useState(false)
+
+  // Determine which flow to show once the role is known
+  useEffect(() => {
+    if (myRole === null || !activeProfile || !user) return
+    if (isOwner && shouldAutoShow) {
+      setOwnerWizardOpen(true)
+    } else if (!isOwner && showCaregiverWelcome) {
+      setCaregiverOpen(true)
+    }
+  }, [myRole, isOwner, shouldAutoShow, showCaregiverWelcome, activeProfile, user])
+
+  if (!activeProfile || !user) return null
+
+  return (
+    <>
+      {ownerWizardOpen && (
+        <SetupWizard
+          profileId={activeProfile.id}
+          profileName={activeProfile.name}
+          userId={user.id}
+          initialStep={savedStep}
+          onClose={(step) => { dismiss(step); setOwnerWizardOpen(false) }}
+          onComplete={() => { markDone(); setOwnerWizardOpen(false) }}
+        />
+      )}
+      {caregiverOpen && (
+        <CaregiverWelcome
+          profileId={activeProfile.id}
+          profileName={activeProfile.name}
+          userId={user.id}
+          onClose={() => { markSeen(); setCaregiverOpen(false) }}
+        />
+      )}
+    </>
+  )
+}
 
 function AppShell() {
   const { activeProfile, loading } = useProfile()
@@ -51,6 +112,7 @@ function AppShell() {
 
   return (
     <div className="flex flex-col min-h-dvh" style={{ background: 'var(--color-background)' }}>
+      <WizardController />
       <AppHeader />
       <main className="flex-1 flex flex-col">
         <Routes>

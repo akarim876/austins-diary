@@ -2,7 +2,7 @@ import { useEffect, useState } from 'react'
 import { format, parseISO } from 'date-fns'
 import {
   Activity, CalendarClock, Check, ChevronDown, ChevronRight, ChevronUp, Clock, Crown, Eye, LogOut,
-  Mail, Palette, Pencil, Plus, Settings, Shield, Trash2, User, Users, Utensils, X,
+  Mail, Palette, Pencil, Plus, Settings, Shield, Trash2, User, Users, Utensils, X, Wand2,
 } from 'lucide-react'
 import toast from 'react-hot-toast'
 import { useNavigate } from 'react-router-dom'
@@ -24,6 +24,9 @@ import { supabase } from '../lib/supabase'
 import { getErrorMessage } from '../lib/errors'
 import { Spinner } from '../components/ui/Spinner'
 import type { ProfileAccess, ProfileInvite } from '../types'
+import { useMyRole } from '../hooks/useMyRole'
+import { useSetupWizard } from '../hooks/useSetupWizard'
+import { SetupWizard } from '../components/onboarding/SetupWizard'
 
 // ─── Role badge ────────────────────────────────────────────────────────────────
 
@@ -889,9 +892,13 @@ function ThemeSection() {
 // ─── Page ──────────────────────────────────────────────────────────────────────
 
 export function SettingsPage() {
-  const { signOut } = useAuth()
+  const { signOut, user } = useAuth()
   const { activeProfile } = useProfile()
   const navigate = useNavigate()
+  const myRole = useMyRole(activeProfile?.id ?? null)
+  const isOwner = myRole === 'owner'
+  const { isResumable, savedStep, markDone, dismiss } = useSetupWizard(activeProfile?.id ?? null)
+  const [showWizard, setShowWizard] = useState(false)
 
   async function handleSignOut() {
     try { await signOut() } catch { toast.error('Failed to sign out') }
@@ -899,6 +906,18 @@ export function SettingsPage() {
 
   return (
     <div className="flex-1 overflow-y-auto">
+      {/* Setup wizard (rendered as portal when opened from Settings) */}
+      {showWizard && activeProfile && user && (
+        <SetupWizard
+          profileId={activeProfile.id}
+          profileName={activeProfile.name}
+          userId={user.id}
+          initialStep={savedStep > 0 ? savedStep : 1}
+          onClose={(step) => { dismiss(step); setShowWizard(false) }}
+          onComplete={() => { markDone(); setShowWizard(false) }}
+        />
+      )}
+
       {/* Page header */}
       <div className="sticky top-0 z-10 bg-white/95 backdrop-blur-sm border-b border-warm-200 px-4 py-3 flex items-center gap-2">
         <Settings className="w-4 h-4 text-gray-400" />
@@ -906,6 +925,31 @@ export function SettingsPage() {
       </div>
 
       <div className="max-w-lg mx-auto px-4 py-6 pb-28 space-y-6">
+        {/* Complete setup banner — only for owners who abandoned the wizard */}
+        {isOwner && isResumable && activeProfile && (
+          <div className="rounded-xl border border-[var(--color-accent)]/30 bg-[var(--color-accent)]/8 p-4 flex items-start gap-3">
+            <div className="w-9 h-9 rounded-xl bg-[var(--color-accent)]/15 flex items-center justify-center flex-shrink-0 mt-0.5">
+              <Wand2 className="w-5 h-5 text-[var(--color-accent)]" />
+            </div>
+            <div className="flex-1 min-w-0">
+              <p className="text-sm font-semibold text-[var(--color-text)]">
+                Complete {activeProfile.name}'s setup
+              </p>
+              <p className="text-xs text-[var(--color-text-muted)] mt-0.5 leading-relaxed">
+                You started setting up the diary but didn't finish. Resume where you left off to
+                add foods, medications, smoothie recipes, and more.
+              </p>
+              <button
+                onClick={() => setShowWizard(true)}
+                className="mt-2.5 inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-lg text-sm font-semibold text-white bg-[var(--color-accent)] hover:opacity-90 transition-opacity"
+              >
+                <Wand2 className="w-3.5 h-3.5" />
+                Resume setup
+              </button>
+            </div>
+          </div>
+        )}
+
         <AccountSection />
         <ThemeSection />
         <QuickTilesSection />
