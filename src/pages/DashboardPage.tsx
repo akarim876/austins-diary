@@ -217,8 +217,7 @@ export function DashboardPage() {
           progress:    () => setProgressOpen(true),
           appointment: () => setAppointmentOpen(true),
         }
-        const count = quickTileIds.length
-        const cols  = count <= 3 ? count : count === 4 ? 2 : 3
+        const cols  = 2
         return (
           <div className="px-4 pb-2">
             <p className="text-[10px] font-bold uppercase tracking-widest mb-2.5" style={{ color: '#9A9187' }}>Quick log</p>
