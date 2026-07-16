@@ -174,20 +174,26 @@ export function LandingPage() {
         <img src="/Icon-splash.png" alt="Austin's Diary" className="h-24 w-24 object-contain mb-7" />
 
         <h1
-          className="text-4xl sm:text-5xl font-bold leading-tight tracking-tight mb-5"
+          className="text-4xl sm:text-5xl font-bold leading-tight tracking-tight"
           style={{
             fontFamily: '"Fraunces", Georgia, serif',
             color:      'var(--color-text)',
           }}
         >
           Every detail<br />
-          matters.{' '}
-          <br className="hidden sm:block" />
-          <span className="text-3xl sm:text-4xl" style={{ color: 'var(--color-accent)' }}>
-            Here's where you<br />
-            keep them.
-          </span>
+          matters.
         </h1>
+
+        <p
+          className="text-3xl sm:text-4xl font-bold leading-tight tracking-tight mt-4 mb-5"
+          style={{
+            fontFamily: '"Fraunces", Georgia, serif',
+            color:      'var(--color-accent)',
+          }}
+        >
+          Here's where you<br />
+          keep them.
+        </p>
 
         <p
           className="text-base sm:text-lg leading-relaxed max-w-xl mb-8"
