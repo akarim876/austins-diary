@@ -671,7 +671,6 @@ function renderSummaryPage(w: PDFWriter, params: PDFExportParams, s: ReturnType<
   // ── Horizontal regulation zone bar ────────────────────────────────────────
   if (inc('sensory') && params.sensory.length > 0) {
     const total       = params.sensory.length
-    const ZONE_ORDER  = ['calm', 'alert', 'anxious', 'dysregulated', 'shutdown'] as const
     const ZONE_META: { key: string; label: string; color: RGB }[] = [
       { key: 'calm',         label: 'Calm',         color: T.reg.calm         },
       { key: 'alert',        label: 'Alert',        color: T.reg.alert        },
@@ -1113,12 +1112,7 @@ function renderAppointments(w: PDFWriter, appts: Appointment[], providers: Provi
 // ─── Custom tracker renderer ──────────────────────────────────────────────────
 
 function renderCustomTracker(w: PDFWriter, tracker: CustomTracker, logs: CustomTrackerLog[]) {
-  const color = (tracker.color
-    ? tracker.color.startsWith('#')
-      ? hexToRgb(tracker.color)
-      : T.accent
-    : T.accent) as RGB
-
+  const color = trackerColor(tracker)
   w.sectionHeader('custom', tracker.name.toUpperCase())
   w.gap(2)
 
@@ -1131,7 +1125,7 @@ function renderCustomTracker(w: PDFWriter, tracker: CustomTracker, logs: CustomT
   const typeLabel = tracker.tracker_type.replace('_', ' ')
   w.body(
     `Type: ${typeLabel.charAt(0).toUpperCase() + typeLabel.slice(1)}  ·  ${logs.length} entries`,
-    { size: 8.5, color: T.muted },
+    { size: 8.5, color },
   )
   w.gap(3)
 
@@ -1146,12 +1140,17 @@ function renderCustomTracker(w: PDFWriter, tracker: CustomTracker, logs: CustomT
   }
 }
 
-// helper: convert "#RRGGBB" → RGB triple
+/** Convert "#RRGGBB" → RGB triple. Used for custom tracker accent colors. */
 function hexToRgb(hex: string): RGB {
-  const r = parseInt(hex.slice(1, 3), 16)
-  const g = parseInt(hex.slice(3, 5), 16)
-  const b = parseInt(hex.slice(5, 7), 16)
-  return [r, g, b]
+  return [
+    parseInt(hex.slice(1, 3), 16),
+    parseInt(hex.slice(3, 5), 16),
+    parseInt(hex.slice(5, 7), 16),
+  ]
+}
+
+function trackerColor(tracker: CustomTracker): RGB {
+  return tracker.color?.startsWith('#') ? hexToRgb(tracker.color) : T.accent
 }
 
 // ─── Main entry point ─────────────────────────────────────────────────────────
