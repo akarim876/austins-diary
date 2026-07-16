@@ -171,7 +171,7 @@ export function LandingPage() {
         className="flex flex-col items-center text-center px-5 pt-10 pb-20 max-w-3xl mx-auto"
         style={reduced ? {} : { animation: 'heroFadeUp 280ms ease-out both' }}
       >
-        <AppLogo className="h-16 mb-7" />
+        <img src="/Icon-splash.png" alt="Austin's Diary" className="h-24 w-24 object-contain mb-7" />
 
         <h1
           className="text-4xl sm:text-5xl font-bold leading-tight tracking-tight mb-5"
@@ -181,7 +181,7 @@ export function LandingPage() {
           }}
         >
           Every detail matters.{' '}
-          <span style={{ color: 'var(--color-accent)' }}>
+          <span className="text-3xl sm:text-4xl" style={{ color: 'var(--color-accent)' }}>
             Here's where&nbsp;you&nbsp;keep&nbsp;them.
           </span>
         </h1>
@@ -195,7 +195,7 @@ export function LandingPage() {
         </p>
 
         <CTAButton onClick={() => navigate('/auth?mode=signup')} reduced={reduced}>
-          Start your free month
+          Start for free
         </CTAButton>
 
         <p className="text-xs mt-4" style={{ color: 'var(--color-text-muted)' }}>
@@ -323,7 +323,7 @@ export function LandingPage() {
 
         <div className="reveal flex flex-col items-center gap-4" style={stagger(2)}>
           <CTAButton onClick={() => navigate('/auth?mode=signup')} reduced={reduced}>
-            Start your free month
+            Start for free
           </CTAButton>
 
           <p className="text-sm" style={{ color: 'var(--color-text-muted)' }}>
