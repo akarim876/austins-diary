@@ -180,15 +180,18 @@ export function LandingPage() {
             color:      'var(--color-text)',
           }}
         >
-          Every detail matters.{' '}
+          Every detail<br />
+          matters.{' '}
+          <br className="hidden sm:block" />
           <span className="text-3xl sm:text-4xl" style={{ color: 'var(--color-accent)' }}>
-            Here's where&nbsp;you&nbsp;keep&nbsp;them.
+            Here's where you<br />
+            keep them.
           </span>
         </h1>
 
         <p
           className="text-base sm:text-lg leading-relaxed max-w-xl mb-8"
-          style={{ color: 'var(--color-text-muted)' }}
+          style={{ color: 'var(--color-text-muted)', fontFamily: '"Merriweather", Georgia, serif', fontWeight: 300 }}
         >
           A private space for the people who care for them most — built to hold the small wins,
           understand the hard moments, and keep everyone who loves your child in sync.
