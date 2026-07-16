@@ -233,7 +233,7 @@ export function ExportPage() {
           { id:'b9', profile_id:'x', entry_date:'2026-07-12', time_of_day:'09:00', behavior:'meltdown',           severity:3, location:'home',   antecedent:'unfamiliar person', antecedent_note:'New babysitter introduced without prep', consequence:'Calming kit used, stayed nearby', helped:'yes', duration_mins:18, notes:'', created_at:'' },
           { id:'b10',profile_id:'x', entry_date:'2026-07-14', time_of_day:'13:00', behavior:'self-injury',        severity:4, location:'home',   antecedent:'sensory overload',  antecedent_note:'Too much visual stimulation at lunch', consequence:'Dimmed lights, removed extra items', helped:'yes', duration_mins:14, notes:'Head-banging on table twice', created_at:'' },
           { id:'b11',profile_id:'x', entry_date:'2026-07-15', time_of_day:'07:45', behavior:'shutdown',           severity:2, location:'home',   antecedent:'transition',        antecedent_note:'Early wake-up school day', consequence:'Extra quiet morning routine', helped:'yes', duration_mins:20, notes:'', created_at:'' },
-        ] as BehaviorLog[],
+        ] as unknown as BehaviorLog[],
         sensory: [
           { id:'s1', profile_id:'x', entry_date:'2026-07-02', time_of_day:'10:00', regulation_level:'anxious',      location:'school', duration_mins:20, sensory_triggers:['Noise','Light'],    calming_strategies:['Headphones','Quiet space'],   helped:'yes',      notes:'Settled well after headphones', created_at:'' },
           { id:'s2', profile_id:'x', entry_date:'2026-07-04', time_of_day:'13:00', regulation_level:'calm',          location:'home',   duration_mins:null,sensory_triggers:[],                   calming_strategies:[],                             helped:'yes',      notes:'Great afternoon, played independently', created_at:'' },
@@ -262,7 +262,7 @@ export function ExportPage() {
           { id:'di6', profile_id:'x', entry_date:'2026-07-07', time_of_day:'08:00', log_type:'medications', medications_checked:['Melatonin 1mg (bedtime)'], notes:'', created_at:'' },
           { id:'di7', profile_id:'x', entry_date:'2026-07-10', time_of_day:'12:30', log_type:'meal', meal_type:'lunch', foods_eaten:['PB&J sandwich','Apple slices','Milk'], new_food_introduced:false, notes:'', created_at:'' },
           { id:'di8', profile_id:'x', entry_date:'2026-07-13', time_of_day:'18:00', log_type:'meal', meal_type:'dinner', foods_eaten:['Pasta (plain)','Broccoli (refused)','Bread'], new_food_introduced:false, notes:'Refused broccoli but tolerated it on the plate', created_at:'' },
-        ] as DietLog[],
+        ] as unknown as DietLog[],
         goals: [
           { id:'g1', profile_id:'x', title:'Independent morning routine', description:'Complete all 5 steps of the morning routine (wake, dress, brush teeth, eat breakfast, put on shoes) without physical or verbal prompting from a caregiver.', status:'active', source:'OT', start_date:'2026-06-01', target_date:'2026-08-31', created_at:'' },
           { id:'g2', profile_id:'x', title:'Reduce meltdown average duration', description:'Bring the average meltdown duration below 10 minutes through proactive regulation strategies and environmental modifications.', status:'active', source:'BCBA', start_date:'2026-05-15', target_date:'2026-09-01', created_at:'' },
@@ -275,12 +275,12 @@ export function ExportPage() {
           { id:'p3', profile_id:'x', goal_id:'g2', note_date:'2026-07-07', rating:'mixed',           notes:'Long incident at the store (25 min) but school incidents much shorter this week', created_at:'' },
           { id:'p4', profile_id:'x', goal_id:'g2', note_date:'2026-07-14', rating:'making_progress', notes:'Average duration trending down — 4 incidents averaged 14 min combined', created_at:'' },
           { id:'p5', profile_id:'x', goal_id:'g3', note_date:'2026-07-05', rating:'making_progress', notes:'Accepted cucumber slices for the first time — now at 18 accepted foods', created_at:'' },
-        ] as ProgressNote[],
+        ] as unknown as ProgressNote[],
         appointments: [
           { id:'a1', profile_id:'x', appt_date:'2026-07-02', appt_time:'10:00', type:'OT Session', provider_id:'pr1', status:'completed', notes:'Worked on fine motor coordination and reviewed sensory diet. Home program updated.', followup_needed:true, followup_date:'2026-07-16', followup_text:'Bring sensory diet log for review', created_at:'' },
           { id:'a2', profile_id:'x', appt_date:'2026-07-09', appt_time:'14:00', type:'BCBA Session', provider_id:'pr2', status:'completed', notes:'Reviewed behavior data. Updated antecedent strategies for store and transition situations.', followup_needed:false, followup_date:null, followup_text:null, created_at:'' },
           { id:'a3', profile_id:'x', appt_date:'2026-07-16', appt_time:'09:00', type:'Pediatrician - 6-month check', provider_id:'pr3', status:'scheduled', notes:'Bring behavior log summary and current medication/supplement list.', followup_needed:false, followup_date:null, followup_text:null, created_at:'' },
-        ] as Appointment[],
+        ] as unknown as Appointment[],
         providers: [
           { id:'pr1', profile_id:'x', name:'Sarah M., MOT/L', role:'Occupational Therapist', phone:'555-0101', email:'sarah@example.com', notes:'Specializes in sensory processing and feeding', created_at:'' },
           { id:'pr2', profile_id:'x', name:'Dr. James R., BCBA-D', role:'Board Certified Behavior Analyst', phone:'555-0102', email:'james@example.com', notes:'Monthly data review + home consultation quarterly', created_at:'' },
