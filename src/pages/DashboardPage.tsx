@@ -232,13 +232,16 @@ export function DashboardPage() {
                       key={id}
                       type="button"
                       onClick={() => setTrackerLogOpen(tracker.id)}
-                      className="flex flex-col items-center gap-2 py-3 px-1 rounded-xl active:scale-95 transition-transform duration-100 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-500"
-                      style={{ background: '#fff', boxShadow: '0 2px 10px rgba(51,50,46,0.07)' }}
+                      className="flex flex-col items-start gap-3 p-4 rounded-xl text-left active:scale-[0.97] transition-transform duration-100 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-500"
+                      style={{ background: '#fff', boxShadow: '0 2px 10px rgba(51,50,46,0.07)', minHeight: 110 }}
                     >
-                      <span className="w-9 h-9 rounded-xl flex items-center justify-center" style={{ background: trackerIconBg(tracker.color) }}>
-                        <TrIcon className="w-4 h-4" style={{ color: tracker.color }} />
+                      <span className="w-10 h-10 rounded-xl flex items-center justify-center flex-shrink-0" style={{ background: trackerIconBg(tracker.color) }}>
+                        <TrIcon className="w-5 h-5" style={{ color: tracker.color }} />
                       </span>
-                      <span className="text-[11px] font-semibold text-center leading-tight" style={{ color: '#33322E' }}>{tracker.name}</span>
+                      <div>
+                        <p className="font-semibold text-sm leading-snug" style={{ color: '#33322E' }}>{tracker.name}</p>
+                        <p className="text-xs mt-0.5 leading-snug" style={{ color: '#9A9187' }}>Log entry</p>
+                      </div>
                     </button>
                   )
                 }
@@ -249,13 +252,16 @@ export function DashboardPage() {
                     key={id}
                     type="button"
                     onClick={staticHandlers[id]}
-                    className="flex flex-col items-center gap-2 py-3 px-1 rounded-xl active:scale-95 transition-transform duration-100 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-500"
-                    style={{ background: '#fff', boxShadow: '0 2px 10px rgba(51,50,46,0.07)' }}
+                    className="flex flex-col items-start gap-3 p-4 rounded-xl text-left active:scale-[0.97] transition-transform duration-100 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-500"
+                    style={{ background: '#fff', boxShadow: '0 2px 10px rgba(51,50,46,0.07)', minHeight: 110 }}
                   >
-                    <span className="w-9 h-9 rounded-xl flex items-center justify-center" style={{ background: def.iconBg }}>
-                      <ModuleIcon name={def.icon} className="w-4 h-4" style={{ color: def.accent }} />
+                    <span className="w-10 h-10 rounded-xl flex items-center justify-center flex-shrink-0" style={{ background: def.iconBg }}>
+                      <ModuleIcon name={def.icon} className="w-5 h-5" style={{ color: def.accent }} />
                     </span>
-                    <span className="text-[11px] font-semibold text-center leading-tight" style={{ color: '#33322E' }}>{def.label}</span>
+                    <div>
+                      <p className="font-semibold text-sm leading-snug" style={{ color: '#33322E' }}>{def.label}</p>
+                      <p className="text-xs mt-0.5 leading-snug" style={{ color: '#9A9187' }}>{def.description}</p>
+                    </div>
                   </button>
                 )
               })}
