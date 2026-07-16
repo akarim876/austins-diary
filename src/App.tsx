@@ -30,6 +30,7 @@ import { ScheduleSettingsPage } from './pages/ScheduleSettingsPage'
 import { TrackerSettingsPage } from './pages/TrackerSettingsPage'
 import { CompleteProfilePage } from './pages/CompleteProfilePage'
 import { ResetPasswordPage } from './pages/ResetPasswordPage'
+import { LandingPage } from './pages/LandingPage'
 import { Spinner } from './components/ui/Spinner'
 import { InstallPrompt } from './components/ui/InstallPrompt'
 import { AppLogo } from './components/ui/AppLogo'
@@ -194,7 +195,17 @@ export default function App() {
     // User arrived via a password-reset link — show the reset form regardless of session state
     content = <ResetPasswordPage />
   } else if (!session) {
-    content = <AuthPage />
+    if (location.pathname === '/auth') {
+      // Detect ?mode=signup from the landing page CTA so we open the register tab directly
+      const params = new URLSearchParams(location.search)
+      const initialMode = params.get('mode') === 'signup' ? 'register' : 'login'
+      content = <AuthPage initialMode={initialMode} />
+    } else if (location.pathname === '/accept-invite') {
+      // Invited users without a session go straight to the auth form
+      content = <AuthPage />
+    } else {
+      content = <LandingPage />
+    }
   } else if (location.pathname === '/accept-invite') {
     content = <AcceptInvitePage />
   } else {

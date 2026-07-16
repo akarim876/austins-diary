@@ -119,9 +119,9 @@ function ForgotPasswordForm({ onBack }: { onBack: () => void }) {
 
 // ─── Main AuthPage ────────────────────────────────────────────────────────────
 
-export function AuthPage() {
+export function AuthPage({ initialMode = 'login' }: { initialMode?: 'login' | 'register' }) {
   const { signIn, signUp } = useAuth()
-  const [mode, setMode]             = useState<'login' | 'register'>('login')
+  const [mode, setMode]             = useState<'login' | 'register'>(initialMode)
   const [showForgot, setShowForgot] = useState(false)
   const [showPassword, setShowPassword] = useState(false)
   const [submitting, setSubmitting] = useState(false)
