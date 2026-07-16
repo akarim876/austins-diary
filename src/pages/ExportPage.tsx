@@ -1,6 +1,6 @@
 import { useState } from 'react'
 import {
-  endOfMonth, format, startOfMonth, subDays,
+  endOfMonth, format, startOfMonth, startOfWeek, subDays,
 } from 'date-fns'
 import {
   AlertCircle, CheckSquare, Download, FileSpreadsheet, FileText,
@@ -23,10 +23,11 @@ import type {
 
 const TODAY = format(new Date(), 'yyyy-MM-dd')
 
-type Preset = 'last7' | 'last30' | 'thisMonth' | 'custom'
+type Preset = 'last7' | 'thisWeek' | 'last30' | 'thisMonth' | 'custom'
 
 const PRESETS: { id: Preset; label: string }[] = [
   { id: 'last7',     label: 'Last 7 days'  },
+  { id: 'thisWeek',  label: 'This week'    },
   { id: 'last30',    label: 'Last 30 days' },
   { id: 'thisMonth', label: 'This month'   },
   { id: 'custom',    label: 'Custom range' },
@@ -47,6 +48,7 @@ const STATIC_MODULES = [
 function presetRange(p: Preset): { start: string; end: string } {
   const today = new Date()
   if (p === 'last7')     return { start: format(subDays(today, 6), 'yyyy-MM-dd'), end: TODAY }
+  if (p === 'thisWeek')  return { start: format(startOfWeek(today, { weekStartsOn: 1 }), 'yyyy-MM-dd'), end: TODAY }
   if (p === 'last30')    return { start: format(subDays(today, 29), 'yyyy-MM-dd'), end: TODAY }
   if (p === 'thisMonth') return { start: format(startOfMonth(today), 'yyyy-MM-dd'), end: format(endOfMonth(today), 'yyyy-MM-dd') }
   return { start: format(subDays(today, 29), 'yyyy-MM-dd'), end: TODAY }

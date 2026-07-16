@@ -1,5 +1,5 @@
 import jsPDF from 'jspdf'
-import { format, parseISO } from 'date-fns'
+import { format, parseISO, eachDayOfInterval } from 'date-fns'
 import type {
   CustomTracker, CustomTrackerLog,
   DiaryEntry, BehaviorLog, SensoryLog, DietLog, SleepLog,
@@ -39,10 +39,33 @@ const C = {
   white:   [255,255,255]  as [number,number,number],
 }
 
+// Severity-level colors (1=Mild … 5=Severe)
+const SEV_COLORS: [number,number,number][] = [
+  [0,0,0],           // 0 unused
+  [5,   150, 105],   // 1 Mild     – emerald
+  [101, 163, 13],    // 2 Low      – lime
+  [217, 119, 6],     // 3 Moderate – amber
+  [234, 88,  12],    // 4 High     – orange
+  [220, 38,  38],    // 5 Severe   – red
+]
+
+// Regulation-zone colors (matching app's fixed gradient palette)
+const ZONE_COLORS: Record<string,[number,number,number]> = {
+  calm:         [143, 184, 156],
+  alert:        [169, 192, 138],
+  anxious:      [232, 199, 126],
+  dysregulated: [217, 154, 108],
+  shutdown:     [199, 123, 106],
+}
+
 // ─── Helpers ──────────────────────────────────────────────────────────────────
 
 function fmtDate(d: string) {
   try { return format(parseISO(d + 'T12:00:00'), 'MMM d, yyyy') } catch { return d }
+}
+
+function fmtDateShort(d: string) {
+  try { return format(parseISO(d + 'T12:00:00'), 'M/d') } catch { return d }
 }
 
 function fmtTime(t: string | null | undefined): string {
@@ -206,25 +229,389 @@ function buildSummary(params: PDFExportParams) {
     ? params.behavior.reduce((s, b) => s + b.severity, 0) / behaviorCount
     : null
 
+  // Per-severity counts
+  const bySeverity: Record<number, number> = {1:0, 2:0, 3:0, 4:0, 5:0}
+  for (const b of params.behavior) {
+    bySeverity[b.severity] = (bySeverity[b.severity] ?? 0) + 1
+  }
+
   const antFreq: Record<string,number> = {}
   for (const b of params.behavior) {
     if (b.antecedent && b.antecedent !== 'other') antFreq[b.antecedent] = (antFreq[b.antecedent]??0)+1
   }
   const topAnt = Object.entries(antFreq).sort(([,a],[,b])=>b-a).slice(0,2).map(([a])=>a)
 
+  // Per-zone counts for sensory
+  const byZone: Record<string, number> = {}
+  for (const s of params.sensory) {
+    byZone[s.regulation_level] = (byZone[s.regulation_level] ?? 0) + 1
+  }
+
   const completeSleep = params.sleep.filter(s => s.total_sleep_minutes != null)
-  const avgSleepMins = completeSleep.length
-    ? completeSleep.reduce((s,l)=>s+(l.total_sleep_minutes!),0)/completeSleep.length
-    : null
-  const avgQuality = completeSleep.length
+  const sleepMins     = completeSleep.map(s => s.total_sleep_minutes!)
+  const avgSleepMins  = sleepMins.length ? sleepMins.reduce((a, b) => a + b, 0) / sleepMins.length : null
+  const minSleepMins  = sleepMins.length ? Math.min(...sleepMins) : null
+  const maxSleepMins  = sleepMins.length ? Math.max(...sleepMins) : null
+  const avgQuality    = completeSleep.length
     ? completeSleep.reduce((s,l)=>s+(l.sleep_quality??0),0)/completeSleep.length
     : null
 
-  const meals = params.diet.filter(d=>d.log_type==='meal').length
-  const smoothies = params.diet.filter(d=>d.log_type==='smoothie').length
-  const activeGoals = params.goals.filter(g=>g.status==='active').length
+  const meals        = params.diet.filter(d=>d.log_type==='meal').length
+  const smoothies    = params.diet.filter(d=>d.log_type==='smoothie').length
+  const supplements  = params.diet.filter(d=>d.log_type==='supplements').length
+  const medications  = params.diet.filter(d=>d.log_type==='medications').length
+  const activeGoals  = params.goals.filter(g=>g.status==='active').length
 
-  return { behaviorCount, avgSeverity, topAnt, avgSleepMins, avgQuality, meals, smoothies, activeGoals }
+  return {
+    behaviorCount, avgSeverity, bySeverity, topAnt,
+    byZone,
+    avgSleepMins, minSleepMins, maxSleepMins, avgQuality,
+    sleepNights: completeSleep.length,
+    meals, smoothies, supplements, medications, activeGoals,
+  }
+}
+
+// ─── Enhanced summary panel ───────────────────────────────────────────────────
+
+/** Draw a mini horizontal proportion bar */
+function miniBar(
+  doc: jsPDF,
+  x: number, y: number, w: number, h: number,
+  filled: number, total: number,
+  color: [number,number,number],
+) {
+  // Background track
+  doc.setFillColor(230, 228, 224)
+  doc.rect(x, y, w, h, 'F')
+  // Filled portion
+  if (total > 0) {
+    const fw = (filled / total) * w
+    doc.setFillColor(color[0], color[1], color[2])
+    doc.rect(x, y, fw, h, 'F')
+  }
+}
+
+function renderEnhancedSummary(w: PDFWriter, params: PDFExportParams, s: ReturnType<typeof buildSummary>) {
+  const inc = (m: string) => params.modules.includes(m)
+
+  // ── Section title ─────────────────────────────────────────────────────────
+  w.doc.setFont('helvetica', 'bold')
+  w.doc.setFontSize(8)
+  w.setColor(C.mid)
+  w.doc.text('PERIOD AT A GLANCE', MX + 6, w.y)
+  w.y += 6
+
+  // ── Module count tiles (2-column grid) ────────────────────────────────────
+  const tileW  = (CW - 6) / 2 - 2
+  const tileH  = 16
+  const tileGap = 2
+
+  type StatTile = { label: string; value: string; sub?: string; color: [number,number,number] }
+  const tiles: StatTile[] = []
+
+  if (inc('behavior'))
+    tiles.push({ label: 'Behavior', value: String(s.behaviorCount), sub: s.behaviorCount === 1 ? 'incident' : 'incidents', color: C.amber })
+  if (inc('sensory'))
+    tiles.push({ label: 'Sensory / Regulation', value: String(params.sensory.length), sub: params.sensory.length === 1 ? 'entry' : 'entries', color: C.violet })
+  if (inc('sleep'))
+    tiles.push({ label: 'Sleep', value: String(s.sleepNights), sub: s.avgSleepMins ? `avg ${fmtMins(s.avgSleepMins)}` : `night${s.sleepNights !== 1 ? 's' : ''}`, color: C.indigo })
+  if (inc('diet'))
+    tiles.push({ label: 'Diet', value: String(s.meals + s.smoothies), sub: `${s.meals} meal${s.meals!==1?'s':''}, ${s.smoothies} smoothie${s.smoothies!==1?'s':''}`, color: C.emerald })
+  if (inc('goals'))
+    tiles.push({ label: 'Goals', value: String(s.activeGoals), sub: `active · ${params.progressNotes.length} note${params.progressNotes.length!==1?'s':''}`, color: C.teal })
+  if (inc('diary'))
+    tiles.push({ label: 'Diary', value: String(params.diary.length), sub: params.diary.length === 1 ? 'entry' : 'entries', color: C.brand })
+  if (inc('appointments'))
+    tiles.push({ label: 'Appointments', value: String(params.appointments.length), sub: params.appointments.length === 1 ? 'visit' : 'visits', color: C.rose })
+
+  let col = 0
+  const tileBaseX = MX + 6
+  for (const tile of tiles) {
+    const tx = col === 0 ? tileBaseX : tileBaseX + tileW + tileGap
+    // Tile background
+    const tileColor = tile.color
+    const bg: [number,number,number] = [
+      tileColor[0] + Math.round((255 - tileColor[0]) * 0.91),
+      tileColor[1] + Math.round((255 - tileColor[1]) * 0.91),
+      tileColor[2] + Math.round((255 - tileColor[2]) * 0.91),
+    ]
+    w.doc.setFillColor(bg[0], bg[1], bg[2])
+    w.doc.rect(tx, w.y, tileW, tileH, 'F')
+
+    // Accent left edge
+    w.doc.setFillColor(tile.color[0], tile.color[1], tile.color[2])
+    w.doc.rect(tx, w.y, 2.5, tileH, 'F')
+
+    // Label
+    w.doc.setFont('helvetica', 'normal')
+    w.doc.setFontSize(7)
+    w.setColor(C.mid)
+    w.doc.text(tile.label, tx + 5, w.y + 4.5)
+
+    // Value (large)
+    w.doc.setFont('helvetica', 'bold')
+    w.doc.setFontSize(14)
+    w.setColor(tile.color)
+    w.doc.text(tile.value, tx + 5, w.y + 11.5)
+
+    // Sub label
+    if (tile.sub) {
+      w.doc.setFont('helvetica', 'normal')
+      w.doc.setFontSize(6.5)
+      w.setColor(C.mid)
+      w.doc.text(tile.sub, tx + 5 + w.doc.getTextWidth(tile.value) + 1.5, w.y + 11.5)
+    }
+
+    col++
+    if (col === 2) {
+      col = 0
+      w.y += tileH + tileGap
+    }
+  }
+  if (col !== 0) w.y += tileH + tileGap
+  w.y += 3
+
+  // ── Behavior severity breakdown ───────────────────────────────────────────
+  if (inc('behavior') && s.behaviorCount > 0) {
+    w.doc.setFont('helvetica', 'bold')
+    w.doc.setFontSize(7.5)
+    w.setColor(C.mid)
+    w.doc.text('Behavior Severity Breakdown', MX + 6, w.y)
+    w.y += 5
+
+    const barTotalW = CW - 30
+    const barH      = 3.5
+    const rowGap    = 5.5
+    const labels: [number, string][] = [[1,'Mild'],[2,'Low'],[3,'Moderate'],[4,'High'],[5,'Severe']]
+
+    for (const [sev, label] of labels) {
+      const count = s.bySeverity[sev] ?? 0
+      if (count === 0) continue
+      w.doc.setFont('helvetica', 'normal')
+      w.doc.setFontSize(7)
+      w.setColor(C.dark)
+      w.doc.text(label, MX + 6, w.y + barH)
+      miniBar(w.doc, MX + 24, w.y, barTotalW, barH, count, s.behaviorCount, SEV_COLORS[sev])
+      w.doc.setFont('helvetica', 'bold')
+      w.doc.setFontSize(7)
+      w.setColor(C.dark)
+      w.doc.text(String(count), MX + 24 + barTotalW + 2, w.y + barH)
+      w.y += rowGap
+    }
+    w.y += 2
+  }
+
+  // ── Sensory zone breakdown ────────────────────────────────────────────────
+  if (inc('sensory') && params.sensory.length > 0) {
+    w.doc.setFont('helvetica', 'bold')
+    w.doc.setFontSize(7.5)
+    w.setColor(C.mid)
+    w.doc.text('Regulation Zone Breakdown', MX + 6, w.y)
+    w.y += 5
+
+    const barTotalW = CW - 30
+    const barH      = 3.5
+    const rowGap    = 5.5
+    const zoneOrder: [string, string][] = [
+      ['calm','Calm'], ['alert','Alert'], ['anxious','Anxious'],
+      ['dysregulated','Dysreg.'], ['shutdown','Shutdown'],
+    ]
+
+    for (const [zone, label] of zoneOrder) {
+      const count = s.byZone[zone] ?? 0
+      if (count === 0) continue
+      w.doc.setFont('helvetica', 'normal')
+      w.doc.setFontSize(7)
+      w.setColor(C.dark)
+      w.doc.text(label, MX + 6, w.y + barH)
+      const zc = ZONE_COLORS[zone] ?? C.mid
+      miniBar(w.doc, MX + 24, w.y, barTotalW, barH, count, params.sensory.length, zc)
+      w.doc.setFont('helvetica', 'bold')
+      w.doc.setFontSize(7)
+      w.setColor(C.dark)
+      w.doc.text(String(count), MX + 24 + barTotalW + 2, w.y + barH)
+      w.y += rowGap
+    }
+    w.y += 2
+  }
+
+  // ── Sleep range summary ───────────────────────────────────────────────────
+  if (inc('sleep') && s.sleepNights > 0 && s.avgSleepMins) {
+    w.doc.setFont('helvetica', 'bold')
+    w.doc.setFontSize(7.5)
+    w.setColor(C.mid)
+    w.doc.text('Sleep Summary', MX + 6, w.y)
+    w.y += 5
+
+    const parts: string[] = [
+      `Avg: ${fmtMins(s.avgSleepMins)}`,
+    ]
+    if (s.minSleepMins && s.maxSleepMins)
+      parts.push(`Range: ${fmtMins(s.minSleepMins)} – ${fmtMins(s.maxSleepMins)}`)
+    if (s.avgQuality)
+      parts.push(`Avg quality: ${qualityLabel(Math.round(s.avgQuality))}`)
+
+    w.doc.setFont('helvetica', 'normal')
+    w.doc.setFontSize(8)
+    w.setColor(C.dark)
+    w.doc.text(parts.join('   |   '), MX + 6, w.y)
+    w.y += 7
+  }
+}
+
+// ─── Behavior frequency chart ─────────────────────────────────────────────────
+
+function renderBehaviorChart(w: PDFWriter, logs: BehaviorLog[], startDate: string, endDate: string) {
+  if (logs.length === 0) return
+
+  // Build per-date counts using the full date range (0 = no incident)
+  let allDates: string[]
+  try {
+    allDates = eachDayOfInterval({
+      start: parseISO(startDate + 'T12:00:00'),
+      end:   parseISO(endDate   + 'T12:00:00'),
+    }).map(d => format(d, 'yyyy-MM-dd'))
+  } catch {
+    allDates = [...new Set(logs.map(l => l.entry_date))].sort()
+  }
+
+  // Group by date — only dates that have incidents
+  const byDate: Record<string,{ count: number; maxSev: number }> = {}
+  for (const l of logs) {
+    if (!byDate[l.entry_date]) byDate[l.entry_date] = { count: 0, maxSev: 0 }
+    byDate[l.entry_date].count++
+    byDate[l.entry_date].maxSev = Math.max(byDate[l.entry_date].maxSev, l.severity)
+  }
+
+  // For long ranges, group by week
+  const shouldGroup = allDates.length > 31
+
+  type BarData = { label: string; count: number; maxSev: number }
+  let bars: BarData[]
+
+  if (shouldGroup) {
+    // Group into ISO-week buckets
+    const weeks: Record<string, { count: number; maxSev: number; label: string }> = {}
+    for (const date of allDates) {
+      const d    = parseISO(date + 'T12:00:00')
+      const wkey = format(d, 'yyyy-ww')
+      const wlbl = `Wk ${format(d, 'M/d')}`
+      if (!weeks[wkey]) weeks[wkey] = { count: 0, maxSev: 0, label: wlbl }
+      const dayData = byDate[date]
+      if (dayData) {
+        weeks[wkey].count  += dayData.count
+        weeks[wkey].maxSev  = Math.max(weeks[wkey].maxSev, dayData.maxSev)
+      }
+    }
+    bars = Object.entries(weeks).sort(([a], [b]) => a.localeCompare(b)).map(([, v]) => v)
+  } else {
+    // Per-day bars (only include days with incidents to keep chart tight)
+    const incidentDates = allDates.filter(d => byDate[d])
+    bars = incidentDates.map(d => ({
+      label:  fmtDateShort(d),
+      count:  byDate[d].count,
+      maxSev: byDate[d].maxSev,
+    }))
+  }
+
+  if (bars.length === 0) return
+
+  const maxCount = Math.max(...bars.map(b => b.count))
+  if (maxCount === 0) return
+
+  const CHART_H    = 38       // mm — height of bar area
+  const LABEL_H    = 7        // mm — space for x-axis labels
+  const TOTAL_H    = CHART_H + LABEL_H + 14  // header + chart + labels
+
+  w.check(TOTAL_H)
+
+  // Sub-title
+  w.doc.setFont('helvetica', 'bold')
+  w.doc.setFontSize(8)
+  w.setColor(C.mid)
+  const chartTitle = shouldGroup ? 'INCIDENTS BY WEEK' : 'INCIDENTS BY DAY'
+  w.doc.text(chartTitle, MX, w.y)
+  w.y += 5
+
+  const chartX      = MX + 8     // leave 8mm for y-axis labels
+  const chartW      = CW - 10
+  const chartTop    = w.y
+  const chartBottom = chartTop + CHART_H
+
+  // Y-axis gridlines + labels
+  const maxTick = Math.ceil(maxCount)
+  const tickStep = maxTick <= 5 ? 1 : maxTick <= 10 ? 2 : 5
+  w.doc.setFont('helvetica', 'normal')
+  w.doc.setFontSize(6)
+  w.setColor(C.light)
+  w.setDraw(C.border)
+  w.doc.setLineWidth(0.15)
+
+  for (let tick = 0; tick <= maxTick; tick += tickStep) {
+    const gy = chartBottom - (tick / maxTick) * CHART_H
+    w.doc.line(chartX, gy, chartX + chartW, gy)
+    w.doc.text(String(tick), chartX - 2, gy + 1, { align: 'right' })
+  }
+
+  // Bars
+  const barSpacing = 1
+  const barW = Math.max(2, (chartW - barSpacing * (bars.length + 1)) / bars.length)
+  const totalBarW = barW * bars.length + barSpacing * (bars.length + 1)
+  const startX = chartX + (chartW - totalBarW) / 2
+
+  for (let i = 0; i < bars.length; i++) {
+    const bar  = bars[i]
+    const barH = (bar.count / maxCount) * CHART_H
+    const bx   = startX + barSpacing + i * (barW + barSpacing)
+    const by   = chartBottom - barH
+
+    // Bar fill — color by max severity
+    const bc = SEV_COLORS[bar.maxSev] ?? C.brand
+    w.doc.setFillColor(bc[0], bc[1], bc[2])
+    w.doc.rect(bx, by, barW, barH, 'F')
+
+    // Count label on top of bar
+    if (bar.count > 0) {
+      w.doc.setFont('helvetica', 'bold')
+      w.doc.setFontSize(6)
+      w.setColor(C.dark)
+      w.doc.text(String(bar.count), bx + barW / 2, by - 1, { align: 'center' })
+    }
+
+    // Date label below chart
+    w.doc.setFont('helvetica', 'normal')
+    w.doc.setFontSize(bars.length > 20 ? 5 : 6)
+    w.setColor(C.mid)
+    if (bars.length <= 20 || i % 2 === 0) {
+      w.doc.text(bar.label, bx + barW / 2, chartBottom + 5, { align: 'center', angle: bars.length > 14 ? 35 : 0 })
+    }
+  }
+
+  // Chart border
+  w.setDraw(C.border)
+  w.doc.setLineWidth(0.25)
+  w.doc.line(chartX, chartTop,    chartX,         chartBottom)  // left axis
+  w.doc.line(chartX, chartBottom, chartX + chartW, chartBottom) // bottom axis
+
+  // Severity legend (only include levels that appear)
+  const usedSevs = [...new Set(bars.map(b => b.maxSev))].sort()
+  const legendLabels: Record<number, string> = {1:'Mild',2:'Low',3:'Moderate',4:'High',5:'Severe'}
+  let lx = chartX
+  const ly = chartBottom + LABEL_H + 1
+  w.doc.setFontSize(6.5)
+  for (const sev of usedSevs) {
+    const sc = SEV_COLORS[sev]
+    if (!sc) continue
+    w.doc.setFillColor(sc[0], sc[1], sc[2])
+    w.doc.rect(lx, ly - 2.5, 3, 3, 'F')
+    w.doc.setFont('helvetica', 'normal')
+    w.setColor(C.mid)
+    w.doc.text(legendLabels[sev] ?? String(sev), lx + 4, ly)
+    lx += w.doc.getTextWidth(legendLabels[sev] ?? '') + 8
+  }
+
+  w.y = ly + 6
+  w.gap(2)
 }
 
 // ─── Module renderers ─────────────────────────────────────────────────────────
@@ -241,9 +628,16 @@ function renderDiary(w: PDFWriter, entries: DiaryEntry[]) {
   }
 }
 
-function renderBehavior(w: PDFWriter, logs: BehaviorLog[]) {
+function renderBehavior(w: PDFWriter, logs: BehaviorLog[], startDate: string, endDate: string) {
   if (!logs.length) return
   w.sectionHeader('BEHAVIOR LOGS', C.amber)
+
+  // Frequency chart before detail entries
+  renderBehaviorChart(w, logs, startDate, endDate)
+
+  w.rule()
+  w.gap(2)
+
   for (const l of logs.sort((a,b)=>a.entry_date.localeCompare(b.entry_date)||a.time_of_day.localeCompare(b.time_of_day))) {
     w.check(28)
     const severityLabel = SEVERITY_LABELS[l.severity]?.label ?? `${l.severity}/5`
@@ -441,33 +835,10 @@ function renderCover(w: PDFWriter, params: PDFExportParams) {
     w.y += 6
   }
 
-  // Summary stats
-  w.y += 10
-  w.doc.setFont('helvetica', 'bold')
-  w.doc.setFontSize(9)
-  w.setColor(C.mid)
-  w.doc.text('SUMMARY', MX + 6, w.y)
-  w.y += 6
-
+  // Enhanced summary panel
+  w.y += 8
   const s = buildSummary(params)
-  const statLines: string[] = []
-  if (params.modules.includes('behavior'))
-    statLines.push(`Behavior incidents: ${s.behaviorCount}${s.avgSeverity ? `  |  Avg severity: ${s.avgSeverity.toFixed(1)}/5` : ''}${s.topAnt.length ? `  |  Top trigger${s.topAnt.length>1?'s':''}: ${s.topAnt.join(', ')}` : ''}`)
-  if (params.modules.includes('sleep') && s.avgSleepMins)
-    statLines.push(`Avg sleep: ${fmtMins(s.avgSleepMins)}${s.avgQuality ? `  |  Avg quality: ${qualityLabel(Math.round(s.avgQuality))}` : ''}`)
-  if (params.modules.includes('diet'))
-    statLines.push(`Diet: ${s.meals} meal${s.meals!==1?'s':''}  |  ${s.smoothies} smoothie${s.smoothies!==1?'s':''}`)
-  if (params.modules.includes('goals'))
-    statLines.push(`Goals: ${s.activeGoals} active  |  ${params.progressNotes.length} progress note${params.progressNotes.length!==1?'s':''} in range`)
-
-  w.doc.setFont('helvetica', 'normal')
-  w.doc.setFontSize(10)
-  w.setColor(C.dark)
-  for (const sl of statLines) {
-    const lines = w.doc.splitTextToSize(sl, CW - 10) as string[]
-    w.doc.text(lines, MX + 6, w.y)
-    w.y += lines.length * 5.5
-  }
+  renderEnhancedSummary(w, params, s)
 }
 
 // ─── Custom tracker renderer ──────────────────────────────────────────────────
@@ -534,7 +905,7 @@ export async function generatePDF(params: PDFExportParams): Promise<Blob> {
     if (!params.modules.includes(mod)) continue
     w.newPage()
     if (mod === 'diary')        renderDiary(w, params.diary)
-    if (mod === 'behavior')     renderBehavior(w, params.behavior)
+    if (mod === 'behavior')     renderBehavior(w, params.behavior, params.startDate, params.endDate)
     if (mod === 'sensory')      renderSensory(w, params.sensory)
     if (mod === 'diet')         renderDiet(w, params.diet)
     if (mod === 'sleep')        renderSleep(w, params.sleep)
