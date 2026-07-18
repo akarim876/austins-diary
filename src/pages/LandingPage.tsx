@@ -219,7 +219,7 @@ export function LandingPage() {
           {FEATURES.map((f, i) => (
             <div
               key={f.title}
-              className="reveal flex gap-4 rounded-2xl p-5 shadow-sm"
+              className="reveal flex gap-4 rounded-xl p-5 shadow-sm"
               style={{
                 background: 'var(--color-surface)',
                 ...stagger(i + 1),
