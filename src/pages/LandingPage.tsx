@@ -82,7 +82,7 @@ function CTAButton({
     <button
       type="button"
       onClick={onClick}
-      className="inline-flex items-center justify-center px-7 py-3.5 rounded-xl text-white text-sm font-bold shadow-md"
+      className="inline-flex items-center justify-center px-7 py-3.5 rounded-lg text-white text-sm font-bold shadow-md"
       style={{
         background: 'var(--color-accent)',
         transition: reduced ? 'none' : 'transform 150ms ease-out',
