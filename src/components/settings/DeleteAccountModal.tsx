@@ -82,7 +82,7 @@ export function DeleteAccountModal({ onClose }: Props) {
 
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-1.5">
-              Type <span className="font-mono font-bold text-red-600">{CONFIRM_WORD}</span> to confirm
+              Type <span className="font-bold text-red-600">{CONFIRM_WORD}</span> to confirm
             </label>
             <input
               type="text"
@@ -91,7 +91,7 @@ export function DeleteAccountModal({ onClose }: Props) {
               placeholder={CONFIRM_WORD}
               disabled={deleting}
               autoComplete="off"
-              className="w-full px-3.5 py-2.5 rounded-xl border border-gray-200 text-sm focus:outline-none focus:ring-2 focus:ring-red-300 focus:border-red-300 transition font-mono"
+              className="w-full px-3.5 py-2.5 rounded-xl border border-gray-200 text-sm focus:outline-none focus:ring-2 focus:ring-red-300 focus:border-red-300 transition tabular-nums"
             />
           </div>
 

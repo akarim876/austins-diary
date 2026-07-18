@@ -14,29 +14,29 @@ import { ModuleIcon } from '../components/ui/ModuleIcon'
 const FEATURES = [
   {
     icon:      'behavior' as const,
-    iconColor: '#92400E',
-    iconBg:    '#FEF3C7',
+    iconColor: '#7A5008',
+    iconBg:    '#F3E1B8',
     title:     'Behavior & sensory tracking',
     desc:      'Log incidents, regulation zones, and what helped — with time, location, and context captured in seconds.',
   },
   {
     icon:      'meal' as const,
-    iconColor: '#065F46',
-    iconBg:    '#D1FAE5',
+    iconColor: '#3A6348',
+    iconBg:    '#D9E4DC',
     title:     'Diet & daily routines',
     desc:      'Track meals, smoothies, supplements, and a daily schedule your whole care team can follow and update.',
   },
   {
     icon:      'sensory' as const,
-    iconColor: '#5B21B6',
-    iconBg:    '#EDE9FE',
+    iconColor: '#6B3568',
+    iconBg:    '#E3CFE0',
     title:     'Handoff notes for caregivers',
     desc:      'A shared, always-current note at the top of the dashboard so anyone stepping in knows exactly what\'s going on.',
   },
   {
     icon:      'goals' as const,
-    iconColor: '#0F766E',
-    iconBg:    '#CCFBF1',
+    iconColor: '#5E4D2A',
+    iconBg:    '#F1EDE3',
     title:     'Progress you can bring to appointments',
     desc:      'Export a clean PDF report — organized by module — ready for doctors, therapists, and school meetings.',
   },
@@ -175,10 +175,7 @@ export function LandingPage() {
 
         <h1
           className="text-4xl sm:text-5xl font-bold leading-tight tracking-tight"
-          style={{
-            fontFamily: '"Fraunces", Georgia, serif',
-            color:      'var(--color-text)',
-          }}
+          style={{ color: 'var(--color-text)' }}
         >
           Every detail<br />
           matters.
@@ -186,10 +183,7 @@ export function LandingPage() {
 
         <p
           className="text-3xl sm:text-4xl font-bold leading-tight tracking-tight mt-4 mb-5"
-          style={{
-            fontFamily: '"Fraunces", Georgia, serif',
-            color:      'var(--color-accent)',
-          }}
+          style={{ color: 'var(--color-accent)' }}
         >
           Here's where you<br />
           keep them.
@@ -197,7 +191,7 @@ export function LandingPage() {
 
         <p
           className="text-base sm:text-lg leading-relaxed max-w-xl mb-8"
-          style={{ color: 'var(--color-text-muted)', fontFamily: '"Merriweather", Georgia, serif', fontWeight: 300 }}
+          style={{ color: 'var(--color-text-muted)' }}
         >
           A private space for the people who care for them most — built to hold the small wins,
           understand the hard moments, and keep everyone who loves your child in sync.
@@ -216,11 +210,7 @@ export function LandingPage() {
       <section className="px-5 pb-20 max-w-4xl mx-auto">
         <h2
           className="text-2xl sm:text-3xl font-bold text-center mb-10 reveal"
-          style={{
-            fontFamily: '"Fraunces", Georgia, serif',
-            color:      'var(--color-text)',
-            ...stagger(0),
-          }}
+          style={{ color: 'var(--color-text)', ...stagger(0) }}
         >
           One place for everything that matters
         </h2>
@@ -229,7 +219,7 @@ export function LandingPage() {
           {FEATURES.map((f, i) => (
             <div
               key={f.title}
-              className="reveal flex gap-4 rounded-xl p-5 shadow-sm"
+              className="reveal flex gap-4 rounded-2xl p-5 shadow-sm"
               style={{
                 background: 'var(--color-surface)',
                 ...stagger(i + 1),
@@ -269,13 +259,9 @@ export function LandingPage() {
         <div className="px-5 py-16 max-w-2xl mx-auto">
           <h2
             className="text-2xl sm:text-3xl font-bold text-center mb-10 reveal"
-            style={{
-              fontFamily: '"Fraunces", Georgia, serif',
-              color:      'var(--color-text)',
-              ...stagger(0),
-            }}
-          >
-            Simple to get started
+          style={{ color: 'var(--color-text)', ...stagger(0) }}
+        >
+          Simple to get started
           </h2>
 
           <div className="space-y-7">
@@ -315,11 +301,7 @@ export function LandingPage() {
       <section className="px-5 pt-16 pb-24 text-center max-w-lg mx-auto">
         <h2
           className="text-2xl sm:text-3xl font-bold mb-3 reveal"
-          style={{
-            fontFamily: '"Fraunces", Georgia, serif',
-            color:      'var(--color-text)',
-            ...stagger(0),
-          }}
+          style={{ color: 'var(--color-text)', ...stagger(0) }}
         >
           Start keeping track today
         </h2>

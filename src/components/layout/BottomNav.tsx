@@ -4,8 +4,11 @@ import { CalendarDays, LayoutDashboard, Plus } from 'lucide-react'
 import { ModuleIcon } from '../ui/ModuleIcon'
 import { GlobalRecordButton } from '../audio/GlobalRecordButton'
 
-// Two tabs on each side of the central FAB
-const LEFT_TABS: { to: string; label: string; renderIcon: (cls: string, col: string) => ReactElement }[] = [
+const LEFT_TABS: {
+  to: string
+  label: string
+  renderIcon: (cls: string, col: string) => ReactElement
+}[] = [
   {
     to: '/dashboard',
     label: 'Today',
@@ -31,25 +34,28 @@ const RIGHT_TABS: typeof LEFT_TABS = [
   },
 ]
 
-function Tab({ to, label, renderIcon }: typeof LEFT_TABS[number]) {
+function Tab({ to, renderIcon, label }: typeof LEFT_TABS[number]) {
   return (
     <NavLink
       to={to}
-      className="flex-1 flex flex-col items-center justify-center py-2 gap-1 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white rounded-xl"
+      aria-label={label}
+      className="flex-1 flex items-center justify-center focus-visible:outline-none"
     >
       {({ isActive }) => (
-        <>
+        <span
+          className="flex items-center justify-center transition-all duration-200"
+          style={{
+            width: 44,
+            height: 44,
+            borderRadius: 14,
+            background: isActive ? 'var(--color-text)' : 'rgba(51,50,46,0.07)',
+          }}
+        >
           {renderIcon(
             'w-5 h-5 transition-colors',
-            isActive ? 'var(--color-accent)' : 'var(--color-text-muted)',
+            isActive ? '#fff' : 'var(--color-text-muted)',
           )}
-          <span
-            className="text-[10px] font-semibold transition-colors"
-            style={{ color: isActive ? 'var(--color-accent)' : 'var(--color-text-muted)' }}
-          >
-            {label}
-          </span>
-        </>
+        </span>
       )}
     </NavLink>
   )
@@ -59,7 +65,7 @@ export function BottomNav() {
   return (
     <nav className="fixed bottom-0 left-0 right-0 z-50 safe-area-bottom">
       <div
-        className="relative max-w-lg mx-auto flex items-end"
+        className="relative max-w-lg mx-auto flex items-center h-16 px-2"
         style={{
           background:           'var(--color-surface-blur)',
           backdropFilter:       'blur(16px)',
@@ -68,15 +74,13 @@ export function BottomNav() {
           boxShadow:            '0 -2px 20px rgba(51,50,46,0.08)',
         }}
       >
-        {/* Left two tabs */}
         {LEFT_TABS.map(t => <Tab key={t.to} {...t} />)}
 
         {/* Center FAB slot */}
-        <div className="flex-shrink-0 w-20 flex flex-col items-center justify-center py-1">
+        <div className="flex-shrink-0 w-20 flex items-center justify-center">
           <GlobalRecordButton />
         </div>
 
-        {/* Right two tabs */}
         {RIGHT_TABS.map(t => <Tab key={t.to} {...t} />)}
       </div>
 

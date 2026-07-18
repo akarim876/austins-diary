@@ -16,9 +16,9 @@ export interface TileDef {
   description: string
   /** Module icon name — render via <ModuleIcon name={def.icon} /> */
   icon: ModuleIconName
-  /** Icon colour from the design system */
+  /** Icon colour — darker shade of the module's hue family */
   accent: string
-  /** Icon container background colour */
+  /** Icon container background — the module's pastel card colour */
   iconBg: string
 }
 
@@ -28,64 +28,64 @@ export const TILE_DEFS: TileDef[] = [
     label: 'Smoothie',
     description: 'Log a smoothie',
     icon: 'smoothie',
-    accent: 'var(--color-accent)',
-    iconBg: 'var(--color-accent-subtle)',
+    accent: '#3A6348',
+    iconBg: '#D9E4DC',
   },
   {
     id: 'meal',
     label: 'Meal / Snack',
     description: 'Log a meal or snack',
     icon: 'meal',
-    accent: 'var(--color-accent)',
-    iconBg: 'var(--color-accent-subtle)',
+    accent: '#3A6348',
+    iconBg: '#D9E4DC',
   },
   {
     id: 'behavior',
     label: 'Behavior',
     description: 'Log an incident',
     icon: 'behavior',
-    accent: '#D99A6C',
-    iconBg: 'rgba(217,154,108,0.12)',
+    accent: '#7A5008',
+    iconBg: '#F3E1B8',
   },
   {
     id: 'sensory',
     label: 'Sensory',
     description: 'Log regulation zone',
     icon: 'sensory',
-    accent: '#8FB89C',
-    iconBg: 'rgba(143,184,156,0.15)',
+    accent: '#6B3568',
+    iconBg: '#E3CFE0',
   },
   {
     id: 'sleep',
     label: 'Sleep',
     description: 'Log bedtime & wake',
     icon: 'sleep',
-    accent: 'var(--color-accent)',
-    iconBg: 'var(--color-accent-subtle)',
+    accent: '#2D5578',
+    iconBg: '#D6E2ED',
   },
   {
     id: 'progress',
     label: 'Goal Progress',
     description: 'Update a goal',
     icon: 'goals',
-    accent: 'var(--color-accent)',
-    iconBg: 'var(--color-accent-subtle)',
+    accent: '#5E4D2A',
+    iconBg: '#F1EDE3',
   },
   {
     id: 'appointment',
     label: 'Appointment',
     description: 'Log a visit',
     icon: 'appointments',
-    accent: '#C77B6A',
-    iconBg: 'rgba(199,123,106,0.12)',
+    accent: '#7A2822',
+    iconBg: '#E3B3AC',
   },
   {
     id: 'quick_mood',
     label: 'Quick Mood',
     description: 'One-tap zone check',
     icon: 'quick_mood',
-    accent: '#8FB89C',
-    iconBg: 'rgba(143,184,156,0.15)',
+    accent: '#6B3568',
+    iconBg: '#E3CFE0',
   },
 ]
 

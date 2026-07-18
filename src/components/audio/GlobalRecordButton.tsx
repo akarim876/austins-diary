@@ -321,7 +321,7 @@ export function GlobalRecordButton() {
           className="text-[10px] font-semibold tabular-nums"
           style={{
             color: isRecording ? '#C77B6A' : '#9A9187',
-            fontFamily: isRecording ? '"JetBrains Mono", monospace' : 'inherit',
+            fontFamily: 'inherit',
           }}
         >
           {isRecording ? fabLabel : 'Record'}

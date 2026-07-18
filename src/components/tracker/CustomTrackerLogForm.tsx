@@ -225,7 +225,7 @@ export function CustomTrackerLogForm({
                   <Square className="w-4 h-4" />
                   Stop
                 </button>
-                <span className="text-sm font-mono text-gray-700 tabular-nums">
+                <span className="text-sm font-semibold text-gray-700 tabular-nums">
                   {formatElapsed(elapsed)}
                 </span>
               </>

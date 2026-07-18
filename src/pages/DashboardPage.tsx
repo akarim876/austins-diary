@@ -2,7 +2,6 @@ import { useState } from 'react'
 import { format, startOfWeek, endOfWeek, parseISO } from 'date-fns'
 import {
   AlertTriangle, Bell, BookOpen, Calendar,
-  ChevronDown, ChevronUp,
   Moon, Pill, Settings2, TrendingDown, TrendingUp, Minus,
 } from 'lucide-react'
 import { WeekStrip } from '../components/calendar/WeekStrip'
@@ -28,9 +27,8 @@ import { ProgressNoteForm } from '../components/goals/ProgressNoteForm'
 import { AppointmentForm } from '../components/appointments/AppointmentForm'
 import { QuickMoodDrawer } from '../components/sensory/QuickMoodDrawer'
 import { CustomTrackerLogForm } from '../components/tracker/CustomTrackerLogForm'
-import { BehaviorFrequencyChart } from '../components/dashboard/BehaviorFrequencyChart'
-import { SleepDurationChart } from '../components/dashboard/SleepDurationChart'
-import { RegulationDistributionChart } from '../components/dashboard/RegulationDistributionChart'
+import { WeeklyBubbleChart } from '../components/dashboard/WeeklyBubbleChart'
+import type { BubbleData } from '../components/dashboard/WeeklyBubbleChart'
 import { Spinner } from '../components/ui/Spinner'
 import { HandoffNote } from '../components/dashboard/HandoffNote'
 import { DailySchedule } from '../components/schedule/DailySchedule'
@@ -49,7 +47,7 @@ function Section({ title, children, className = '', action }: {
   return (
     <section
       className={`overflow-hidden ${className}`}
-      style={{ background: '#fff', borderRadius: 10, boxShadow: '0 2px 10px rgba(51,50,46,0.07)' }}
+      style={{ background: '#fff', borderRadius: 20, boxShadow: '0 2px 10px rgba(51,50,46,0.07)' }}
     >
       <div className="px-4 pt-4 pb-1 flex items-center justify-between">
         <h2 className="text-[10px] font-bold uppercase tracking-widest" style={{ color: '#9A9187' }}>{title}</h2>
@@ -140,7 +138,7 @@ export function DashboardPage() {
   const [sleepOpen,       setSleepOpen]       = useState(false)
   const [progressOpen,    setProgressOpen]    = useState(false)
   const [appointmentOpen, setAppointmentOpen] = useState(false)
-  const [chartsOpen,      setChartsOpen]      = useState(false)
+  const [_chartsOpen,     _setChartsOpen]     = useState(false) // replaced by bubble chart
   const [trackerLogOpen,  setTrackerLogOpen]  = useState<string | null>(null) // tracker ID
   const [quickMoodOpen,   setQuickMoodOpen]   = useState(false)
 
@@ -366,8 +364,8 @@ export function DashboardPage() {
 
               {/* Behavior */}
               <div className="flex items-start gap-3">
-                <div className="w-8 h-8 rounded-xl bg-amber-50 flex items-center justify-center flex-shrink-0">
-                  <ModuleIcon name="behavior" className="w-4 h-4 text-amber-500" />
+                <div className="w-8 h-8 rounded-xl flex items-center justify-center flex-shrink-0" style={{ background: '#F3E1B8' }}>
+                  <ModuleIcon name="behavior" className="w-4 h-4" style={{ color: '#7A5008' }} />
                 </div>
                 <div className="flex-1">
                   <div className="flex items-center gap-1.5">
@@ -390,8 +388,8 @@ export function DashboardPage() {
 
               {/* Sleep */}
               <div className="flex items-start gap-3">
-                <div className="w-8 h-8 rounded-xl bg-indigo-50 flex items-center justify-center flex-shrink-0">
-                  <ModuleIcon name="sleep" className="w-4 h-4 text-indigo-500" />
+                <div className="w-8 h-8 rounded-xl flex items-center justify-center flex-shrink-0" style={{ background: '#D6E2ED' }}>
+                  <ModuleIcon name="sleep" className="w-4 h-4" style={{ color: '#2D5578' }} />
                 </div>
                 <div className="flex-1">
                   {db.avgSleepHoursThisWeek != null ? (
@@ -425,8 +423,8 @@ export function DashboardPage() {
 
               {/* Smoothies */}
               <div className="flex items-start gap-3">
-                <div className="w-8 h-8 rounded-xl bg-emerald-50 flex items-center justify-center flex-shrink-0">
-                  <ModuleIcon name="smoothie" className="w-4 h-4 text-emerald-500" />
+                <div className="w-8 h-8 rounded-xl flex items-center justify-center flex-shrink-0" style={{ background: '#D9E4DC' }}>
+                  <ModuleIcon name="smoothie" className="w-4 h-4" style={{ color: '#3A6348' }} />
                 </div>
                 <div className="flex-1">
                   <div className="flex items-center gap-2">
@@ -449,8 +447,8 @@ export function DashboardPage() {
                 <>
                   <div style={{ borderTop: '1px solid #EDE9E3' }} />
                   <div className="flex items-start gap-3">
-                    <div className="w-8 h-8 rounded-xl bg-yellow-50 flex items-center justify-center flex-shrink-0">
-                      <AlertTriangle className="w-4 h-4 text-yellow-500" />
+                    <div className="w-8 h-8 rounded-xl flex items-center justify-center flex-shrink-0" style={{ background: '#F1EDE3' }}>
+                      <AlertTriangle className="w-4 h-4" style={{ color: '#5E4D2A' }} />
                     </div>
                     <div className="flex-1">
                       <span className="text-sm font-semibold text-gray-900">
@@ -487,67 +485,74 @@ export function DashboardPage() {
           )}
         </Section>
 
-        {/* ── Charts ──────────────────────────────────────────────────────────── */}
-        <section className="overflow-hidden" style={{ background: '#fff', borderRadius: 10, boxShadow: '0 2px 10px rgba(51,50,46,0.07)' }}>
-          <button
-            type="button"
-            onClick={() => setChartsOpen(v => !v)}
-            className="w-full flex items-center justify-between px-4 py-4 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-500 rounded-xl"
-          >
-            <span className="text-[10px] font-bold uppercase tracking-widest" style={{ color: '#9A9187' }}>Trends &amp; charts</span>
-            {chartsOpen
-              ? <ChevronUp className="w-4 h-4 text-gray-400" />
-              : <ChevronDown className="w-4 h-4 text-gray-400" />
-            }
-          </button>
+        {/* ── Weekly snapshot (bubble chart) ───────────────────────────────────── */}
+        {(() => {
+          const weekStartDate = startOfWeek(new Date(), { weekStartsOn: 0 })
+          const sleepWeekCount = db.sleepChart.filter(
+            p => parseISO(p.date) >= weekStartDate && p.duration != null
+          ).length
+          const sensoryWeekTotal = db.regulationChart.reduce((sum, z) => sum + z.count, 0)
 
-          {chartsOpen && (
-            <div className="px-4 pb-5 space-y-6">
-              {/* Behavior 30 days */}
-              <div>
-                <p className="text-xs font-semibold text-gray-500 mb-2 flex items-center gap-1.5">
-                  <ModuleIcon name="behavior" className="w-3.5 h-3.5 text-amber-500" />
-                  Behavior incidents — last 30 days
-                </p>
+          const weeklyBubbles: BubbleData[] = [
+            {
+              id:        'behavior',
+              label:     'Behavior',
+              value:     db.weekBehaviorCount,
+              bgColor:   '#F3E1B8',
+              iconColor: '#7A5008',
+              icon:      'behavior',
+            },
+            {
+              id:        'diet',
+              label:     'Diet',
+              value:     db.smoothiesThisWeek,
+              bgColor:   '#D9E4DC',
+              iconColor: '#3A6348',
+              icon:      'smoothie',
+            },
+            {
+              id:        'sleep',
+              label:     'Sleep',
+              value:     sleepWeekCount,
+              bgColor:   '#D6E2ED',
+              iconColor: '#2D5578',
+              icon:      'sleep',
+            },
+            {
+              id:        'sensory',
+              label:     'Regulation',
+              value:     sensoryWeekTotal,
+              bgColor:   '#E3CFE0',
+              iconColor: '#6B3568',
+              icon:      'sensory',
+            },
+          ]
+
+          return (
+            <section
+              className="overflow-hidden"
+              style={{ background: '#fff', borderRadius: 20, boxShadow: '0 2px 10px rgba(51,50,46,0.07)' }}
+            >
+              <div className="px-4 pt-4 pb-1">
+                <h2 className="text-[10px] font-bold uppercase tracking-widest" style={{ color: '#9A9187' }}>
+                  Weekly snapshot
+                </h2>
+              </div>
+              <div className="px-4 pb-5 pt-2">
                 {db.loading
-                  ? <div className="flex justify-center py-6"><Spinner className="w-5 h-5" /></div>
-                  : <BehaviorFrequencyChart data={db.behaviorChart} />
+                  ? <div className="flex justify-center py-8"><Spinner className="w-5 h-5" /></div>
+                  : <WeeklyBubbleChart bubbles={weeklyBubbles} />
                 }
               </div>
-
-              {/* Sleep 30 days */}
-              <div>
-                <p className="text-xs font-semibold text-gray-500 mb-2 flex items-center gap-1.5">
-                  <ModuleIcon name="sleep" className="w-3.5 h-3.5 text-indigo-500" />
-                  Sleep duration — last 30 days
-                </p>
-                {db.loading
-                  ? <div className="flex justify-center py-6"><Spinner className="w-5 h-5" /></div>
-                  : <SleepDurationChart data={db.sleepChart} />
-                }
-                <p className="text-[10px] text-gray-400 mt-1">Dashed line = 9h reference</p>
-              </div>
-
-              {/* Regulation this week */}
-              <div>
-                <p className="text-xs font-semibold text-gray-500 mb-2 flex items-center gap-1.5">
-                  <ModuleIcon name="sensory" className="w-3.5 h-3.5 text-violet-500" />
-                  Regulation zones — this week
-                </p>
-                {db.loading
-                  ? <div className="flex justify-center py-6"><Spinner className="w-5 h-5" /></div>
-                  : <RegulationDistributionChart data={db.regulationChart} />
-                }
-              </div>
-            </div>
-          )}
-        </section>
+            </section>
+          )
+        })()}
 
         {/* ── Unfiled voice notes ──────────────────────────────────────────────── */}
         {quickNotes.length > 0 && (
           <section
             className="overflow-hidden"
-            style={{ background: '#fff', borderRadius: 10, boxShadow: '0 2px 10px rgba(51,50,46,0.07)' }}
+            style={{ background: '#fff', borderRadius: 20, boxShadow: '0 2px 10px rgba(51,50,46,0.07)' }}
           >
             <div className="px-4 pt-4 pb-1">
               <h2 className="text-[10px] font-bold uppercase tracking-widest" style={{ color: '#9A9187' }}>

@@ -1,4 +1,4 @@
-@import url('https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,400;0,9..144,600;0,9..144,700;1,9..144,400&family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Inter:ital,wght@0,400;0,500;0,600;0,700;1,400&display=swap');
 @import "tailwindcss";
 
 /* ─── Design tokens ────────────────────────────────────────────────────────── */
@@ -24,10 +24,10 @@
   --color-warm-400: #B8B0A3;
   --color-warm-500: #9A9187;
 
-  /* Typography families */
-  --font-display: 'Fraunces', Georgia, 'Times New Roman', serif;
+  /* Typography — single Inter family throughout, display/mono aliases kept for back-compat */
+  --font-display: 'Inter', system-ui, sans-serif;
   --font-sans:    'Inter', system-ui, sans-serif;
-  --font-mono:    'JetBrains Mono', 'Fira Mono', monospace;
+  --font-mono:    'Inter', system-ui, sans-serif;
 
   /* Shadows — soft, layered, no hard edges */
   --shadow-xs:   0 1px 4px  rgba(51,50,46,0.05);
@@ -56,6 +56,21 @@
   --text-primary:   #33322E;
   --text-secondary: #6B6760;
   --text-muted:     #9A9187;
+
+  /* ── Module color-blocked cards — fixed across ALL themes ─────────────── */
+  /* These encode meaning (module identity), never swap with [data-theme]. */
+  --module-diet-bg:       #D9E4DC;
+  --module-diet-icon:     #3A6348;
+  --module-behavior-bg:   #F3E1B8;
+  --module-behavior-icon: #7A5008;
+  --module-sensory-bg:    #E3CFE0;
+  --module-sensory-icon:  #6B3568;
+  --module-sleep-bg:      #D6E2ED;
+  --module-sleep-icon:    #2D5578;
+  --module-goals-bg:      #F1EDE3;
+  --module-goals-icon:    #5E4D2A;
+  --module-appt-bg:       #E3B3AC;
+  --module-appt-icon:     #7A2822;
 }
 
 /* ─── Swappable color themes ─────────────────────────────────────────────── */
@@ -183,15 +198,15 @@ body {
 
 /* ─── Typography utilities ──────────────────────────────────────────────── */
 
+/* font-display now renders bold Inter — keeps existing class working */
 .font-display {
-  font-family: var(--font-display);
+  font-family: var(--font-sans);
+  font-weight: 700;
 }
 
-/* For timestamps, durations, numeric data */
+/* font-data: tabular Inter for numeric/data contexts */
 .font-data {
-  font-family: var(--font-mono);
-  font-size: 0.82em;
-  letter-spacing: 0.01em;
+  font-family: var(--font-sans);
   font-variant-numeric: tabular-nums;
 }
 
@@ -199,13 +214,13 @@ body {
 
 .card {
   background: var(--color-surface);
-  border-radius: 16px;
+  border-radius: 20px;
   box-shadow: 0 2px 10px rgba(51,50,46,0.07);
 }
 
 .card-sm {
   background: var(--color-surface);
-  border-radius: 12px;
+  border-radius: 16px;
   box-shadow: 0 1px 4px rgba(51,50,46,0.05);
 }
 

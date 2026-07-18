@@ -283,7 +283,7 @@ export function VoiceInput({ onTranscribed, disabled = false }: Props) {
         <span>Stop</span>
         <span
           className="tabular-nums text-xs font-medium opacity-90"
-          style={{ fontFamily: '"JetBrains Mono", monospace' }}
+          style={{ fontFamily: 'inherit' }}
         >
           {formatTime(elapsed)}{nearMax ? ` / ${formatTime(MAX_SECONDS)}` : ''}
         </span>
