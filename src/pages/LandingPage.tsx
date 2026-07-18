@@ -175,7 +175,7 @@ export function LandingPage() {
 
         <h1
           className="text-4xl sm:text-5xl font-bold leading-tight tracking-tight"
-          style={{ color: 'var(--color-text)' }}
+          style={{ color: 'var(--color-text)', fontFamily: '"Fraunces", Georgia, serif' }}
         >
           Every detail<br />
           matters.
@@ -183,7 +183,7 @@ export function LandingPage() {
 
         <p
           className="text-3xl sm:text-4xl font-bold leading-tight tracking-tight mt-4 mb-5"
-          style={{ color: 'var(--color-accent)' }}
+          style={{ color: 'var(--color-accent)', fontFamily: '"Fraunces", Georgia, serif' }}
         >
           Here's where you<br />
           keep them.
