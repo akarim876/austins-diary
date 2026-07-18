@@ -489,7 +489,7 @@ export function DashboardPage() {
         {(() => {
           const weekStartDate = startOfWeek(new Date(), { weekStartsOn: 0 })
           const sleepWeekCount = db.sleepChart.filter(
-            p => parseISO(p.date) >= weekStartDate && p.duration != null
+            p => parseISO(p.date) >= weekStartDate && p.hours != null
           ).length
           const sensoryWeekTotal = db.regulationChart.reduce((sum, z) => sum + z.count, 0)
 
