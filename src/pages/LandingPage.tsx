@@ -210,7 +210,7 @@ export function LandingPage() {
       <section className="px-5 pb-20 max-w-4xl mx-auto">
         <h2
           className="text-2xl sm:text-3xl font-bold text-center mb-10 reveal"
-          style={{ color: 'var(--color-text)', ...stagger(0) }}
+          style={{ color: 'var(--color-text)', fontFamily: '"Fraunces", Georgia, serif', ...stagger(0) }}
         >
           One place for everything that matters
         </h2>
@@ -259,9 +259,9 @@ export function LandingPage() {
         <div className="px-5 py-16 max-w-2xl mx-auto">
           <h2
             className="text-2xl sm:text-3xl font-bold text-center mb-10 reveal"
-          style={{ color: 'var(--color-text)', ...stagger(0) }}
-        >
-          Simple to get started
+            style={{ color: 'var(--color-text)', fontFamily: '"Fraunces", Georgia, serif', ...stagger(0) }}
+          >
+            Simple to get started
           </h2>
 
           <div className="space-y-7">
