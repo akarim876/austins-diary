@@ -77,7 +77,7 @@ export function QuickMoodDrawer({ profileId, date, onSaved, onCancel }: Props) {
     : format(new Date(date + 'T12:00:00'), 'MMM d')
 
   return (
-    <div className="flex flex-col gap-5 px-1 pb-2">
+    <div className="flex flex-col gap-5 px-4 pb-4">
 
       {/* Time picker */}
       <div>
