@@ -191,7 +191,7 @@ export function LandingPage() {
 
         <p
           className="text-base sm:text-lg leading-relaxed max-w-xl mb-8"
-          style={{ color: 'var(--color-text-muted)' }}
+          style={{ color: 'var(--color-text-muted)', fontFamily: '"Merriweather", Georgia, serif' }}
         >
           A private space for the people who care for them most — built to hold the small wins,
           understand the hard moments, and keep everyone who loves your child in sync.
@@ -244,7 +244,7 @@ export function LandingPage() {
                 </p>
                 <p
                   className="text-sm leading-relaxed"
-                  style={{ color: 'var(--color-text-muted)' }}
+                  style={{ color: 'var(--color-text-muted)', fontFamily: '"Merriweather", Georgia, serif' }}
                 >
                   {f.desc}
                 </p>
