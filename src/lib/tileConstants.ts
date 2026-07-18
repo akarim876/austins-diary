@@ -8,6 +8,7 @@ export type TileId =
   | 'sleep'
   | 'progress'
   | 'appointment'
+  | 'quick_mood'
 
 export interface TileDef {
   id: TileId
@@ -77,6 +78,14 @@ export const TILE_DEFS: TileDef[] = [
     icon: 'appointments',
     accent: '#C77B6A',
     iconBg: 'rgba(199,123,106,0.12)',
+  },
+  {
+    id: 'quick_mood',
+    label: 'Quick Mood',
+    description: 'One-tap zone check',
+    icon: 'quick_mood',
+    accent: '#8FB89C',
+    iconBg: 'rgba(143,184,156,0.15)',
   },
 ]
 

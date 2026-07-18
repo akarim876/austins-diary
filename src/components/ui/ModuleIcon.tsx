@@ -20,6 +20,7 @@ export type ModuleIconName =
   | 'sleep'
   | 'goals'
   | 'appointments'
+  | 'quick_mood'
 
 // ---------------------------------------------------------------------------
 // Path definitions — each icon is a fragment of SVG elements
@@ -85,6 +86,20 @@ function Goals() {
   )
 }
 
+/** Quick Mood — simple neutral face, readable at tile size */
+function QuickMood() {
+  return (
+    <>
+      <circle cx="12" cy="12" r="9" />
+      {/* eyes: open, attentive dots */}
+      <circle cx="9.5" cy="11" r="0.9" fill="currentColor" />
+      <circle cx="14.5" cy="11" r="0.9" fill="currentColor" />
+      {/* slight smile — suggests "check in" */}
+      <path d="M8.5 15c1-1.8 6-1.8 7 0" />
+    </>
+  )
+}
+
 function Appointments() {
   return (
     <>
@@ -108,6 +123,7 @@ const ICONS: Record<ModuleIconName, () => React.ReactElement> = {
   sleep:        Sleep,
   goals:        Goals,
   appointments: Appointments,
+  quick_mood:   QuickMood,
 }
 
 // ---------------------------------------------------------------------------

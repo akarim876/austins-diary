@@ -26,6 +26,7 @@ import { DietSheet } from '../components/diet/DietSheet'
 import { SleepLogForm } from '../components/sleep/SleepLogForm'
 import { ProgressNoteForm } from '../components/goals/ProgressNoteForm'
 import { AppointmentForm } from '../components/appointments/AppointmentForm'
+import { QuickMoodDrawer } from '../components/sensory/QuickMoodDrawer'
 import { CustomTrackerLogForm } from '../components/tracker/CustomTrackerLogForm'
 import { BehaviorFrequencyChart } from '../components/dashboard/BehaviorFrequencyChart'
 import { SleepDurationChart } from '../components/dashboard/SleepDurationChart'
@@ -141,6 +142,7 @@ export function DashboardPage() {
   const [appointmentOpen, setAppointmentOpen] = useState(false)
   const [chartsOpen,      setChartsOpen]      = useState(false)
   const [trackerLogOpen,  setTrackerLogOpen]  = useState<string | null>(null) // tracker ID
+  const [quickMoodOpen,   setQuickMoodOpen]   = useState(false)
 
   const today     = new Date()
   const weekStart = format(startOfWeek(today, { weekStartsOn: 0 }), 'MMM d')
@@ -216,6 +218,7 @@ export function DashboardPage() {
           sleep:       () => setSleepOpen(true),
           progress:    () => setProgressOpen(true),
           appointment: () => setAppointmentOpen(true),
+          quick_mood:  () => setQuickMoodOpen(true),
         }
         const cols  = 2
         return (
@@ -611,6 +614,16 @@ export function DashboardPage() {
           providers={providers}
           onSaved={() => setAppointmentOpen(false)}
           onCancel={() => setAppointmentOpen(false)}
+        />
+      </BottomSheet>
+
+      {/* Quick Mood sheet */}
+      <BottomSheet open={quickMoodOpen} onClose={() => setQuickMoodOpen(false)} title="Quick mood check">
+        <QuickMoodDrawer
+          profileId={activeProfile.id}
+          date={realTodayStr}
+          onSaved={() => setQuickMoodOpen(false)}
+          onCancel={() => setQuickMoodOpen(false)}
         />
       </BottomSheet>
 
