@@ -2,7 +2,7 @@
  * Public landing page — 5-slide onboarding for unauthenticated visitors.
  * Authenticated users never reach this; App.tsx routes them straight to AppShell.
  */
-import { useEffect, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import type { CSSProperties } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { AppLogo } from '../components/ui/AppLogo'
@@ -10,6 +10,7 @@ import { AppLogo } from '../components/ui/AppLogo'
 const TOTAL_SLIDES = 5
 const FEATURE_SLIDE_COUNT = 4
 const ANIM_MS = 280
+const SWIPE_THRESHOLD_PX = 48
 
 // ─── Feature slide content ────────────────────────────────────────────────────
 
@@ -281,10 +282,15 @@ export function LandingPage() {
   const reduced  = usePrefersReducedMotion()
   const [slide, setSlide] = useState(0)
   const [phase, setPhase] = useState<'in' | 'out'>('in')
+  const [dir, setDir]     = useState<'forward' | 'back'>('forward')
   const [busy, setBusy]   = useState(false)
 
-  function goTo(next: number) {
-    if (busy || next === slide) return
+  const pointerStart = useRef<{ x: number; y: number } | null>(null)
+  const swiping      = useRef(false)
+
+  function goTo(next: number, direction: 'forward' | 'back' = 'forward') {
+    if (busy || next === slide || next < 0 || next >= TOTAL_SLIDES) return
+    setDir(direction)
     if (reduced) {
       setSlide(next)
       return
@@ -300,17 +306,65 @@ export function LandingPage() {
 
   function handleContinue() {
     if (slide < TOTAL_SLIDES - 1) {
-      goTo(slide + 1)
+      goTo(slide + 1, 'forward')
     } else {
       navigate('/auth?mode=signup')
+    }
+  }
+
+  function onPointerDown(e: React.PointerEvent) {
+    // Ignore swipes that start on interactive controls
+    const tag = (e.target as HTMLElement).closest('button, a, input, textarea')
+    if (tag) return
+    pointerStart.current = { x: e.clientX, y: e.clientY }
+    swiping.current = false
+  }
+
+  function onPointerMove(e: React.PointerEvent) {
+    if (!pointerStart.current || busy) return
+    const dx = e.clientX - pointerStart.current.x
+    const dy = e.clientY - pointerStart.current.y
+    if (Math.abs(dx) > 10 && Math.abs(dx) > Math.abs(dy)) {
+      swiping.current = true
+      e.preventDefault()
+    }
+  }
+
+  function onPointerUp(e: React.PointerEvent) {
+    if (!pointerStart.current) return
+    const dx = e.clientX - pointerStart.current.x
+    const dy = e.clientY - pointerStart.current.y
+    pointerStart.current = null
+
+    if (!swiping.current || Math.abs(dx) < SWIPE_THRESHOLD_PX || Math.abs(dx) < Math.abs(dy)) {
+      swiping.current = false
+      return
+    }
+    swiping.current = false
+
+    if (dx < 0) {
+      // Swipe left → next
+      if (slide < TOTAL_SLIDES - 1) goTo(slide + 1, 'forward')
+      else navigate('/auth?mode=signup')
+    } else {
+      // Swipe right → previous
+      if (slide > 0) goTo(slide - 1, 'back')
     }
   }
 
   const shellAnim: CSSProperties = reduced
     ? {}
     : phase === 'out'
-      ? { animation: `slideExitLeft ${ANIM_MS}ms ease-out both` }
-      : { animation: `slideEnterRight ${ANIM_MS}ms ease-out both` }
+      ? {
+          animation: dir === 'forward'
+            ? `slideExitLeft ${ANIM_MS}ms ease-out both`
+            : `slideExitRight ${ANIM_MS}ms ease-out both`,
+        }
+      : {
+          animation: dir === 'forward'
+            ? `slideEnterRight ${ANIM_MS}ms ease-out both`
+            : `slideEnterLeft ${ANIM_MS}ms ease-out both`,
+        }
 
   const isHero = slide === 0
   const featureIndex = slide - 1
@@ -338,8 +392,15 @@ export function LandingPage() {
         </button>
       </nav>
 
-      {/* ── Slide body ─────────────────────────────────────────────────────── */}
-      <main className="flex-1 flex flex-col px-5 pb-8 max-w-lg mx-auto w-full">
+      {/* ── Slide body (swipeable) ─────────────────────────────────────────── */}
+      <main
+        className="flex-1 flex flex-col px-5 pb-8 max-w-lg mx-auto w-full"
+        style={{ touchAction: 'pan-y' }}
+        onPointerDown={onPointerDown}
+        onPointerMove={onPointerMove}
+        onPointerUp={onPointerUp}
+        onPointerCancel={() => { pointerStart.current = null }}
+      >
         <div key={slide} className="flex-1 flex flex-col" style={shellAnim}>
 
           {isHero ? (
@@ -450,9 +511,17 @@ export function LandingPage() {
           from { opacity: 0; transform: translateX(28px); }
           to   { opacity: 1; transform: translateX(0); }
         }
+        @keyframes slideEnterLeft {
+          from { opacity: 0; transform: translateX(-28px); }
+          to   { opacity: 1; transform: translateX(0); }
+        }
         @keyframes slideExitLeft {
           from { opacity: 1; transform: translateX(0); }
           to   { opacity: 0; transform: translateX(-28px); }
+        }
+        @keyframes slideExitRight {
+          from { opacity: 1; transform: translateX(0); }
+          to   { opacity: 0; transform: translateX(28px); }
         }
         @media (prefers-reduced-motion: reduce) {
           * {
