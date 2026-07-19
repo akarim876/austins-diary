@@ -88,13 +88,9 @@ function ContinueButton({
   )
 }
 
-function DotIndicators({ activeIndex, reduced }: { activeIndex: number; reduced: boolean }) {
+function DotIndicators({ activeIndex }: { activeIndex: number }) {
   return (
-    <div
-      className="flex items-center justify-center gap-2 mb-5"
-      style={enterStyle(reduced, 320)}
-      aria-hidden="true"
-    >
+    <div className="flex items-center justify-center gap-2 mb-5" aria-hidden="true">
       {Array.from({ length: FEATURE_SLIDE_COUNT }).map((_, i) => (
         <span
           key={i}
@@ -401,10 +397,9 @@ export function LandingPage() {
         onPointerUp={onPointerUp}
         onPointerCancel={() => { pointerStart.current = null }}
       >
-        <div key={slide} className="flex-1 flex flex-col" style={shellAnim}>
-
+        {/* Animated content only — Continue stays pinned below */}
+        <div key={slide} className="flex-1 flex flex-col min-h-0" style={shellAnim}>
           {isHero ? (
-            /* ── Slide 0: Hero ─────────────────────────────────────────────── */
             <div className="flex-1 flex flex-col items-center text-center pt-10">
               <img
                 src="/Icon-splash.png"
@@ -438,7 +433,7 @@ export function LandingPage() {
               </p>
 
               <p
-                className="text-lg sm:text-xl leading-relaxed max-w-xl mb-10"
+                className="text-lg sm:text-xl leading-relaxed max-w-xl"
                 style={{
                   color: 'var(--color-text-muted)',
                   fontFamily: '"Merriweather", Georgia, serif',
@@ -448,18 +443,13 @@ export function LandingPage() {
                 A private space for the people who care for them most — built to hold the small wins,
                 understand the hard moments, and keep everyone who loves your child in sync.
               </p>
-
-              <div className="mt-auto w-full pt-6" style={enterStyle(reduced, 260)}>
-                <ContinueButton onClick={handleContinue} reduced={reduced} />
-              </div>
             </div>
           ) : (
-            /* ── Slides 1–4: Feature slides ────────────────────────────────── */
             (() => {
               const feature = FEATURE_SLIDES[featureIndex]
               const Art = FEATURE_ART[featureIndex]
               return (
-                <div className="flex-1 flex flex-col items-center text-center pt-6">
+                <div className="flex-1 flex flex-col items-center text-center pt-6 min-h-0">
                   <h2
                     className="text-3xl sm:text-4xl font-bold leading-tight tracking-tight px-2"
                     style={{
@@ -482,18 +472,21 @@ export function LandingPage() {
                     {feature.desc}
                   </p>
 
-                  <div className="w-full flex-1 flex items-center justify-center min-h-[220px]">
+                  <div className="w-full flex-1 flex items-center justify-center min-h-[180px]">
                     <Art reduced={reduced} />
-                  </div>
-
-                  <div className="mt-auto w-full pt-4">
-                    <DotIndicators activeIndex={featureIndex} reduced={reduced} />
-                    <ContinueButton onClick={handleContinue} reduced={reduced} style={enterStyle(reduced, 360)} />
                   </div>
                 </div>
               )
             })()
           )}
+        </div>
+
+        {/* Fixed footer — does not remount or animate with slide changes */}
+        <div className="w-full pt-4 flex-shrink-0">
+          {!isHero && <DotIndicators activeIndex={featureIndex} />}
+          {/* Reserve dot space on hero so Continue stays at the same Y */}
+          {isHero && <div className="mb-5" style={{ height: 6 }} aria-hidden="true" />}
+          <ContinueButton onClick={handleContinue} reduced={reduced} />
         </div>
       </main>
 
