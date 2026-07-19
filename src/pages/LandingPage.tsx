@@ -1,159 +1,331 @@
 /**
- * Public landing page — shown at "/" for unauthenticated visitors.
+ * Public landing page — 5-slide onboarding for unauthenticated visitors.
  * Authenticated users never reach this; App.tsx routes them straight to AppShell.
- * No API calls, no auth — purely static content.
  */
-import { useEffect, useRef } from 'react'
+import { useEffect, useState } from 'react'
 import type { CSSProperties } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { AppLogo } from '../components/ui/AppLogo'
-import { ModuleIcon } from '../components/ui/ModuleIcon'
 
-// ─── Content data ─────────────────────────────────────────────────────────────
+const TOTAL_SLIDES = 5
+const FEATURE_SLIDE_COUNT = 4
+const ANIM_MS = 280
 
-const FEATURES = [
+// ─── Feature slide content ────────────────────────────────────────────────────
+
+const FEATURE_SLIDES = [
   {
-    icon:      'behavior' as const,
-    iconColor: '#7A5008',
-    iconBg:    '#F3E1B8',
-    title:     'Behavior & sensory tracking',
-    desc:      'Log incidents, regulation zones, and what helped — with time, location, and context captured in seconds.',
+    title: 'Behavior & Sensory Tracking',
+    desc:  'Log incidents, regulation zones, and what helped — with time, location, and context captured in seconds.',
   },
   {
-    icon:      'meal' as const,
-    iconColor: '#3A6348',
-    iconBg:    '#D9E4DC',
-    title:     'Diet & daily routines',
-    desc:      'Track meals, smoothies, supplements, and a daily schedule your whole care team can follow and update.',
+    title: 'Diet and Daily Routines',
+    desc:  'Track meals, snacks, supplements, and a daily schedule your whole care team can follow and update.',
   },
   {
-    icon:      'sensory' as const,
-    iconColor: '#6B3568',
-    iconBg:    '#E3CFE0',
-    title:     'Handoff notes for caregivers',
-    desc:      'A shared, always-current note at the top of the dashboard so anyone stepping in knows exactly what\'s going on.',
+    title: 'Handoff notes for caregivers',
+    desc:  "A shared, always-current note at the top of the dashboard so anyone stepping in knows exactly what's going on.",
   },
   {
-    icon:      'goals' as const,
-    iconColor: '#5E4D2A',
-    iconBg:    '#F1EDE3',
-    title:     'Progress you can bring to appointments',
-    desc:      'Export a clean PDF report — organized by module — ready for doctors, therapists, and school meetings.',
+    title: 'Progress you can bring to appointments',
+    desc:  'Export a clean PDF report, organized by module, ready for doctors, therapists, and school meetings.',
   },
 ] as const
 
-const STEPS = [
-  {
-    num:   '1',
-    title: 'Set up your child\'s profile',
-    desc:  'Add their name, allergies, and key medical notes. A guided setup wizard walks you through the whole thing.',
-  },
-  {
-    num:   '2',
-    title: 'Log moments as they happen',
-    desc:  'Tap to log a behavior, sleep session, or meal in under 30 seconds — or use voice-to-text from anywhere in the app.',
-  },
-  {
-    num:   '3',
-    title: 'Share with caregivers and providers',
-    desc:  'Invite other caregivers with one link. Export a full report before any appointment — no prep work needed.',
-  },
-] as const
-
-// ─── Animation helpers ────────────────────────────────────────────────────────
+// ─── Helpers ──────────────────────────────────────────────────────────────────
 
 function usePrefersReducedMotion() {
-  if (typeof window === 'undefined') return false
-  return window.matchMedia('(prefers-reduced-motion: reduce)').matches
+  const [reduced, setReduced] = useState(false)
+  useEffect(() => {
+    const mq = window.matchMedia('(prefers-reduced-motion: reduce)')
+    setReduced(mq.matches)
+    const handler = (e: MediaQueryListEvent) => setReduced(e.matches)
+    mq.addEventListener('change', handler)
+    return () => mq.removeEventListener('change', handler)
+  }, [])
+  return reduced
+}
+
+function enterStyle(reduced: boolean, delayMs: number, kind: 'up' | 'scale' = 'up'): CSSProperties {
+  if (reduced) return {}
+  const from = kind === 'scale'
+    ? 'scale(0.85)'
+    : 'translateY(18px)'
+  return {
+    opacity: 0,
+    transform: from,
+    animation: `slideEnter${kind === 'scale' ? 'Scale' : 'Up'} ${ANIM_MS}ms ease-out ${delayMs}ms both`,
+  }
 }
 
 // ─── Sub-components ───────────────────────────────────────────────────────────
 
-function CTAButton({
+function ContinueButton({
   onClick,
   reduced,
-  children,
+  style,
 }: {
   onClick: () => void
   reduced: boolean
-  children: React.ReactNode
+  style?: CSSProperties
 }) {
   return (
     <button
       type="button"
       onClick={onClick}
-      className="inline-flex items-center justify-center px-7 py-3.5 rounded-lg text-white text-sm font-bold shadow-md"
+      className="w-full max-w-sm mx-auto block py-3.5 rounded-lg text-white text-sm font-bold tracking-wide uppercase shadow-md"
       style={{
         background: 'var(--color-accent)',
         transition: reduced ? 'none' : 'transform 150ms ease-out',
+        ...style,
       }}
       onMouseEnter={e => { if (!reduced) (e.currentTarget as HTMLElement).style.transform = 'scale(1.02)' }}
       onMouseLeave={e => { (e.currentTarget as HTMLElement).style.transform = '' }}
-      onFocus={e     => { if (!reduced) (e.currentTarget as HTMLElement).style.transform = 'scale(1.02)' }}
-      onBlur={e      => { (e.currentTarget as HTMLElement).style.transform = '' }}
     >
-      {children}
+      Continue
     </button>
   )
 }
 
+function DotIndicators({ activeIndex, reduced }: { activeIndex: number; reduced: boolean }) {
+  return (
+    <div
+      className="flex items-center justify-center gap-2 mb-5"
+      style={enterStyle(reduced, 320)}
+      aria-hidden="true"
+    >
+      {Array.from({ length: FEATURE_SLIDE_COUNT }).map((_, i) => (
+        <span
+          key={i}
+          className="transition-all duration-200"
+          style={{
+            height: 6,
+            width: i === activeIndex ? 22 : 6,
+            borderRadius: 999,
+            background: i === activeIndex ? 'var(--color-accent)' : 'rgba(51,50,46,0.22)',
+          }}
+        />
+      ))}
+    </div>
+  )
+}
+
+/** Horizontal baseline used under illustration clusters */
+function Baseline() {
+  return (
+    <div
+      className="absolute left-0 right-0"
+      style={{
+        bottom: '18%',
+        height: 1.5,
+        background: 'var(--color-text)',
+        opacity: 0.55,
+      }}
+    />
+  )
+}
+
+// ─── Illustration clusters ────────────────────────────────────────────────────
+
+function ArtPiece({
+  src,
+  reduced,
+  delay,
+  className,
+  style,
+  rotate = 0,
+}: {
+  src: string
+  reduced: boolean
+  delay: number
+  className?: string
+  style?: CSSProperties
+  rotate?: number
+}) {
+  return (
+    <div className={className} style={{ ...style, ...enterStyle(reduced, delay, 'scale') }}>
+      <img
+        src={src}
+        alt=""
+        className="w-full h-full object-contain"
+        style={{ transform: rotate ? `rotate(${rotate}deg)` : undefined }}
+      />
+    </div>
+  )
+}
+
+function BehaviorArt({ reduced }: { reduced: boolean }) {
+  return (
+    <div className="relative w-full max-w-xs mx-auto h-56 sm:h-64">
+      <ArtPiece
+        src="/Images/Smiley-face-1.png"
+        reduced={reduced}
+        delay={140}
+        rotate={6}
+        className="absolute"
+        style={{ width: '52%', top: '2%', right: '4%' }}
+      />
+      <ArtPiece
+        src="/Images/Smiley-face-2.png"
+        reduced={reduced}
+        delay={220}
+        rotate={-8}
+        className="absolute"
+        style={{ width: '40%', bottom: '6%', left: '6%' }}
+      />
+      <ArtPiece
+        src="/Images/Smiley-face-3.png"
+        reduced={reduced}
+        delay={300}
+        rotate={4}
+        className="absolute"
+        style={{ width: '42%', bottom: '4%', right: '10%' }}
+      />
+    </div>
+  )
+}
+
+function DietArt({ reduced }: { reduced: boolean }) {
+  return (
+    <div className="relative w-full max-w-sm mx-auto h-56 sm:h-64 flex items-center justify-center">
+      <Baseline />
+      <div
+        className="absolute rounded-full"
+        style={{
+          width: '58%',
+          aspectRatio: '1',
+          background: 'var(--color-accent)',
+          opacity: 0.85,
+          ...enterStyle(reduced, 120, 'scale'),
+        }}
+      />
+      <ArtPiece
+        src="/Images/Food-art.png"
+        reduced={reduced}
+        delay={200}
+        className="relative z-10"
+        style={{ width: '72%', maxHeight: '90%' }}
+      />
+    </div>
+  )
+}
+
+function HandoffArt({ reduced }: { reduced: boolean }) {
+  return (
+    <div className="relative w-full max-w-sm mx-auto h-56 sm:h-64">
+      <Baseline />
+      <ArtPiece
+        src="/Images/Smiley-face-4.png"
+        reduced={reduced}
+        delay={140}
+        rotate={-6}
+        className="absolute z-10"
+        style={{ width: '28%', bottom: '16%', left: '4%' }}
+      />
+      <ArtPiece
+        src="/Images/Notes.png"
+        reduced={reduced}
+        delay={220}
+        rotate={8}
+        className="absolute z-20"
+        style={{ width: '34%', bottom: '14%', left: '33%' }}
+      />
+      <ArtPiece
+        src="/Images/Smiley-face-5.png"
+        reduced={reduced}
+        delay={300}
+        rotate={4}
+        className="absolute z-10"
+        style={{ width: '36%', bottom: '14%', right: '2%' }}
+      />
+    </div>
+  )
+}
+
+function ProgressArt({ reduced }: { reduced: boolean }) {
+  return (
+    <div className="relative w-full max-w-sm mx-auto h-56 sm:h-64">
+      <ArtPiece
+        src="/Images/Smiley-face-6.png"
+        reduced={reduced}
+        delay={140}
+        rotate={-4}
+        className="absolute"
+        style={{ width: '42%', top: '8%', left: '2%' }}
+      />
+      <ArtPiece
+        src="/Images/Smiley-face-7.png"
+        reduced={reduced}
+        delay={220}
+        className="absolute z-10"
+        style={{ width: '26%', top: '28%', left: '38%' }}
+      />
+      <ArtPiece
+        src="/Images/Smiley-doc-face.png"
+        reduced={reduced}
+        delay={300}
+        rotate={3}
+        className="absolute"
+        style={{ width: '48%', top: '4%', right: '0%' }}
+      />
+    </div>
+  )
+}
+
+const FEATURE_ART = [BehaviorArt, DietArt, HandoffArt, ProgressArt] as const
+
 // ─── Page ─────────────────────────────────────────────────────────────────────
 
 export function LandingPage() {
-  const navigate    = useNavigate()
-  const reduced     = usePrefersReducedMotion()
-  const sectionRef  = useRef<HTMLDivElement>(null)
+  const navigate = useNavigate()
+  const reduced  = usePrefersReducedMotion()
+  const [slide, setSlide] = useState(0)
+  const [phase, setPhase] = useState<'in' | 'out'>('in')
+  const [busy, setBusy]   = useState(false)
 
-  // Scroll-reveal with IntersectionObserver
-  useEffect(() => {
-    if (reduced) return
+  function goTo(next: number) {
+    if (busy || next === slide) return
+    if (reduced) {
+      setSlide(next)
+      return
+    }
+    setBusy(true)
+    setPhase('out')
+    window.setTimeout(() => {
+      setSlide(next)
+      setPhase('in')
+      window.setTimeout(() => setBusy(false), ANIM_MS)
+    }, ANIM_MS)
+  }
 
-    const observer = new IntersectionObserver(
-      (entries) => {
-        entries.forEach(entry => {
-          if (entry.isIntersecting) {
-            const el = entry.target as HTMLElement
-            el.style.opacity   = '1'
-            el.style.transform = 'translateY(0)'
-            observer.unobserve(el)
-          }
-        })
-      },
-      { threshold: 0.1, rootMargin: '0px 0px -32px 0px' },
-    )
-
-    sectionRef.current
-      ?.querySelectorAll<HTMLElement>('.reveal')
-      .forEach(el => observer.observe(el))
-
-    return () => observer.disconnect()
-  }, [reduced])
-
-  /** Stagger delay style applied to each reveal element */
-  function stagger(i: number, baseMs = 80): CSSProperties {
-    if (reduced) return {}
-    return {
-      opacity:    0,
-      transform:  'translateY(20px)',
-      transition: `opacity 250ms ease-out ${i * baseMs}ms, transform 250ms ease-out ${i * baseMs}ms`,
+  function handleContinue() {
+    if (slide < TOTAL_SLIDES - 1) {
+      goTo(slide + 1)
+    } else {
+      navigate('/auth?mode=signup')
     }
   }
 
+  const shellAnim: CSSProperties = reduced
+    ? {}
+    : phase === 'out'
+      ? { animation: `slideExitLeft ${ANIM_MS}ms ease-out both` }
+      : { animation: `slideEnterRight ${ANIM_MS}ms ease-out both` }
+
+  const isHero = slide === 0
+  const featureIndex = slide - 1
+
   return (
     <div
-      ref={sectionRef}
-      className="min-h-dvh"
+      className="min-h-dvh flex flex-col"
       style={{ background: 'var(--color-background)', color: 'var(--color-text)' }}
     >
-      {/* ── Minimal nav ───────────────────────────────────────────────────── */}
-      <nav className="flex items-center justify-between px-5 py-4 max-w-5xl mx-auto">
+      {/* ── Header ─────────────────────────────────────────────────────────── */}
+      <nav className="flex items-center justify-between px-5 py-4 max-w-lg mx-auto w-full">
         <div className="flex items-center gap-2">
           <AppLogo className="h-7" />
-          <span
-            className="text-sm font-bold tracking-tight"
-            style={{ color: 'var(--color-text)' }}
-          >
-            Austin's Diary
+          <span className="text-sm font-bold tracking-tight" style={{ color: 'var(--color-text)' }}>
+            Austin&apos;s Diary
           </span>
         </div>
         <button
@@ -166,181 +338,125 @@ export function LandingPage() {
         </button>
       </nav>
 
-      {/* ── Hero ──────────────────────────────────────────────────────────── */}
-      <section
-        className="flex flex-col items-center text-center px-5 pt-10 pb-20 max-w-3xl mx-auto"
-        style={reduced ? {} : { animation: 'heroFadeUp 280ms ease-out both' }}
-      >
-        <img src="/Icon-splash.png" alt="Austin's Diary" className="h-24 w-24 object-contain mb-7" />
+      {/* ── Slide body ─────────────────────────────────────────────────────── */}
+      <main className="flex-1 flex flex-col px-5 pb-8 max-w-lg mx-auto w-full">
+        <div key={slide} className="flex-1 flex flex-col" style={shellAnim}>
 
-        <h1
-          className="text-4xl sm:text-5xl font-bold leading-tight tracking-tight"
-          style={{ color: 'var(--color-text)', fontFamily: '"Fraunces", Georgia, serif' }}
-        >
-          Every detail<br />
-          matters.
-        </h1>
+          {isHero ? (
+            /* ── Slide 0: Hero ─────────────────────────────────────────────── */
+            <div className="flex-1 flex flex-col items-center text-center pt-10">
+              <img
+                src="/Icon-splash.png"
+                alt="Austin's Diary"
+                className="h-24 w-24 object-contain mb-7"
+                style={enterStyle(reduced, 0, 'scale')}
+              />
 
-        <p
-          className="text-3xl sm:text-4xl font-bold leading-tight tracking-tight mt-4 mb-5"
-          style={{ color: 'var(--color-accent)', fontFamily: '"Fraunces", Georgia, serif' }}
-        >
-          Here's where you<br />
-          keep them.
-        </p>
-
-        <p
-          className="text-base sm:text-lg leading-relaxed max-w-xl mb-8"
-          style={{ color: 'var(--color-text-muted)', fontFamily: '"Merriweather", Georgia, serif' }}
-        >
-          A private space for the people who care for them most — built to hold the small wins,
-          understand the hard moments, and keep everyone who loves your child in sync.
-        </p>
-
-        <CTAButton onClick={() => navigate('/auth?mode=signup')} reduced={reduced}>
-          Start for free
-        </CTAButton>
-
-        <p className="text-xs mt-4" style={{ color: 'var(--color-text-muted)' }}>
-          No credit card required &mdash; everything stays private and secure.
-        </p>
-      </section>
-
-      {/* ── Feature highlights ────────────────────────────────────────────── */}
-      <section className="px-5 pb-20 max-w-4xl mx-auto">
-        <h2
-          className="text-2xl sm:text-3xl font-bold text-center mb-10 reveal"
-          style={{ color: 'var(--color-text)', fontFamily: '"Fraunces", Georgia, serif', ...stagger(0) }}
-        >
-          One place for everything that matters
-        </h2>
-
-        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-          {FEATURES.map((f, i) => (
-            <div
-              key={f.title}
-              className="reveal flex gap-4 rounded-xl p-5 shadow-sm"
-              style={{
-                background: 'var(--color-surface)',
-                ...stagger(i + 1),
-              }}
-            >
-              <div
-                className="w-11 h-11 rounded-xl flex-shrink-0 flex items-center justify-center mt-0.5"
-                style={{ background: f.iconBg }}
+              <h1
+                className="text-4xl sm:text-5xl font-bold leading-tight tracking-tight"
+                style={{
+                  color: 'var(--color-text)',
+                  fontFamily: '"Fraunces", Georgia, serif',
+                  ...enterStyle(reduced, 60),
+                }}
               >
-                <ModuleIcon
-                  name={f.icon}
-                  className="w-5 h-5"
-                  style={{ color: f.iconColor }}
-                />
-              </div>
-              <div>
-                <p
-                  className="text-sm font-bold mb-1"
-                  style={{ color: 'var(--color-text)' }}
-                >
-                  {f.title}
-                </p>
-                <p
-                  className="text-sm leading-relaxed"
-                  style={{ color: 'var(--color-text-muted)', fontFamily: '"Merriweather", Georgia, serif' }}
-                >
-                  {f.desc}
-                </p>
+                Every detail<br />
+                matters.
+              </h1>
+
+              <p
+                className="text-3xl sm:text-4xl font-bold leading-tight tracking-tight mt-4 mb-5"
+                style={{
+                  color: 'var(--color-accent)',
+                  fontFamily: '"Fraunces", Georgia, serif',
+                  ...enterStyle(reduced, 120),
+                }}
+              >
+                Here&apos;s where you<br />
+                keep them.
+              </p>
+
+              <p
+                className="text-base sm:text-lg leading-relaxed max-w-xl mb-10"
+                style={{
+                  color: 'var(--color-text-muted)',
+                  fontFamily: '"Merriweather", Georgia, serif',
+                  ...enterStyle(reduced, 180),
+                }}
+              >
+                A private space for the people who care for them most — built to hold the small wins,
+                understand the hard moments, and keep everyone who loves your child in sync.
+              </p>
+
+              <div className="mt-auto w-full pt-6" style={enterStyle(reduced, 260)}>
+                <ContinueButton onClick={handleContinue} reduced={reduced} />
               </div>
             </div>
-          ))}
-        </div>
-      </section>
-
-      {/* ── How it works ──────────────────────────────────────────────────── */}
-      <section style={{ background: 'var(--color-surface)' }}>
-        <div className="px-5 py-16 max-w-2xl mx-auto">
-          <h2
-            className="text-2xl sm:text-3xl font-bold text-center mb-10 reveal"
-            style={{ color: 'var(--color-text)', fontFamily: '"Fraunces", Georgia, serif', ...stagger(0) }}
-          >
-            Simple to get started
-          </h2>
-
-          <div className="space-y-7">
-            {STEPS.map((s, i) => (
-              <div
-                key={s.num}
-                className="reveal flex items-start gap-5"
-                style={stagger(i + 1, 100)}
-              >
-                <div
-                  className="w-9 h-9 rounded-full flex-shrink-0 flex items-center justify-center text-white text-sm font-bold"
-                  style={{ background: 'var(--color-accent)' }}
-                >
-                  {s.num}
-                </div>
-                <div className="pt-0.5">
-                  <p
-                    className="text-sm font-bold mb-1"
-                    style={{ color: 'var(--color-text)' }}
+          ) : (
+            /* ── Slides 1–4: Feature slides ────────────────────────────────── */
+            (() => {
+              const feature = FEATURE_SLIDES[featureIndex]
+              const Art = FEATURE_ART[featureIndex]
+              return (
+                <div className="flex-1 flex flex-col items-center text-center pt-6">
+                  <h2
+                    className="text-2xl sm:text-3xl font-bold leading-tight tracking-tight px-2"
+                    style={{
+                      color: 'var(--color-accent)',
+                      fontFamily: '"Fraunces", Georgia, serif',
+                      ...enterStyle(reduced, 40),
+                    }}
                   >
-                    {s.title}
-                  </p>
+                    {feature.title}
+                  </h2>
+
                   <p
-                    className="text-sm leading-relaxed"
-                    style={{ color: 'var(--color-text-muted)' }}
+                    className="text-sm sm:text-base leading-relaxed mt-4 mb-6 max-w-md px-1"
+                    style={{
+                      color: 'var(--color-text)',
+                      fontFamily: '"Merriweather", Georgia, serif',
+                      ...enterStyle(reduced, 100),
+                    }}
                   >
-                    {s.desc}
+                    {feature.desc}
                   </p>
+
+                  <div className="w-full flex-1 flex items-center justify-center min-h-[220px]">
+                    <Art reduced={reduced} />
+                  </div>
+
+                  <div className="mt-auto w-full pt-4">
+                    <DotIndicators activeIndex={featureIndex} reduced={reduced} />
+                    <ContinueButton onClick={handleContinue} reduced={reduced} style={enterStyle(reduced, 360)} />
+                  </div>
                 </div>
-              </div>
-            ))}
-          </div>
+              )
+            })()
+          )}
         </div>
-      </section>
+      </main>
 
-      {/* ── Closing CTA ───────────────────────────────────────────────────── */}
-      <section className="px-5 pt-16 pb-24 text-center max-w-lg mx-auto">
-        <h2
-          className="text-2xl sm:text-3xl font-bold mb-3 reveal"
-          style={{ color: 'var(--color-text)', ...stagger(0) }}
-        >
-          Start keeping track today
-        </h2>
-        <p
-          className="text-sm leading-relaxed mb-8 reveal"
-          style={{ color: 'var(--color-text-muted)', ...stagger(1) }}
-        >
-          Everything here stays private, just for the people who love them.
-        </p>
-
-        <div className="reveal flex flex-col items-center gap-4" style={stagger(2)}>
-          <CTAButton onClick={() => navigate('/auth?mode=signup')} reduced={reduced}>
-            Start for free
-          </CTAButton>
-
-          <p className="text-sm" style={{ color: 'var(--color-text-muted)' }}>
-            Already have an account?{' '}
-            <button
-              type="button"
-              onClick={() => navigate('/auth')}
-              className="font-semibold hover:underline underline-offset-2 transition-opacity hover:opacity-70"
-              style={{ color: 'var(--color-accent)' }}
-            >
-              Log in
-            </button>
-          </p>
-        </div>
-      </section>
-
-      {/* ── Keyframes ─────────────────────────────────────────────────────── */}
+      {/* ── Keyframes ──────────────────────────────────────────────────────── */}
       <style>{`
-        @keyframes heroFadeUp {
-          from { opacity: 0; transform: translateY(20px); }
-          to   { opacity: 1; transform: translateY(0);    }
+        @keyframes slideEnterUp {
+          from { opacity: 0; transform: translateY(18px); }
+          to   { opacity: 1; transform: translateY(0); }
+        }
+        @keyframes slideEnterScale {
+          from { opacity: 0; transform: scale(0.85); }
+          to   { opacity: 1; transform: scale(1); }
+        }
+        @keyframes slideEnterRight {
+          from { opacity: 0; transform: translateX(28px); }
+          to   { opacity: 1; transform: translateX(0); }
+        }
+        @keyframes slideExitLeft {
+          from { opacity: 1; transform: translateX(0); }
+          to   { opacity: 0; transform: translateX(-28px); }
         }
         @media (prefers-reduced-motion: reduce) {
-          .reveal {
-            opacity: 1 !important;
-            transform: none !important;
+          * {
+            animation: none !important;
             transition: none !important;
           }
         }
