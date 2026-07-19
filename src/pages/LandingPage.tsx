@@ -134,6 +134,7 @@ function ArtPiece({
   className,
   style,
   rotate = 0,
+  imgStyle,
 }: {
   src: string
   reduced: boolean
@@ -141,6 +142,7 @@ function ArtPiece({
   className?: string
   style?: CSSProperties
   rotate?: number
+  imgStyle?: CSSProperties
 }) {
   return (
     <div className={className} style={{ ...style, ...enterStyle(reduced, delay, 'scale') }}>
@@ -148,7 +150,10 @@ function ArtPiece({
         src={src}
         alt=""
         className="w-full h-full object-contain"
-        style={{ transform: rotate ? `rotate(${rotate}deg)` : undefined }}
+        style={{
+          transform: rotate ? `rotate(${rotate}deg)` : undefined,
+          ...imgStyle,
+        }}
       />
     </div>
   )
@@ -175,14 +180,14 @@ function BehaviorArt({ reduced }: { reduced: boolean }) {
         className="absolute z-10"
         style={{ width: '40%', bottom: '6%', left: '6%' }}
       />
-      {/* Teal face — smaller, front */}
+      {/* Teal face — smaller, front, lower center */}
       <ArtPiece
         src="/Images/Smiley-face-1.png"
         reduced={reduced}
         delay={300}
         rotate={6}
         className="absolute z-20"
-        style={{ width: '36%', top: '18%', right: '8%' }}
+        style={{ width: '36%', bottom: '2%', left: '32%' }}
       />
     </div>
   )
@@ -192,20 +197,10 @@ function DietArt({ reduced }: { reduced: boolean }) {
   return (
     <div className="relative w-full max-w-sm mx-auto h-56 sm:h-64 flex items-center justify-center">
       <Baseline />
-      <div
-        className="absolute rounded-full"
-        style={{
-          width: '58%',
-          aspectRatio: '1',
-          background: 'var(--color-accent)',
-          opacity: 0.85,
-          ...enterStyle(reduced, 120, 'scale'),
-        }}
-      />
       <ArtPiece
         src="/Images/Food-art.png"
         reduced={reduced}
-        delay={200}
+        delay={160}
         className="relative z-10"
         style={{ width: '72%', maxHeight: '90%' }}
       />
@@ -216,30 +211,29 @@ function DietArt({ reduced }: { reduced: boolean }) {
 function HandoffArt({ reduced }: { reduced: boolean }) {
   return (
     <div className="relative w-full max-w-sm mx-auto h-56 sm:h-64">
-      <Baseline />
       <ArtPiece
         src="/Images/Smiley-face-4.png"
         reduced={reduced}
         delay={140}
         rotate={-6}
-        className="absolute z-10"
-        style={{ width: '28%', bottom: '16%', left: '4%' }}
+        className="absolute z-20"
+        style={{ width: '26%', bottom: '16%', left: '2%' }}
       />
       <ArtPiece
         src="/Images/Notes.png"
         reduced={reduced}
         delay={220}
         rotate={8}
-        className="absolute z-20"
-        style={{ width: '34%', bottom: '14%', left: '33%' }}
+        className="absolute z-0"
+        style={{ width: '96%', bottom: '4%', left: '2%' }}
       />
       <ArtPiece
         src="/Images/Smiley-face-5.png"
         reduced={reduced}
         delay={300}
         rotate={4}
-        className="absolute z-10"
-        style={{ width: '36%', bottom: '14%', right: '2%' }}
+        className="absolute z-20"
+        style={{ width: '44%', bottom: '12%', right: '0%' }}
       />
     </div>
   )
@@ -248,28 +242,31 @@ function HandoffArt({ reduced }: { reduced: boolean }) {
 function ProgressArt({ reduced }: { reduced: boolean }) {
   return (
     <div className="relative w-full max-w-sm mx-auto h-56 sm:h-64">
+      {/* Face 7 — larger, left (where face 6 was) */}
       <ArtPiece
-        src="/Images/Smiley-face-6.png"
+        src="/Images/Smiley-face-7.png"
         reduced={reduced}
         delay={140}
         rotate={-4}
         className="absolute"
         style={{ width: '42%', top: '8%', left: '2%' }}
       />
+      {/* Face 6 — smaller, lower center */}
       <ArtPiece
-        src="/Images/Smiley-face-7.png"
+        src="/Images/Smiley-face-6.png"
         reduced={reduced}
         delay={220}
         className="absolute z-10"
-        style={{ width: '26%', top: '28%', left: '38%' }}
+        style={{ width: '26%', bottom: '4%', left: '36%' }}
       />
+      {/* Doc face — bigger, right */}
       <ArtPiece
         src="/Images/Smiley-doc-face.png"
         reduced={reduced}
         delay={300}
         rotate={3}
-        className="absolute"
-        style={{ width: '48%', top: '4%', right: '0%' }}
+        className="absolute z-20"
+        style={{ width: '72%', top: '-2%', right: '-4%' }}
       />
     </div>
   )
@@ -380,7 +377,7 @@ export function LandingPage() {
               </p>
 
               <p
-                className="text-base sm:text-lg leading-relaxed max-w-xl mb-10"
+                className="text-lg sm:text-xl leading-relaxed max-w-xl mb-10"
                 style={{
                   color: 'var(--color-text-muted)',
                   fontFamily: '"Merriweather", Georgia, serif',
@@ -403,7 +400,7 @@ export function LandingPage() {
               return (
                 <div className="flex-1 flex flex-col items-center text-center pt-6">
                   <h2
-                    className="text-2xl sm:text-3xl font-bold leading-tight tracking-tight px-2"
+                    className="text-3xl sm:text-4xl font-bold leading-tight tracking-tight px-2"
                     style={{
                       color: 'var(--color-accent)',
                       fontFamily: '"Fraunces", Georgia, serif',
@@ -414,7 +411,7 @@ export function LandingPage() {
                   </h2>
 
                   <p
-                    className="text-sm sm:text-base leading-relaxed mt-4 mb-6 max-w-md px-1"
+                    className="text-base sm:text-lg leading-relaxed mt-4 mb-6 max-w-md px-1"
                     style={{
                       color: 'var(--color-text)',
                       fontFamily: '"Merriweather", Georgia, serif',

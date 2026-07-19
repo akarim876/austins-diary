@@ -4,7 +4,6 @@ import { zodResolver } from '@hookform/resolvers/zod'
 import { z } from 'zod'
 import toast from 'react-hot-toast'
 import { ArrowLeft, Eye, EyeOff } from 'lucide-react'
-import { AppLogo } from '../ui/AppLogo'
 import { useAuth } from '../../contexts/AuthContext'
 import { getErrorMessage } from '../../lib/errors'
 import { Spinner } from '../ui/Spinner'
@@ -26,7 +25,7 @@ type ForgotValues = z.infer<typeof forgotSchema>
 // ─── Shared input styles ──────────────────────────────────────────────────────
 
 const inputClass =
-  'w-full px-3.5 py-2.5 rounded-xl border border-gray-200 bg-white text-gray-900 placeholder-gray-400 text-sm focus:outline-none focus:ring-2 focus:ring-brand-400 focus:border-transparent transition'
+  'w-full px-3.5 py-2.5 rounded-md border border-gray-200 bg-white text-gray-900 placeholder-gray-400 text-sm focus:outline-none focus:ring-2 focus:ring-brand-400 focus:border-transparent transition'
 
 // ─── Forgot password form ─────────────────────────────────────────────────────
 
@@ -108,7 +107,7 @@ function ForgotPasswordForm({ onBack }: { onBack: () => void }) {
         <button
           type="submit"
           disabled={submitting}
-          className="w-full py-2.5 rounded-xl bg-brand-500 text-white font-semibold text-sm hover:bg-brand-600 active:bg-brand-700 transition disabled:opacity-60 flex items-center justify-center gap-2"
+          className="w-full py-2.5 rounded-md bg-brand-500 text-white font-semibold text-sm hover:bg-brand-600 active:bg-brand-700 transition disabled:opacity-60 flex items-center justify-center gap-2"
         >
           {submitting ? <Spinner className="w-4 h-4" /> : 'Send reset link'}
         </button>
@@ -158,33 +157,48 @@ export function AuthPage({ initialMode = 'login' }: { initialMode?: 'login' | 'r
   }
 
   return (
-    <div className="min-h-dvh bg-warm-100 flex flex-col items-center justify-center px-4 py-12">
+    <div
+      className="min-h-dvh flex flex-col items-center justify-center px-5 py-12"
+      style={{ background: 'var(--color-background)' }}
+    >
       {/* Logo */}
       <div className="mb-8 flex flex-col items-center gap-3">
-        <AppLogo className="h-16" />
+        <img
+          src="/Icon-splash.png"
+          alt="Austin's Diary"
+          className="h-20 w-20 object-contain"
+        />
         <div className="text-center">
-          <h1 className="text-2xl font-bold text-gray-900 tracking-tight">Austin's Diary</h1>
-          <p className="text-sm text-gray-500 mt-1">A private caregiving journal</p>
+          <h1 className="text-2xl font-bold tracking-tight" style={{ color: 'var(--color-text)' }}>
+            Austin&apos;s Diary
+          </h1>
+          <p className="text-sm mt-1" style={{ color: 'var(--color-text-muted)' }}>
+            A private caregiving journal
+          </p>
         </div>
       </div>
 
-      {/* Card */}
-      <div className="w-full max-w-sm bg-white rounded-xl shadow-sm border border-warm-200 p-6">
+      {/* Form — open layout, no card */}
+      <div className="w-full max-w-sm">
         {showForgot ? (
           <ForgotPasswordForm onBack={() => setShowForgot(false)} />
         ) : (
           <>
             {/* Tab switch */}
-            <div className="flex rounded-xl bg-warm-100 p-1 mb-6">
+            <div
+              className="flex rounded-md p-1 mb-6"
+              style={{ background: 'rgba(51,50,46,0.07)' }}
+            >
               {(['login', 'register'] as const).map(m => (
                 <button
                   key={m}
                   onClick={() => setMode(m)}
-                  className={`flex-1 py-2 text-sm font-medium rounded-lg transition-all ${
+                  className="flex-1 py-2 text-sm font-medium rounded-sm transition-all"
+                  style={
                     mode === m
-                      ? 'bg-white text-gray-900 shadow-sm'
-                      : 'text-gray-500 hover:text-gray-700'
-                  }`}
+                      ? { background: 'var(--color-accent)', color: '#fff' }
+                      : { color: 'var(--color-text-muted)' }
+                  }
                 >
                   {m === 'login' ? 'Sign in' : 'Create account'}
                 </button>
@@ -202,24 +216,27 @@ export function AuthPage({ initialMode = 'login' }: { initialMode?: 'login' | 'r
                   {...register('email')}
                   className={inputClass}
                 />
-                {errors.email && (
-                  <p className="mt-1 text-xs text-red-500">{errors.email.message}</p>
-                )}
+                <p className="mt-1 text-xs text-red-500 min-h-4">
+                  {errors.email?.message ?? '\u00a0'}
+                </p>
               </div>
 
               {/* Password */}
               <div>
-                <div className="flex items-center justify-between mb-1.5">
+                <div className="flex items-center justify-between mb-1.5 min-h-5">
                   <label className="text-sm font-medium text-gray-700">Password</label>
-                  {mode === 'login' && (
-                    <button
-                      type="button"
-                      onClick={() => setShowForgot(true)}
-                      className="text-xs text-brand-600 hover:text-brand-700 font-medium"
-                    >
-                      Forgot password?
-                    </button>
-                  )}
+                  {/* Always rendered so tab switch doesn't shift layout */}
+                  <button
+                    type="button"
+                    onClick={() => setShowForgot(true)}
+                    tabIndex={mode === 'login' ? 0 : -1}
+                    aria-hidden={mode !== 'login'}
+                    className={`text-xs text-brand-600 hover:text-brand-700 font-medium ${
+                      mode === 'login' ? '' : 'invisible pointer-events-none'
+                    }`}
+                  >
+                    Forgot password?
+                  </button>
                 </div>
                 <div className="relative">
                   <input
@@ -237,15 +254,16 @@ export function AuthPage({ initialMode = 'login' }: { initialMode?: 'login' | 'r
                     {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
                   </button>
                 </div>
-                {errors.password && (
-                  <p className="mt-1 text-xs text-red-500">{errors.password.message}</p>
-                )}
+                {/* Reserved error slot — prevents jump when validation messages appear */}
+                <p className="mt-1 text-xs text-red-500 min-h-4">
+                  {errors.password?.message ?? '\u00a0'}
+                </p>
               </div>
 
               <button
                 type="submit"
                 disabled={submitting}
-                className="w-full py-2.5 rounded-xl bg-brand-500 text-white font-semibold text-sm hover:bg-brand-600 active:bg-brand-700 transition disabled:opacity-60 flex items-center justify-center gap-2 mt-2"
+                className="w-full py-2.5 rounded-md bg-brand-500 text-white font-semibold text-sm hover:bg-brand-600 active:bg-brand-700 transition disabled:opacity-60 flex items-center justify-center gap-2 mt-2"
               >
                 {submitting ? (
                   <Spinner className="w-4 h-4" />
@@ -257,11 +275,14 @@ export function AuthPage({ initialMode = 'login' }: { initialMode?: 'login' | 'r
               </button>
             </form>
 
-            {mode === 'register' && (
-              <p className="mt-4 text-center text-xs text-gray-400">
-                If you were invited, use the link in your invite email or sign in above.
-              </p>
-            )}
+            {/* Always rendered (invisible on login) so height stays constant */}
+            <p
+              className={`mt-4 text-center text-xs text-gray-400 min-h-8 ${
+                mode === 'register' ? '' : 'invisible'
+              }`}
+            >
+              If you were invited, use the link in your invite email or sign in above.
+            </p>
           </>
         )}
       </div>

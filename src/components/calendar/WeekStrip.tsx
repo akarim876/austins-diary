@@ -1,229 +1,199 @@
 /**
- * Swipeable 7-day week strip with smooth transform-based animation.
+ * Horizontally scrollable day strip.
  *
- * Layout:
- *   BUFFER cells off-screen left | 7 visible cells | BUFFER cells off-screen right
- *   (total TOTAL = 13 cells rendered to allow full ±3-day tap-to-select animation)
- *
- * Bug-fix notes:
- *   - touch-action:none on the container prevents the browser from intercepting
- *     horizontal touch gestures as page-scroll before pointer events can capture them.
- *   - e.preventDefault() in pointermove (once horizontal drag is confirmed) is a
- *     second layer of defense in case the browser starts a scroll before touch-action
- *     kicks in.
- *   - The animation state (cellOffset, withAnim) is set via useLayoutEffect, which
- *     runs synchronously after DOM mutations but BEFORE the browser paints. This
- *     ensures the CSS transition always starts from the last-painted transform value,
- *     so the selected-cell circle never "jumps" to the new position in an intermediate
- *     painted frame.
+ * Scroll and selection are independent:
+ *  - Swiping scrolls freely (native overflow-x) with no selection side effects
+ *  - The selected day keeps its highlight even when scrolled out of view
+ *  - Tapping a day selects it without re-centering the strip
+ *  - "Back to today" both selects today and scrolls it into the center
  */
 import {
-  useEffect, useLayoutEffect, useRef, useState, useCallback,
+  forwardRef,
+  useCallback,
+  useEffect,
+  useImperativeHandle,
+  useLayoutEffect,
+  useMemo,
+  useRef,
+  useState,
 } from 'react'
 import {
-  addDays, differenceInCalendarDays, format, isToday, parseISO,
+  addDays, format, isToday, parseISO, startOfDay,
 } from 'date-fns'
 
 const VISIBLE = 7
-const BUFFER  = 3                     // extra cells on each side for animation
-const TOTAL   = VISIBLE + 2 * BUFFER  // 13
-const CENTER_IDX = Math.floor(TOTAL / 2)  // 6
-const ANIM_MS = 230
-const SWIPE_THRESHOLD_PX = 36
+/** Days rendered on each side of today */
+const RANGE = 90
+const TOTAL = RANGE * 2 + 1
+
+export interface WeekStripHandle {
+  /** Select today and scroll it into the center of the strip */
+  goToToday: () => void
+  /** Scroll so the given date is centered (does not change selection) */
+  scrollToDate: (date: string, smooth?: boolean) => void
+}
 
 export interface WeekStripProps {
   selectedDate: string
   onSelectDate: (date: string) => void
   dotsByDate?: Record<string, string[]>
   maxDate?: string
+  /** Fires when the visible scroll window changes (for dot fetching) */
+  onVisibleRangeChange?: (start: string, end: string) => void
 }
 
-export function WeekStrip({
-  selectedDate,
-  onSelectDate,
-  dotsByDate = {},
-  maxDate,
-}: WeekStripProps) {
+export const WeekStrip = forwardRef<WeekStripHandle, WeekStripProps>(function WeekStrip(
+  {
+    selectedDate,
+    onSelectDate,
+    dotsByDate = {},
+    maxDate,
+    onVisibleRangeChange,
+  },
+  ref,
+) {
   const today     = format(new Date(), 'yyyy-MM-dd')
   const limit     = maxDate ?? today
   const isOnToday = selectedDate === today
 
-  // ── Measurement ──────────────────────────────────────────────────────────────
-  const containerRef = useRef<HTMLDivElement>(null)
+  const scrollerRef = useRef<HTMLDivElement>(null)
   const [cellPx, setCellPx] = useState(0)
+  const [visibleMonth, setVisibleMonth] = useState(() => format(parseISO(selectedDate), 'MMMM yyyy'))
+  const didInitScroll = useRef(false)
+  const suppressClick = useRef(false)
+  const scrollRaf = useRef<number | null>(null)
 
+  // Fixed day list centered on today (stable identity)
+  const days = useMemo(() => {
+    const origin = startOfDay(new Date())
+    return Array.from({ length: TOTAL }, (_, i) => addDays(origin, i - RANGE))
+  }, [today]) // recompute if calendar day rolls over while app is open
+
+  const dateToIndex = useCallback((dateStr: string) => {
+    const origin = startOfDay(new Date())
+    const target = startOfDay(parseISO(dateStr))
+    const idx = Math.round((target.getTime() - origin.getTime()) / 86_400_000) + RANGE
+    return Math.max(0, Math.min(TOTAL - 1, idx))
+  }, [])
+
+  const scrollToDate = useCallback((dateStr: string, smooth = true) => {
+    const el = scrollerRef.current
+    if (!el || cellPx === 0) return
+    const idx = dateToIndex(dateStr)
+    // Center the cell in the viewport (7 cells wide)
+    const left = idx * cellPx - (VISIBLE / 2 - 0.5) * cellPx
+    el.scrollTo({ left: Math.max(0, left), behavior: smooth ? 'smooth' : 'auto' })
+  }, [cellPx, dateToIndex])
+
+  const goToToday = useCallback(() => {
+    onSelectDate(today)
+    scrollToDate(today, true)
+  }, [onSelectDate, today, scrollToDate])
+
+  useImperativeHandle(ref, () => ({ goToToday, scrollToDate }), [goToToday, scrollToDate])
+
+  // Measure cell width from container
   useLayoutEffect(() => {
+    const el = scrollerRef.current
+    if (!el) return
     function measure() {
-      setCellPx((containerRef.current?.offsetWidth ?? 0) / VISIBLE)
+      setCellPx((scrollerRef.current?.clientWidth ?? 0) / VISIBLE)
     }
     measure()
     const ro = new ResizeObserver(measure)
-    if (containerRef.current) ro.observe(containerRef.current)
+    ro.observe(el)
     return () => ro.disconnect()
   }, [])
 
-  // ── Animation state ───────────────────────────────────────────────────────────
-  // displayCenter: the date at logical center of the 13-cell strip.
-  // Animation: set cellOffset → strip slides → snap displayCenter → reset.
-  const [displayCenter, setDisplayCenter] = useState(() => parseISO(selectedDate))
-  const [cellOffset, setCellOffset]       = useState(0)
-  const [withAnim, setWithAnim]           = useState(false)
-  const [blocking, setBlocking]           = useState(false)
-
-  const [dragPx, setDragPx]         = useState(0)
-  const pointerStartX               = useRef<number | null>(null)
-  const isDragging                  = useRef(false)
-  const animTimer                   = useRef<ReturnType<typeof setTimeout> | null>(null)
-  const prevSelectedRef             = useRef(selectedDate)
-
-  // ── KEY FIX #2: use useLayoutEffect (not useEffect) ──────────────────────────
-  // useLayoutEffect fires synchronously after DOM mutations but before the browser
-  // paints. This means cellOffset and withAnim are always applied in the same
-  // browser frame as the selectedDate-driven re-render, so the CSS transition
-  // starts from the last-painted transform and the circle never jumps.
+  // Initial scroll: center on selected date (usually today) without animation
   useLayoutEffect(() => {
-    if (prevSelectedRef.current === selectedDate) return
-    const prev = prevSelectedRef.current
-    prevSelectedRef.current = selectedDate
+    if (cellPx === 0 || didInitScroll.current) return
+    didInitScroll.current = true
+    scrollToDate(selectedDate, false)
+  }, [cellPx, selectedDate, scrollToDate])
 
-    const delta = differenceInCalendarDays(parseISO(selectedDate), parseISO(prev))
+  const reportVisibleRange = useCallback(() => {
+    const el = scrollerRef.current
+    if (!el || cellPx === 0) return
 
-    if (Math.abs(delta) > BUFFER) {
-      // Destination too far to animate cleanly — instant snap
-      setWithAnim(false)
-      setDragPx(0)
-      setCellOffset(0)
-      setDisplayCenter(parseISO(selectedDate))
-      return
-    }
+    const firstIdx = Math.max(0, Math.floor(el.scrollLeft / cellPx))
+    const lastIdx  = Math.min(TOTAL - 1, Math.ceil((el.scrollLeft + el.clientWidth) / cellPx) - 1)
+    const midIdx   = Math.round((firstIdx + lastIdx) / 2)
 
-    if (animTimer.current) clearTimeout(animTimer.current)
-    setBlocking(true)
-    setDragPx(0)
-    setWithAnim(true)
-    setCellOffset(delta)  // positive = future = slide left
+    const start = format(days[firstIdx], 'yyyy-MM-dd')
+    const end   = format(days[lastIdx], 'yyyy-MM-dd')
+    setVisibleMonth(format(days[midIdx], 'MMMM yyyy'))
+    onVisibleRangeChange?.(start, end)
+  }, [cellPx, days, onVisibleRangeChange])
 
-    animTimer.current = setTimeout(() => {
-      // Snap: update displayCenter, reset offset with NO transition
-      setWithAnim(false)
-      setDisplayCenter(parseISO(selectedDate))
-      setCellOffset(0)
-      setBlocking(false)
-    }, ANIM_MS + 30)
-  }, [selectedDate])
+  useEffect(() => {
+    if (cellPx === 0) return
+    reportVisibleRange()
+  }, [cellPx, reportVisibleRange])
 
-  useEffect(() => () => {
-    if (animTimer.current) clearTimeout(animTimer.current)
-  }, [])
+  function handleScroll() {
+    if (scrollRaf.current != null) cancelAnimationFrame(scrollRaf.current)
+    scrollRaf.current = requestAnimationFrame(() => {
+      scrollRaf.current = null
+      reportVisibleRange()
+    })
+  }
 
-  // ── Build 13-cell day array centered on displayCenter ────────────────────────
-  const days = Array.from({ length: TOTAL }, (_, i) =>
-    addDays(displayCenter, i - CENTER_IDX)
-  )
+  // Distinguish tap from scroll-drag on touch devices
+  const pointerStart = useRef<{ x: number; y: number } | null>(null)
 
-  const translateX = -(BUFFER + cellOffset) * cellPx + dragPx
+  function handlePointerDown(e: React.PointerEvent) {
+    pointerStart.current = { x: e.clientX, y: e.clientY }
+    suppressClick.current = false
+  }
 
-  // ── KEY FIX #1: touch-action + preventDefault for reliable mobile swipe ──────
-  // touch-action:none is set on the container div (see style prop below).
-  // Additionally, once a horizontal drag is confirmed we call preventDefault()
-  // in the pointer-move handler to stop the browser from starting a scroll.
-  const handlePointerDown = useCallback((e: React.PointerEvent) => {
-    if (blocking || cellPx === 0) return
-    pointerStartX.current = e.clientX
-    isDragging.current = false
-    ;(e.currentTarget as HTMLElement).setPointerCapture(e.pointerId)
-  }, [blocking, cellPx])
+  function handlePointerMove(e: React.PointerEvent) {
+    if (!pointerStart.current) return
+    const dx = Math.abs(e.clientX - pointerStart.current.x)
+    const dy = Math.abs(e.clientY - pointerStart.current.y)
+    if (dx > 8 || dy > 8) suppressClick.current = true
+  }
 
-  const handlePointerMove = useCallback((e: React.PointerEvent) => {
-    if (pointerStartX.current === null) return
-    const delta = e.clientX - pointerStartX.current
-    if (Math.abs(delta) > 4) {
-      isDragging.current = true
-      // Prevent the browser from treating this as a page scroll
-      e.preventDefault()
-    }
-    setDragPx(delta)
-  }, [])
-
-  const commitSwipe = useCallback((finalDelta: number) => {
-    pointerStartX.current = null
-    if (Math.abs(finalDelta) >= SWIPE_THRESHOLD_PX && isDragging.current) {
-      const direction = finalDelta < 0 ? 1 : -1  // left swipe = advance
-      const nextStr   = format(addDays(parseISO(selectedDate), direction), 'yyyy-MM-dd')
-      if (direction > 0 && nextStr > limit) {
-        setDragPx(0)  // already at limit, snap back
-      } else {
-        setDragPx(0)
-        onSelectDate(nextStr)
-      }
-    } else {
-      // Not a committed swipe — ease back to zero
-      setWithAnim(true)
-      setDragPx(0)
-      requestAnimationFrame(() => requestAnimationFrame(() => setWithAnim(false)))
-    }
-    isDragging.current = false
-  }, [selectedDate, limit, onSelectDate])
-
-  const handlePointerUp = useCallback((e: React.PointerEvent) => {
-    if (pointerStartX.current === null) return
-    commitSwipe(e.clientX - pointerStartX.current)
-  }, [commitSwipe])
-
-  const handlePointerCancel = useCallback(() => {
-    if (pointerStartX.current === null) return
-    pointerStartX.current = null
-    isDragging.current = false
-    setDragPx(0)
-  }, [])
+  function handlePointerUp() {
+    pointerStart.current = null
+  }
 
   function handleTap(dayDate: Date) {
-    if (blocking || isDragging.current) return
+    if (suppressClick.current) return
     const dateStr = format(dayDate, 'yyyy-MM-dd')
     if (dateStr > limit) return
     if (dateStr === selectedDate) return
     onSelectDate(dateStr)
+    // Intentionally do NOT scroll / re-center
   }
 
-  // ── Render ────────────────────────────────────────────────────────────────────
   return (
     <div className="select-none">
-      {/* Month + year context */}
       <p
         className="text-center text-xs font-medium mb-2"
         style={{ color: 'var(--color-text-muted)' }}
       >
-        {format(parseISO(selectedDate), 'MMMM yyyy')}
+        {visibleMonth}
       </p>
 
-      {/* Clipping container — touch-action:none prevents browser scroll capture */}
       <div
-        ref={containerRef}
-        className="relative overflow-hidden"
+        ref={scrollerRef}
+        className="overflow-x-auto scrollbar-none"
         style={{
           height: 76,
-          touchAction: 'none',   // KEY FIX #1 — must be an inline style (not Tailwind)
+          // Allow horizontal pan; keep vertical page scroll available
+          touchAction: 'pan-x',
+          WebkitOverflowScrolling: 'touch',
         }}
+        onScroll={handleScroll}
         onPointerDown={handlePointerDown}
         onPointerMove={handlePointerMove}
         onPointerUp={handlePointerUp}
-        onPointerCancel={handlePointerCancel}
+        onPointerCancel={handlePointerUp}
       >
         {cellPx > 0 && (
-          <div
-            className="absolute inset-y-0 left-0 flex"
-            style={{
-              width: TOTAL * cellPx,
-              transform: `translateX(${translateX}px)`,
-              // KEY FIX #2 (combined with useLayoutEffect above):
-              // transition only active when withAnim=true, which is set in the
-              // same layout pass as cellOffset, so the browser starts the animation
-              // from the last painted position rather than an intermediate value.
-              transition: withAnim ? `transform ${ANIM_MS}ms ease-out` : 'none',
-              willChange: 'transform',
-            }}
-          >
-            {days.map((day, idx) => {
+          <div className="flex" style={{ width: TOTAL * cellPx }}>
+            {days.map((day) => {
               const dateStr    = format(day, 'yyyy-MM-dd')
               const isSelected = dateStr === selectedDate
               const isTodayDay = isToday(day)
@@ -232,33 +202,30 @@ export function WeekStrip({
 
               return (
                 <button
-                  key={idx}
+                  key={dateStr}
+                  type="button"
                   onClick={() => handleTap(day)}
-                  disabled={isFuture || blocking}
+                  disabled={isFuture}
                   style={{ width: cellPx }}
                   className={`
                     flex-shrink-0 flex flex-col items-center justify-center gap-0.5 py-1
-                    rounded-xl active:scale-95
+                    rounded-xl
                     ${isFuture ? 'opacity-25 cursor-not-allowed' : !isSelected ? 'hover:bg-black/5' : ''}
                   `}
                 >
-                  {/* Day-of-week abbreviation */}
                   <span
                     className="text-[9px] font-semibold tracking-wider"
                     style={{
                       color: isSelected
                         ? 'rgba(255,255,255,0.85)'
                         : isTodayDay
-                        ? 'var(--color-accent)'
-                        : 'var(--color-text-muted)',
-                      // Color change is instant — it's part of the same
-                      // animation frame as the strip translate (via useLayoutEffect).
+                          ? 'var(--color-accent)'
+                          : 'var(--color-text-muted)',
                     }}
                   >
                     {format(day, 'EEE').toUpperCase()}
                   </span>
 
-                  {/* Day-number circle — same single transform as the strip */}
                   <span
                     className="text-base font-bold leading-none w-9 h-9 flex items-center justify-center rounded-full"
                     style={{
@@ -266,18 +233,13 @@ export function WeekStrip({
                       color: isSelected
                         ? '#ffffff'
                         : isTodayDay
-                        ? 'var(--color-accent)'
-                        : 'var(--color-text)',
-                      // No separate transition here — the circle IS part of the
-                      // strip element and moves via the parent's translateX. Using
-                      // an additional transition-colors would create two independent
-                      // animation systems (layout + compositor) that drift out of sync.
+                          ? 'var(--color-accent)'
+                          : 'var(--color-text)',
                     }}
                   >
                     {format(day, 'd')}
                   </span>
 
-                  {/* Entry dots (max 3) */}
                   <div className="flex gap-0.5" style={{ height: 6 }}>
                     {dots.slice(0, 3).map((color, di) => (
                       <span
@@ -286,7 +248,6 @@ export function WeekStrip({
                         style={{ background: isSelected ? 'rgba(255,255,255,0.7)' : color }}
                       />
                     ))}
-                    {/* Reserve height even when no dots */}
                     {dots.length === 0 && <span className="w-1.5 h-1.5" />}
                   </div>
                 </button>
@@ -296,11 +257,12 @@ export function WeekStrip({
         )}
       </div>
 
-      {/* "Today" pill — reserve space to avoid layout shift */}
+      {/* "Back to today" — selects today AND scrolls it into view */}
       <div className="flex justify-center mt-2" style={{ minHeight: 24 }}>
         {!isOnToday && (
           <button
-            onClick={() => onSelectDate(today)}
+            type="button"
+            onClick={goToToday}
             className="text-xs font-semibold px-3 py-1 rounded-full transition-colors"
             style={{
               color: 'var(--color-accent)',
@@ -313,4 +275,4 @@ export function WeekStrip({
       </div>
     </div>
   )
-}
+})

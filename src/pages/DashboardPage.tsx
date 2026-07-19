@@ -1,10 +1,11 @@
-import { useState } from 'react'
+import { useRef, useState } from 'react'
 import { format, startOfWeek, endOfWeek, parseISO } from 'date-fns'
 import {
   AlertTriangle, Bell, BookOpen, Calendar,
   Moon, Pill, Settings2, TrendingDown, TrendingUp, Minus,
 } from 'lucide-react'
 import { WeekStrip } from '../components/calendar/WeekStrip'
+import type { WeekStripHandle } from '../components/calendar/WeekStrip'
 import { useWeekDots } from '../hooks/useWeekDots'
 import { ModuleIcon } from '../components/ui/ModuleIcon'
 import { useNavigate } from 'react-router-dom'
@@ -106,12 +107,18 @@ export function DashboardPage() {
   const { activeProfile } = useProfile()
   const navigate = useNavigate()
 
-  // Date navigation
+  // Date navigation — selection is independent of WeekStrip scroll position
   const realTodayStr = format(new Date(), 'yyyy-MM-dd')
   const [viewDate, setViewDate] = useState(realTodayStr)
   const isViewingToday = viewDate === realTodayStr
+  const weekStripRef = useRef<WeekStripHandle>(null)
 
-  const weekDots = useWeekDots(activeProfile?.id ?? null, viewDate)
+  // Dot fetch keyed to the strip's visible scroll window, not the selected day
+  const [visibleRange, setVisibleRange] = useState<{ start: string; end: string }>({
+    start: realTodayStr,
+    end: realTodayStr,
+  })
+  const weekDots = useWeekDots(activeProfile?.id ?? null, visibleRange.start, visibleRange.end)
 
   const db = useDashboard(activeProfile?.id ?? null, viewDate)
 
@@ -189,9 +196,11 @@ export function DashboardPage() {
         </h1>
         <div className="px-2">
           <WeekStrip
+            ref={weekStripRef}
             selectedDate={viewDate}
             onSelectDate={setViewDate}
             dotsByDate={weekDots}
+            onVisibleRangeChange={(start, end) => setVisibleRange({ start, end })}
           />
         </div>
       </div>
@@ -287,7 +296,7 @@ export function DashboardPage() {
               Viewing {format(parseISO(viewDate), 'MMMM d')} — go to Today to log new entries.
             </p>
             <button
-              onClick={() => setViewDate(realTodayStr)}
+              onClick={() => weekStripRef.current?.goToToday()}
               className="flex-shrink-0 px-3 py-1.5 rounded-full text-xs font-semibold text-white transition"
               style={{ background: 'var(--color-accent)' }}
             >

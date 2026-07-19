@@ -1,46 +1,55 @@
 /**
  * Fetches which dates have entries for each module within a date range.
  * Returns a Record<dateStr, string[]> of up to 3 CSS color values per day.
- * Used by WeekStrip on the Dashboard where we don't already have all logs in memory.
+ *
+ * Driven by the WeekStrip's *visible scroll window*, not the selected date —
+ * users can browse far from the selected day while dots stay in sync.
  */
-import { useEffect, useMemo, useRef, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { addDays, format, parseISO } from 'date-fns'
 import { supabase } from '../lib/supabase'
 
-// Priority-ordered dot colors (first 3 win per day)
 const MODULE_COLORS: { table: string; dateCol: string; color: string }[] = [
-  { table: 'behavior_logs',   dateCol: 'entry_date', color: '#D4A843' },  // amber
-  { table: 'sensory_logs',    dateCol: 'entry_date', color: '#9B8EC4' },  // violet
-  { table: 'diet_logs',       dateCol: 'entry_date', color: '#7CB48F' },  // mint
-  { table: 'sleep_logs',      dateCol: 'log_date',   color: '#6875C8' },  // indigo
-  { table: 'diary_entries',   dateCol: 'entry_date', color: '#5B7B7A' },  // accent
-  { table: 'appointments',    dateCol: 'appt_date',  color: '#C77B6A' },  // coral
-  { table: 'progress_notes',  dateCol: 'note_date',  color: '#2E7D60' },  // forest
+  { table: 'behavior_logs',   dateCol: 'entry_date', color: '#D4A843' },
+  { table: 'sensory_logs',    dateCol: 'entry_date', color: '#9B8EC4' },
+  { table: 'diet_logs',       dateCol: 'entry_date', color: '#7CB48F' },
+  { table: 'sleep_logs',      dateCol: 'log_date',   color: '#6875C8' },
+  { table: 'diary_entries',   dateCol: 'entry_date', color: '#5B7B7A' },
+  { table: 'appointments',    dateCol: 'appt_date',  color: '#C77B6A' },
+  { table: 'progress_notes',  dateCol: 'note_date',  color: '#2E7D60' },
 ]
 
-export function useWeekDots(profileId: string | null, centerDate: string) {
+/** Padding around the visible window so adjacent scrolls don't always re-fetch */
+const PAD_DAYS = 14
+
+export function useWeekDots(
+  profileId: string | null,
+  visibleStart: string | null,
+  visibleEnd: string | null,
+) {
   const [dotsByDate, setDotsByDate] = useState<Record<string, string[]>>({})
-  // Cache the fetched window so we don't re-query on every swipe
+  /** Inclusive range already fetched and merged into dotsByDate */
   const cachedRange = useRef<{ start: string; end: string } | null>(null)
 
-  // Extend the window ±10 days so adjacent swipes don't trigger re-queries
-  const { startDate, endDate } = useMemo(() => {
-    const center = parseISO(centerDate)
-    return {
-      startDate: format(addDays(center, -10), 'yyyy-MM-dd'),
-      endDate:   format(addDays(center, +10), 'yyyy-MM-dd'),
-    }
-  }, [centerDate])
+  // Reset cache when the active profile changes
+  useEffect(() => {
+    cachedRange.current = null
+    setDotsByDate({})
+  }, [profileId])
 
   useEffect(() => {
-    if (!profileId) return
+    if (!profileId || !visibleStart || !visibleEnd) return
 
-    // Skip if the new center is still within the cached window
+    const cached = cachedRange.current
+    // Skip if the entire visible window is already covered
     if (
-      cachedRange.current &&
-      centerDate >= cachedRange.current.start &&
-      centerDate <= cachedRange.current.end
+      cached &&
+      visibleStart >= cached.start &&
+      visibleEnd <= cached.end
     ) return
+
+    const startDate = format(addDays(parseISO(visibleStart), -PAD_DAYS), 'yyyy-MM-dd')
+    const endDate   = format(addDays(parseISO(visibleEnd),   +PAD_DAYS), 'yyyy-MM-dd')
 
     const controller = new AbortController()
 
@@ -68,17 +77,26 @@ export function useWeekDots(profileId: string | null, centerDate: string) {
         }
       })
 
-      cachedRange.current = { start: startDate, end: endDate }
-      setDotsByDate(
-        Object.fromEntries(
-          Object.entries(map).map(([d, colors]) => [d, [...colors].slice(0, 3)])
-        )
+      const next = Object.fromEntries(
+        Object.entries(map).map(([d, colors]) => [d, [...colors].slice(0, 3)])
       )
+
+      // Expand cache bounds and merge dots so browsing back doesn't flash empty
+      if (!cachedRange.current) {
+        cachedRange.current = { start: startDate, end: endDate }
+      } else {
+        cachedRange.current = {
+          start: startDate < cachedRange.current.start ? startDate : cachedRange.current.start,
+          end:   endDate   > cachedRange.current.end   ? endDate   : cachedRange.current.end,
+        }
+      }
+
+      setDotsByDate(prev => ({ ...prev, ...next }))
     }
 
     fetch()
     return () => controller.abort()
-  }, [profileId, startDate, endDate, centerDate])
+  }, [profileId, visibleStart, visibleEnd])
 
   return dotsByDate
 }
