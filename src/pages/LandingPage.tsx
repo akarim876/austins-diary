@@ -157,29 +157,32 @@ function ArtPiece({
 function BehaviorArt({ reduced }: { reduced: boolean }) {
   return (
     <div className="relative w-full max-w-xs mx-auto h-56 sm:h-64">
+      {/* Yellow face — larger, back, higher up */}
       <ArtPiece
-        src="/Images/Smiley-face-1.png"
+        src="/Images/Smiley-face-3.png"
         reduced={reduced}
         delay={140}
-        rotate={6}
-        className="absolute"
-        style={{ width: '52%', top: '2%', right: '4%' }}
+        rotate={4}
+        className="absolute z-0"
+        style={{ width: '56%', top: '0%', right: '6%' }}
       />
+      {/* Blue face — mid */}
       <ArtPiece
         src="/Images/Smiley-face-2.png"
         reduced={reduced}
         delay={220}
         rotate={-8}
-        className="absolute"
+        className="absolute z-10"
         style={{ width: '40%', bottom: '6%', left: '6%' }}
       />
+      {/* Teal face — smaller, front */}
       <ArtPiece
-        src="/Images/Smiley-face-3.png"
+        src="/Images/Smiley-face-1.png"
         reduced={reduced}
         delay={300}
-        rotate={4}
-        className="absolute"
-        style={{ width: '42%', bottom: '4%', right: '10%' }}
+        rotate={6}
+        className="absolute z-20"
+        style={{ width: '36%', top: '18%', right: '8%' }}
       />
     </div>
   )
