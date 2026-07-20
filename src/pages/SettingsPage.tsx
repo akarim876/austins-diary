@@ -8,7 +8,7 @@ import {
 import { DeleteAccountModal } from '../components/settings/DeleteAccountModal'
 import { DeleteProfileModal } from '../components/settings/DeleteProfileModal'
 import toast from 'react-hot-toast'
-import { useNavigate } from 'react-router-dom'
+import { useNavigate, useLocation } from 'react-router-dom'
 import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { z } from 'zod'
@@ -133,7 +133,7 @@ function AccountSection() {
     : user?.email?.charAt(0).toUpperCase() ?? '?'
 
   return (
-    <section>
+    <section id="account">
       <h2 className="text-xs font-semibold text-gray-400 uppercase tracking-wider mb-3 px-1 flex items-center gap-1.5">
         <User className="w-3.5 h-3.5" /> Account
       </h2>
@@ -261,7 +261,7 @@ function ChildProfilesSection() {
   }
 
   return (
-    <section>
+    <section id="profiles">
       <h2 className="text-xs font-semibold text-gray-400 uppercase tracking-wider mb-3 px-1">
         Child profiles
       </h2>
@@ -476,7 +476,7 @@ function CaregiversSection() {
   if (!activeProfile) return null
 
   return (
-    <section>
+    <section id="caregivers">
       <div className="flex items-center gap-2 mb-3 px-1">
         <Users className="w-3.5 h-3.5 text-gray-400" />
         <h2 className="text-xs font-semibold text-gray-400 uppercase tracking-wider flex-1">
@@ -660,7 +660,7 @@ function QuickTilesSection() {
   }
 
   return (
-    <section>
+    <section id="quick-add">
       <h2 className="text-xs font-semibold text-gray-400 uppercase tracking-wider mb-3 px-1">
         Dashboard quick-add tiles
       </h2>
@@ -927,7 +927,7 @@ function ThemeSection() {
   const { theme, setTheme } = useTheme()
 
   return (
-    <section>
+    <section id="appearance">
       <h2 className="text-xs font-semibold text-gray-400 uppercase tracking-wider mb-3 px-1">
         Appearance
       </h2>
@@ -996,12 +996,24 @@ export function SettingsPage() {
   const { signOut, user } = useAuth()
   const { activeProfile, refresh: refreshProfiles } = useProfile()
   const navigate = useNavigate()
+  const location = useLocation()
   const myRole = useMyRole(activeProfile?.id ?? null)
   const isOwner = myRole === 'owner'
   const { isResumable, savedStep, markDone, dismiss } = useSetupWizard(activeProfile?.id ?? null)
   const [showWizard, setShowWizard]                   = useState(false)
   const [showDeleteModal, setShowDeleteModal]         = useState(false)
   const [showDeleteProfileModal, setShowDeleteProfileModal] = useState(false)
+
+  // Deep-link from header settings menu: /settings#appearance etc.
+  useEffect(() => {
+    const hash = location.hash.replace(/^#/, '')
+    if (!hash) return
+    // Wait a frame so sections are painted
+    const t = window.setTimeout(() => {
+      document.getElementById(hash)?.scrollIntoView({ behavior: 'smooth', block: 'start' })
+    }, 80)
+    return () => window.clearTimeout(t)
+  }, [location.hash])
 
   async function handleSignOut() {
     try { await signOut() } catch { toast.error('Failed to sign out') }
@@ -1062,7 +1074,7 @@ export function SettingsPage() {
 
         {/* Diet settings link */}
         {activeProfile && (
-          <section>
+          <section id="diet">
             <h2 className="text-xs font-semibold text-gray-400 uppercase tracking-wider mb-3 px-1">
               Diet &amp; Nutrition
             </h2>
@@ -1084,7 +1096,7 @@ export function SettingsPage() {
 
         {/* Schedule settings link */}
         {activeProfile && (
-          <section>
+          <section id="schedule">
             <h2 className="text-xs font-semibold text-gray-400 uppercase tracking-wider mb-3 px-1">
               Daily Schedule
             </h2>
@@ -1106,7 +1118,7 @@ export function SettingsPage() {
 
         {/* Custom trackers link */}
         {activeProfile && (
-          <section>
+          <section id="trackers">
             <h2 className="text-xs font-semibold text-gray-400 uppercase tracking-wider mb-3 px-1">
               Custom Trackers
             </h2>

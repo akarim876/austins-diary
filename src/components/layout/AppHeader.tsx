@@ -1,4 +1,4 @@
-import { LogOut, ChevronDown, Download, Settings, Share2 } from 'lucide-react'
+import { LogOut, ChevronDown, Download, Settings, Share2, User, Palette, LayoutGrid, Users, Utensils, CalendarClock, Activity, Baby } from 'lucide-react'
 import { AppLogo } from '../ui/AppLogo'
 import { useState } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
@@ -6,20 +6,27 @@ import { useAuth } from '../../contexts/AuthContext'
 import { useProfile } from '../../contexts/ProfileContext'
 import toast from 'react-hot-toast'
 
+const SETTINGS_LINKS = [
+  { label: 'Account',          hash: 'account',     Icon: User },
+  { label: 'Appearance',       hash: 'appearance',  Icon: Palette },
+  { label: 'Quick-add',        hash: 'quick-add',   Icon: LayoutGrid },
+  { label: 'Child profiles',   hash: 'profiles',    Icon: Baby },
+  { label: 'Caregivers',       hash: 'caregivers',  Icon: Users },
+  { label: 'Diet & Nutrition', hash: 'diet',        Icon: Utensils },
+  { label: 'Daily Schedule',   hash: 'schedule',    Icon: CalendarClock },
+  { label: 'Custom Trackers',  hash: 'trackers',    Icon: Activity },
+] as const
+
 export function AppHeader() {
   const { user, signOut, userProfile } = useAuth()
   const { activeProfile, profiles, setActiveProfile } = useProfile()
   const navigate = useNavigate()
 
-  const avatarInitials = userProfile
-    ? `${userProfile.first_name.charAt(0)}${userProfile.last_name.charAt(0)}`.toUpperCase()
-    : user?.email?.charAt(0).toUpperCase() ?? '?'
-
   const displayName = userProfile
     ? `${userProfile.first_name} ${userProfile.last_name}`
     : user?.email ?? ''
   const [showProfileMenu, setShowProfileMenu] = useState(false)
-  const [showUserMenu, setShowUserMenu] = useState(false)
+  const [showSettingsMenu, setShowSettingsMenu] = useState(false)
 
   async function handleSignOut() {
     try {
@@ -30,7 +37,7 @@ export function AppHeader() {
   }
 
   async function handleShare() {
-    setShowUserMenu(false)
+    setShowSettingsMenu(false)
     const shareData = {
       title: "Austin's Diary",
       text: "A private caregiving journal for tracking daily routines, behaviors, sleep, and more.",
@@ -46,6 +53,11 @@ export function AppHeader() {
     } catch {
       // User cancelled share — no error needed
     }
+  }
+
+  function goToSettingsSection(hash: string) {
+    setShowSettingsMenu(false)
+    navigate(`/settings#${hash}`)
   }
 
   return (
@@ -126,44 +138,59 @@ export function AppHeader() {
             <Download className="w-4 h-4" />
           </Link>
 
-          {/* User avatar / menu */}
+          {/* Settings gear / menu */}
           <div className="relative">
             <button
-              onClick={() => setShowUserMenu(s => !s)}
-              className="w-8 h-8 rounded-full flex items-center justify-center text-xs font-bold transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-500"
-              style={{ background: 'var(--color-accent)', color: '#fff' }}
+              type="button"
+              aria-label="Settings"
+              aria-expanded={showSettingsMenu}
+              onClick={() => setShowSettingsMenu(s => !s)}
+              className="w-8 h-8 rounded-full flex items-center justify-center transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-500"
+              style={{ color: 'var(--color-accent)' }}
             >
-              {avatarInitials}
+              <Settings className="w-5 h-5" />
             </button>
-            {showUserMenu && (
+            {showSettingsMenu && (
               <div
-                className="absolute right-0 top-full mt-1 w-48 rounded-xl overflow-hidden z-50"
+                className="absolute right-0 top-full mt-1 w-56 rounded-xl overflow-hidden z-50"
                 style={{ background: 'var(--color-surface)', boxShadow: '0 4px 20px rgba(51,50,46,0.12)' }}
               >
                 <div className="px-4 py-3" style={{ borderBottom: '1px solid rgba(237,233,227,0.8)' }}>
                   <p className="text-xs font-semibold truncate" style={{ color: 'var(--color-text)' }}>{displayName}</p>
                   <p className="text-xs truncate mt-0.5" style={{ color: 'var(--color-text-muted)' }}>{user?.email}</p>
                 </div>
+
+                <ul className="py-1">
+                  {SETTINGS_LINKS.map(({ label, hash, Icon }) => (
+                    <li key={hash}>
+                      <button
+                        type="button"
+                        onClick={() => goToSettingsSection(hash)}
+                        className="w-full flex items-center gap-2.5 px-4 py-2.5 text-sm transition-colors hover:bg-black/[0.03] focus-visible:outline-none"
+                        style={{ color: 'var(--color-text)' }}
+                      >
+                        <Icon className="w-4 h-4 flex-shrink-0" style={{ color: 'var(--color-accent)' }} />
+                        {label}
+                      </button>
+                    </li>
+                  ))}
+                </ul>
+
+                <div style={{ borderTop: '1px solid rgba(237,233,227,0.8)' }} />
+
                 <button
-                  onClick={() => { setShowUserMenu(false); navigate('/settings') }}
-                  className="w-full flex items-center gap-2 px-4 py-2.5 text-sm transition-colors hover:bg-gray-50 focus-visible:outline-none"
-                  style={{ color: 'var(--color-text)' }}
-                >
-                  <Settings className="w-4 h-4" style={{ color: '#9A9187' }} />
-                  Settings
-                </button>
-                <button
+                  type="button"
                   onClick={handleShare}
-                  className="w-full flex items-center gap-2 px-4 py-2.5 text-sm transition-colors hover:bg-gray-50 focus-visible:outline-none"
+                  className="w-full flex items-center gap-2.5 px-4 py-2.5 text-sm transition-colors hover:bg-black/[0.03] focus-visible:outline-none"
                   style={{ color: 'var(--color-text)' }}
                 >
-                  <Share2 className="w-4 h-4" style={{ color: '#9A9187' }} />
+                  <Share2 className="w-4 h-4" style={{ color: 'var(--color-accent)' }} />
                   Share app
                 </button>
-                <div style={{ borderTop: '1px solid rgba(237,233,227,0.8)' }} />
                 <button
+                  type="button"
                   onClick={handleSignOut}
-                  className="w-full flex items-center gap-2 px-4 py-2.5 text-sm text-red-600 hover:bg-red-50 transition-colors focus-visible:outline-none"
+                  className="w-full flex items-center gap-2.5 px-4 py-2.5 text-sm text-red-600 hover:bg-red-50 transition-colors focus-visible:outline-none"
                 >
                   <LogOut className="w-4 h-4" />
                   Sign out
@@ -175,10 +202,10 @@ export function AppHeader() {
       </div>
 
       {/* Dismiss menus on outside click */}
-      {(showProfileMenu || showUserMenu) && (
+      {(showProfileMenu || showSettingsMenu) && (
         <div
           className="fixed inset-0 z-30"
-          onClick={() => { setShowProfileMenu(false); setShowUserMenu(false) }}
+          onClick={() => { setShowProfileMenu(false); setShowSettingsMenu(false) }}
         />
       )}
     </header>
