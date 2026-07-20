@@ -1,6 +1,6 @@
 import type { ReactNode } from 'react'
 import { useEffect, useState } from 'react'
-import { Navigate, Route, Routes, useLocation } from 'react-router-dom'
+import { Navigate, Outlet, Route, Routes, useLocation } from 'react-router-dom'
 import { Toaster } from 'react-hot-toast'
 import { useAuth } from './contexts/AuthContext'
 import { useTheme } from './hooks/useTheme'
@@ -106,6 +106,7 @@ function WizardController() {
 function AppShell() {
   const { activeProfile, loading } = useProfile()
   const { userProfile, userProfileLoaded, reloadUserProfile } = useAuth()
+  const location = useLocation()
 
   const combinedLoading = loading || !userProfileLoaded
 
@@ -128,24 +129,9 @@ function AppShell() {
       <WizardController />
       <AppHeader />
       <main className="flex-1 flex flex-col">
-        <Routes>
-          <Route path="/dashboard"          element={<DashboardPage />} />
-          <Route path="/log"                element={<LogPage />} />
-          <Route path="/diary"              element={<DiaryPage />} />
-          <Route path="/calendar"           element={<CalendarPage />} />
-          <Route path="/goals"              element={<GoalsPage />} />
-          <Route path="/goals/:id"          element={<GoalDetailPage />} />
-          <Route path="/providers"          element={<ProvidersPage />} />
-          <Route path="/providers/:id"      element={<ProviderDetailPage />} />
-          <Route path="/settings"           element={<SettingsPage />} />
-          <Route path="/diet-settings"      element={<DietSettingsPage />} />
-          <Route path="/schedule-settings"  element={<ScheduleSettingsPage />} />
-          <Route path="/tracker-settings"  element={<TrackerSettingsPage />} />
-          <Route path="/export"             element={<ExportPage />} />
-          {/* Redirects */}
-          <Route path="/profile"            element={<Navigate to="/settings?section=account" replace />} />
-          <Route path="*"                   element={<Navigate to="/dashboard" replace />} />
-        </Routes>
+        <div key={location.pathname} className="flex-1 flex flex-col">
+          <Outlet />
+        </div>
       </main>
       <BottomNav />
       <InstallPrompt />
@@ -181,37 +167,88 @@ function ThemeApplier() {
 }
 
 export default function App() {
-  const { session, loading } = useAuth()
+  const { session, loading, isPasswordRecovery } = useAuth()
   const location = useLocation()
 
   if (loading) {
     return <FullScreenLoader />
   }
 
-  const { isPasswordRecovery } = useAuth()
-
-  let content: ReactNode
+  // Public / recovery routes (no AppShell)
   if (isPasswordRecovery) {
-    // User arrived via a password-reset link — show the reset form regardless of session state
-    content = <ResetPasswordPage />
-  } else if (!session) {
-    if (location.pathname === '/auth') {
-      // Detect ?mode=signup from the landing page CTA so we open the register tab directly
-      const params = new URLSearchParams(location.search)
-      const initialMode = params.get('mode') === 'signup' ? 'register' : 'login'
-      content = <AuthPage initialMode={initialMode} />
-    } else if (location.pathname === '/accept-invite') {
-      // Invited users without a session go straight to the auth form
-      content = <AuthPage />
-    } else {
-      content = <LandingPage />
-    }
-  } else if (location.pathname === '/accept-invite') {
-    content = <AcceptInvitePage />
-  } else {
-    content = <AppShell />
+    return (
+      <>
+        <ThemeApplier />
+        <Toaster
+          position="top-center"
+          toastOptions={{
+            style: {
+              borderRadius: '8px',
+              background: '#fff',
+              color: '#111827',
+              fontSize: '14px',
+              boxShadow: '0 4px 6px -1px rgba(0,0,0,0.1)',
+            },
+          }}
+        />
+        <ResetPasswordPage />
+      </>
+    )
   }
 
+  if (!session) {
+    let publicPage: ReactNode
+    if (location.pathname === '/auth') {
+      const params = new URLSearchParams(location.search)
+      const initialMode = params.get('mode') === 'signup' ? 'register' : 'login'
+      publicPage = <AuthPage initialMode={initialMode} />
+    } else if (location.pathname === '/accept-invite') {
+      publicPage = <AuthPage />
+    } else {
+      publicPage = <LandingPage />
+    }
+    return (
+      <>
+        <ThemeApplier />
+        <Toaster
+          position="top-center"
+          toastOptions={{
+            style: {
+              borderRadius: '8px',
+              background: '#fff',
+              color: '#111827',
+              fontSize: '14px',
+              boxShadow: '0 4px 6px -1px rgba(0,0,0,0.1)',
+            },
+          }}
+        />
+        {publicPage}
+      </>
+    )
+  }
+
+  if (location.pathname === '/accept-invite') {
+    return (
+      <>
+        <ThemeApplier />
+        <Toaster
+          position="top-center"
+          toastOptions={{
+            style: {
+              borderRadius: '8px',
+              background: '#fff',
+              color: '#111827',
+              fontSize: '14px',
+              boxShadow: '0 4px 6px -1px rgba(0,0,0,0.1)',
+            },
+          }}
+        />
+        <AcceptInvitePage />
+      </>
+    )
+  }
+
+  // Authenticated app — layout route + nested pages (Outlet)
   return (
     <>
       <ThemeApplier />
@@ -227,7 +264,25 @@ export default function App() {
           },
         }}
       />
-      {content}
+      <Routes>
+        <Route element={<AppShell />}>
+          <Route path="/dashboard"         element={<DashboardPage />} />
+          <Route path="/log"               element={<LogPage />} />
+          <Route path="/diary"             element={<DiaryPage />} />
+          <Route path="/calendar"          element={<CalendarPage />} />
+          <Route path="/goals"             element={<GoalsPage />} />
+          <Route path="/goals/:id"         element={<GoalDetailPage />} />
+          <Route path="/providers"         element={<ProvidersPage />} />
+          <Route path="/providers/:id"     element={<ProviderDetailPage />} />
+          <Route path="/settings"          element={<SettingsPage />} />
+          <Route path="/diet-settings"     element={<DietSettingsPage />} />
+          <Route path="/schedule-settings" element={<ScheduleSettingsPage />} />
+          <Route path="/tracker-settings"  element={<TrackerSettingsPage />} />
+          <Route path="/export"            element={<ExportPage />} />
+          <Route path="/profile"           element={<Navigate to="/settings?section=account" replace />} />
+          <Route path="*"                  element={<Navigate to="/dashboard" replace />} />
+        </Route>
+      </Routes>
     </>
   )
 }
