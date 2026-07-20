@@ -1,8 +1,8 @@
 import { useEffect, useState } from 'react'
 import { format, parseISO } from 'date-fns'
 import {
-  Activity, CalendarClock, Check, ChevronDown, ChevronLeft, ChevronRight, ChevronUp, Clock, Crown, Eye, EyeOff,
-  LogOut, Mail, Palette, Pencil, Plus, Settings, Shield, Trash2, User, Users, Utensils, X, Wand2,
+  Check, ChevronDown, ChevronLeft, ChevronRight, ChevronUp, Clock, Crown, Eye, EyeOff,
+  LogOut, Mail, Palette, Pencil, Plus, Shield, Trash2, User, Users, X, Wand2,
   AlertTriangle,
 } from 'lucide-react'
 import { DeleteAccountModal } from '../components/settings/DeleteAccountModal'
