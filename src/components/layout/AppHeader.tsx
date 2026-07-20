@@ -7,14 +7,14 @@ import { useProfile } from '../../contexts/ProfileContext'
 import toast from 'react-hot-toast'
 
 const SETTINGS_LINKS = [
-  { label: 'Account',          hash: 'account',     Icon: User },
-  { label: 'Appearance',       hash: 'appearance',  Icon: Palette },
-  { label: 'Quick-add',        hash: 'quick-add',   Icon: LayoutGrid },
-  { label: 'Child profiles',   hash: 'profiles',    Icon: Baby },
-  { label: 'Caregivers',       hash: 'caregivers',  Icon: Users },
-  { label: 'Diet & Nutrition', hash: 'diet',        Icon: Utensils },
-  { label: 'Daily Schedule',   hash: 'schedule',    Icon: CalendarClock },
-  { label: 'Custom Trackers',  hash: 'trackers',    Icon: Activity },
+  { label: 'Account',          section: 'account',    path: null,                 Icon: User },
+  { label: 'Appearance',       section: 'appearance', path: null,                 Icon: Palette },
+  { label: 'Quick-add',        section: 'quick-add',  path: null,                 Icon: LayoutGrid },
+  { label: 'Child profiles',   section: 'profiles',   path: null,                 Icon: Baby },
+  { label: 'Caregivers',       section: 'caregivers', path: null,                 Icon: Users },
+  { label: 'Diet & Nutrition', section: 'diet',       path: '/diet-settings',     Icon: Utensils },
+  { label: 'Daily Schedule',   section: 'schedule',   path: '/schedule-settings', Icon: CalendarClock },
+  { label: 'Custom Trackers',  section: 'trackers',   path: '/tracker-settings',  Icon: Activity },
 ] as const
 
 export function AppHeader() {
@@ -55,9 +55,10 @@ export function AppHeader() {
     }
   }
 
-  function goToSettingsSection(hash: string) {
+  function goToSettingsSection(item: typeof SETTINGS_LINKS[number]) {
     setShowSettingsMenu(false)
-    navigate(`/settings#${hash}`)
+    if (item.path) navigate(item.path)
+    else navigate(`/settings?section=${item.section}`)
   }
 
   return (
@@ -161,16 +162,16 @@ export function AppHeader() {
                 </div>
 
                 <ul className="py-1">
-                  {SETTINGS_LINKS.map(({ label, hash, Icon }) => (
-                    <li key={hash}>
+                  {SETTINGS_LINKS.map((item) => (
+                    <li key={item.section}>
                       <button
                         type="button"
-                        onClick={() => goToSettingsSection(hash)}
+                        onClick={() => goToSettingsSection(item)}
                         className="w-full flex items-center gap-2.5 px-4 py-2.5 text-sm transition-colors hover:bg-black/[0.03] focus-visible:outline-none"
                         style={{ color: 'var(--color-text)' }}
                       >
-                        <Icon className="w-4 h-4 flex-shrink-0" style={{ color: 'var(--color-accent)' }} />
-                        {label}
+                        <item.Icon className="w-4 h-4 flex-shrink-0" style={{ color: 'var(--color-accent)' }} />
+                        {item.label}
                       </button>
                     </li>
                   ))}

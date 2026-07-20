@@ -143,7 +143,7 @@ function AppShell() {
           <Route path="/tracker-settings"  element={<TrackerSettingsPage />} />
           <Route path="/export"             element={<ExportPage />} />
           {/* Redirects */}
-          <Route path="/profile"            element={<Navigate to="/settings" replace />} />
+          <Route path="/profile"            element={<Navigate to="/settings?section=account" replace />} />
           <Route path="*"                   element={<Navigate to="/dashboard" replace />} />
         </Routes>
       </main>

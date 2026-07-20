@@ -265,7 +265,7 @@ export function ScheduleSettingsPage() {
       >
         <div className="flex items-center gap-3 px-4 h-14">
           <button
-            onClick={() => navigate('/settings')}
+            onClick={() => navigate('/settings?section=account')}
             className="w-8 h-8 rounded-full flex items-center justify-center hover:bg-warm-200 transition-colors"
             style={{ color: 'var(--color-accent)' }}
           >

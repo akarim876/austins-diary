@@ -79,7 +79,7 @@ export function DiaryPage() {
           <p className="text-sm text-gray-500 mt-1">Set up a child profile first.</p>
         </div>
         <button
-          onClick={() => navigate('/settings')}
+          onClick={() => navigate('/settings?section=account')}
           className="px-5 py-2.5 rounded-xl bg-brand-500 text-white text-sm font-semibold hover:bg-brand-600 transition"
         >
           Set up profile

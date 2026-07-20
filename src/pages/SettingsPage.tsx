@@ -1,14 +1,14 @@
 import { useEffect, useState } from 'react'
 import { format, parseISO } from 'date-fns'
 import {
-  Activity, CalendarClock, Check, ChevronDown, ChevronRight, ChevronUp, Clock, Crown, Eye, EyeOff,
+  Activity, CalendarClock, Check, ChevronDown, ChevronLeft, ChevronRight, ChevronUp, Clock, Crown, Eye, EyeOff,
   LogOut, Mail, Palette, Pencil, Plus, Settings, Shield, Trash2, User, Users, Utensils, X, Wand2,
   AlertTriangle,
 } from 'lucide-react'
 import { DeleteAccountModal } from '../components/settings/DeleteAccountModal'
 import { DeleteProfileModal } from '../components/settings/DeleteProfileModal'
 import toast from 'react-hot-toast'
-import { useNavigate, useLocation } from 'react-router-dom'
+import { useNavigate, useSearchParams } from 'react-router-dom'
 import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { z } from 'zod'
@@ -992,28 +992,29 @@ function ThemeSection() {
 
 // ─── Page ──────────────────────────────────────────────────────────────────────
 
+const SECTION_TITLES: Record<string, string> = {
+  account:     'Account',
+  appearance:  'Appearance',
+  'quick-add': 'Quick-add',
+  profiles:    'Child profiles',
+  caregivers:  'Caregivers',
+}
+
 export function SettingsPage() {
   const { signOut, user } = useAuth()
   const { activeProfile, refresh: refreshProfiles } = useProfile()
   const navigate = useNavigate()
-  const location = useLocation()
+  const [searchParams] = useSearchParams()
+  const section = searchParams.get('section') ?? 'account'
+
   const myRole = useMyRole(activeProfile?.id ?? null)
   const isOwner = myRole === 'owner'
   const { isResumable, savedStep, markDone, dismiss } = useSetupWizard(activeProfile?.id ?? null)
-  const [showWizard, setShowWizard]                   = useState(false)
-  const [showDeleteModal, setShowDeleteModal]         = useState(false)
+  const [showWizard, setShowWizard]                         = useState(false)
+  const [showDeleteModal, setShowDeleteModal]               = useState(false)
   const [showDeleteProfileModal, setShowDeleteProfileModal] = useState(false)
 
-  // Deep-link from header settings menu: /settings#appearance etc.
-  useEffect(() => {
-    const hash = location.hash.replace(/^#/, '')
-    if (!hash) return
-    // Wait a frame so sections are painted
-    const t = window.setTimeout(() => {
-      document.getElementById(hash)?.scrollIntoView({ behavior: 'smooth', block: 'start' })
-    }, 80)
-    return () => window.clearTimeout(t)
-  }, [location.hash])
+  const title = SECTION_TITLES[section] ?? 'Settings'
 
   async function handleSignOut() {
     try { await signOut() } catch { toast.error('Failed to sign out') }
@@ -1021,7 +1022,6 @@ export function SettingsPage() {
 
   return (
     <div className="flex-1 overflow-y-auto">
-      {/* Setup wizard (rendered as portal when opened from Settings) */}
       {showWizard && activeProfile && user && (
         <SetupWizard
           profileId={activeProfile.id}
@@ -1033,168 +1033,115 @@ export function SettingsPage() {
         />
       )}
 
-      {/* Page header */}
       <div className="sticky top-0 z-10 bg-white/95 backdrop-blur-sm border-b border-warm-200 px-4 py-3 flex items-center gap-2">
-        <Settings className="w-4 h-4 text-gray-400" />
-        <h1 className="font-bold text-gray-900">Settings</h1>
+        <button
+          type="button"
+          onClick={() => navigate(-1)}
+          className="w-8 h-8 -ml-1 rounded-lg flex items-center justify-center text-gray-500 hover:bg-gray-100 transition"
+          aria-label="Back"
+        >
+          <ChevronLeft className="w-5 h-5" />
+        </button>
+        <h1 className="font-bold text-gray-900">{title}</h1>
       </div>
 
       <div className="max-w-lg mx-auto px-4 py-6 pb-28 space-y-6">
-        {/* Complete setup banner — only for owners who abandoned the wizard */}
-        {isOwner && isResumable && activeProfile && (
-          <div className="rounded-xl border border-[var(--color-accent)]/30 bg-[var(--color-accent)]/8 p-4 flex items-start gap-3">
-            <div className="w-9 h-9 rounded-xl bg-[var(--color-accent)]/15 flex items-center justify-center flex-shrink-0 mt-0.5">
-              <Wand2 className="w-5 h-5 text-[var(--color-accent)]" />
-            </div>
-            <div className="flex-1 min-w-0">
-              <p className="text-sm font-semibold text-[var(--color-text)]">
-                Complete {activeProfile.name}'s setup
-              </p>
-              <p className="text-xs text-[var(--color-text-muted)] mt-0.5 leading-relaxed">
-                You started setting up the diary but didn't finish. Resume where you left off to
-                add foods, medications, smoothie recipes, and more.
-              </p>
-              <button
-                onClick={() => setShowWizard(true)}
-                className="mt-2.5 inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-lg text-sm font-semibold text-white bg-[var(--color-accent)] hover:opacity-90 transition-opacity"
-              >
-                <Wand2 className="w-3.5 h-3.5" />
-                Resume setup
-              </button>
-            </div>
-          </div>
-        )}
-
-        <AccountSection />
-        <ChangePasswordSection />
-        <ThemeSection />
-        <QuickTilesSection />
-        <ChildProfilesSection />
-        <CaregiversSection />
-
-        {/* Diet settings link */}
-        {activeProfile && (
-          <section id="diet">
-            <h2 className="text-xs font-semibold text-gray-400 uppercase tracking-wider mb-3 px-1">
-              Diet &amp; Nutrition
-            </h2>
-            <button
-              onClick={() => navigate('/diet-settings')}
-              className="w-full flex items-center gap-3 py-3 px-4 rounded-xl bg-white border border-warm-200 shadow-sm hover:shadow-md hover:border-emerald-200 transition-all text-left"
-            >
-              <div className="w-9 h-9 rounded-xl bg-emerald-100 flex items-center justify-center flex-shrink-0">
-                <Utensils className="w-4 h-4 text-emerald-600" />
-              </div>
-              <div className="flex-1">
-                <p className="text-sm font-semibold text-gray-900">Diet &amp; Nutrition Settings</p>
-                <p className="text-xs text-gray-400 mt-0.5">Foods, smoothie recipes, supplements, medications</p>
-              </div>
-              <ChevronRight className="w-4 h-4 text-gray-300 flex-shrink-0" />
-            </button>
-          </section>
-        )}
-
-        {/* Schedule settings link */}
-        {activeProfile && (
-          <section id="schedule">
-            <h2 className="text-xs font-semibold text-gray-400 uppercase tracking-wider mb-3 px-1">
-              Daily Schedule
-            </h2>
-            <button
-              onClick={() => navigate('/schedule-settings')}
-              className="w-full flex items-center gap-3 py-3 px-4 rounded-xl bg-white border border-warm-200 shadow-sm hover:shadow-md hover:border-brand-200 transition-all text-left"
-            >
-              <div className="w-9 h-9 rounded-xl bg-brand-50 flex items-center justify-center flex-shrink-0">
-                <CalendarClock className="w-4 h-4 text-brand-600" />
-              </div>
-              <div className="flex-1">
-                <p className="text-sm font-semibold text-gray-900">Schedule Template</p>
-                <p className="text-xs text-gray-400 mt-0.5">Build the typical daily routine checklist</p>
-              </div>
-              <ChevronRight className="w-4 h-4 text-gray-300 flex-shrink-0" />
-            </button>
-          </section>
-        )}
-
-        {/* Custom trackers link */}
-        {activeProfile && (
-          <section id="trackers">
-            <h2 className="text-xs font-semibold text-gray-400 uppercase tracking-wider mb-3 px-1">
-              Custom Trackers
-            </h2>
-            <button
-              onClick={() => navigate('/tracker-settings')}
-              className="w-full flex items-center gap-3 py-3 px-4 rounded-xl bg-white border border-warm-200 shadow-sm hover:shadow-md hover:border-brand-200 transition-all text-left"
-            >
-              <div className="w-9 h-9 rounded-xl bg-brand-50 flex items-center justify-center flex-shrink-0">
-                <Activity className="w-4 h-4 text-brand-600" />
-              </div>
-              <div className="flex-1">
-                <p className="text-sm font-semibold text-gray-900">Custom Trackers</p>
-                <p className="text-xs text-gray-400 mt-0.5">Create duration, counter, yes/no, and rating trackers</p>
-              </div>
-              <ChevronRight className="w-4 h-4 text-gray-300 flex-shrink-0" />
-            </button>
-          </section>
-        )}
-
-        {/* Sign out */}
-        <button
-          onClick={handleSignOut}
-          className="w-full flex items-center justify-center gap-2 py-3 rounded-xl border border-red-100 text-red-500 text-sm font-medium hover:bg-red-50 transition"
-        >
-          <LogOut className="w-4 h-4" /> Sign out
-        </button>
-
-        {/* Delete profile — owner only */}
-        {isOwner && activeProfile && (
-          <section className="pb-2">
-            <div className="rounded-xl border border-red-100 bg-red-50/40 p-4">
-              <div className="flex items-start gap-3">
-                <div className="w-8 h-8 rounded-lg bg-red-100 flex items-center justify-center flex-shrink-0 mt-0.5">
-                  <Trash2 className="w-4 h-4 text-red-500" />
+        {section === 'account' && (
+          <>
+            {isOwner && isResumable && activeProfile && (
+              <div className="rounded-xl border border-[var(--color-accent)]/30 bg-[var(--color-accent)]/8 p-4 flex items-start gap-3">
+                <div className="w-9 h-9 rounded-xl bg-[var(--color-accent)]/15 flex items-center justify-center flex-shrink-0 mt-0.5">
+                  <Wand2 className="w-5 h-5 text-[var(--color-accent)]" />
                 </div>
                 <div className="flex-1 min-w-0">
-                  <p className="text-sm font-semibold text-gray-900">Delete this diary</p>
-                  <p className="text-xs text-gray-500 mt-0.5 leading-relaxed">
-                    Permanently deletes {activeProfile.name}'s entire diary — all logs, goals,
-                    appointments, and caregiver access. This cannot be undone.
+                  <p className="text-sm font-semibold text-[var(--color-text)]">
+                    Complete {activeProfile.name}'s setup
+                  </p>
+                  <p className="text-xs text-[var(--color-text-muted)] mt-0.5 leading-relaxed">
+                    You started setting up the diary but didn't finish. Resume where you left off to
+                    add foods, medications, smoothie recipes, and more.
                   </p>
                   <button
-                    onClick={() => setShowDeleteProfileModal(true)}
-                    className="mt-2.5 text-xs font-semibold text-red-600 hover:text-red-700 transition"
+                    onClick={() => setShowWizard(true)}
+                    className="mt-2.5 inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-lg text-sm font-semibold text-white bg-[var(--color-accent)] hover:opacity-90 transition-opacity"
                   >
-                    Delete {activeProfile.name}'s diary →
+                    <Wand2 className="w-3.5 h-3.5" />
+                    Resume setup
                   </button>
                 </div>
               </div>
-            </div>
-          </section>
+            )}
+
+            <AccountSection />
+            <ChangePasswordSection />
+
+            <button
+              onClick={handleSignOut}
+              className="w-full flex items-center justify-center gap-2 py-3 rounded-xl border border-red-100 text-red-500 text-sm font-medium hover:bg-red-50 transition"
+            >
+              <LogOut className="w-4 h-4" /> Sign out
+            </button>
+
+            <section className="pb-2">
+              <div className="rounded-xl border border-red-100 bg-red-50/40 p-4">
+                <div className="flex items-start gap-3">
+                  <div className="w-8 h-8 rounded-lg bg-red-100 flex items-center justify-center flex-shrink-0 mt-0.5">
+                    <AlertTriangle className="w-4 h-4 text-red-500" />
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <p className="text-sm font-semibold text-gray-900">Delete account</p>
+                    <p className="text-xs text-gray-500 mt-0.5 leading-relaxed">
+                      Permanently removes your credentials and profile. Log entries you created will
+                      remain visible to other caregivers.
+                    </p>
+                    <button
+                      onClick={() => setShowDeleteModal(true)}
+                      className="mt-2.5 text-xs font-semibold text-red-600 hover:text-red-700 transition"
+                    >
+                      Delete my account →
+                    </button>
+                  </div>
+                </div>
+              </div>
+            </section>
+          </>
         )}
 
-        {/* Delete account */}
-        <section className="pb-2">
-          <div className="rounded-xl border border-red-100 bg-red-50/40 p-4">
-            <div className="flex items-start gap-3">
-              <div className="w-8 h-8 rounded-lg bg-red-100 flex items-center justify-center flex-shrink-0 mt-0.5">
-                <AlertTriangle className="w-4 h-4 text-red-500" />
-              </div>
-              <div className="flex-1 min-w-0">
-                <p className="text-sm font-semibold text-gray-900">Delete account</p>
-                <p className="text-xs text-gray-500 mt-0.5 leading-relaxed">
-                  Permanently removes your credentials and profile. Log entries you created will
-                  remain visible to other caregivers.
-                </p>
-                <button
-                  onClick={() => setShowDeleteModal(true)}
-                  className="mt-2.5 text-xs font-semibold text-red-600 hover:text-red-700 transition"
-                >
-                  Delete my account →
-                </button>
-              </div>
-            </div>
-          </div>
-        </section>
+        {section === 'appearance' && <ThemeSection />}
+
+        {section === 'quick-add' && <QuickTilesSection />}
+
+        {section === 'profiles' && (
+          <>
+            <ChildProfilesSection />
+            {isOwner && activeProfile && (
+              <section className="pb-2">
+                <div className="rounded-xl border border-red-100 bg-red-50/40 p-4">
+                  <div className="flex items-start gap-3">
+                    <div className="w-8 h-8 rounded-lg bg-red-100 flex items-center justify-center flex-shrink-0 mt-0.5">
+                      <Trash2 className="w-4 h-4 text-red-500" />
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <p className="text-sm font-semibold text-gray-900">Delete this diary</p>
+                      <p className="text-xs text-gray-500 mt-0.5 leading-relaxed">
+                        Permanently deletes {activeProfile.name}'s entire diary — all logs, goals,
+                        appointments, and caregiver access. This cannot be undone.
+                      </p>
+                      <button
+                        onClick={() => setShowDeleteProfileModal(true)}
+                        className="mt-2.5 text-xs font-semibold text-red-600 hover:text-red-700 transition"
+                      >
+                        Delete {activeProfile.name}'s diary →
+                      </button>
+                    </div>
+                  </div>
+                </div>
+              </section>
+            )}
+          </>
+        )}
+
+        {section === 'caregivers' && <CaregiversSection />}
       </div>
 
       {showDeleteModal && (
