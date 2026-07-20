@@ -50,10 +50,35 @@
     />
 
     <!-- ── Service Worker registration ───────────────────────────────────── -->
+    <!--
+      Installed PWAs (home-screen apps) rarely get a hard reload — the OS
+      suspends/resumes them instead of reloading. Without the logic below, a
+      new service worker can finish installing and activating in the
+      background, but the already-open page keeps running the OLD JS bundle
+      forever, so fixes never visibly take effect until the user manually
+      force-quits and reopens the app. `controllerchange` fires the moment the
+      new worker takes over — we use that as the signal to reload the page
+      exactly once so the fresh bundle loads automatically.
+    -->
     <script>
       if ('serviceWorker' in navigator) {
+        let refreshing = false
+        navigator.serviceWorker.addEventListener('controllerchange', () => {
+          if (refreshing) return
+          refreshing = true
+          window.location.reload()
+        })
+
         window.addEventListener('load', () => {
-          navigator.serviceWorker.register('/sw.js').catch((err) => {
+          navigator.serviceWorker.register('/sw.js').then((registration) => {
+            // Re-check for updates whenever the app regains focus — covers
+            // PWAs that were merely resumed from the background, not reloaded.
+            document.addEventListener('visibilitychange', () => {
+              if (document.visibilityState === 'visible') {
+                registration.update().catch(() => {})
+              }
+            })
+          }).catch((err) => {
             console.warn('[SW] Registration failed:', err)
           })
         })

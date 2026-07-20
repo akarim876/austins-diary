@@ -13,7 +13,7 @@
  * so users get a fresh cache on next visit.
  */
 
-const SHELL_VERSION  = 'v1'
+const SHELL_VERSION  = 'v2'
 const SHELL_CACHE    = `austins-diary-shell-${SHELL_VERSION}`
 const FONTS_CACHE    = 'austins-diary-fonts-v1'
 
