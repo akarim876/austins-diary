@@ -8,7 +8,16 @@ import App from './App'
 
 createRoot(document.getElementById('root')!).render(
   <StrictMode>
-    <BrowserRouter>
+    {/*
+      useTransitions={false}: react-router-dom's BrowserRouter defaults to
+      wrapping every location update in React.startTransition(). The browser
+      history updates immediately (so the address bar changes), but the React
+      state feeding useLocation() is low-priority and can be perpetually
+      starved by other renders — which is exactly what caused navbar taps to
+      change the URL without ever updating the visible page. Opting out makes
+      navigation updates synchronous/normal-priority again.
+    */}
+    <BrowserRouter useTransitions={false}>
       <AuthProvider>
         <ProfileProvider>
           <App />
