@@ -1,7 +1,7 @@
 import type { ReactNode } from 'react'
 import { useEffect, useState } from 'react'
 import { Navigate, Outlet, Route, Routes, useLocation } from 'react-router-dom'
-import { Toaster } from 'react-hot-toast'
+import { Toaster, toast } from 'react-hot-toast'
 import { useAuth } from './contexts/AuthContext'
 import { useTheme } from './hooks/useTheme'
 import { useProfile } from './contexts/ProfileContext'
