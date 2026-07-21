@@ -40,22 +40,27 @@ export function DiaryEntryForm({ profileId, date, existingEntry, initialNote, on
     resolver: zodResolver(schema),
     defaultValues: {
       entry_date: date,
-      note: existingEntry?.note ?? initialNote ?? '',
+      // initialNote (when explicitly passed, e.g. from a voice transcription)
+      // takes priority over the existing entry's note so callers can control
+      // the starting text — e.g. a merged "existing note + new transcription"
+      // string — while still passing the real existingEntry so saving updates
+      // that row instead of inserting a duplicate.
+      note: initialNote ?? existingEntry?.note ?? '',
       tags: existingEntry?.tags ?? [],
       photo: null,
     },
   })
 
-  // Reset when date or entry changes
+  // Reset when date, entry, or initial note changes
   useEffect(() => {
     reset({
       entry_date: date,
-      note: existingEntry?.note ?? initialNote ?? '',
+      note: initialNote ?? existingEntry?.note ?? '',
       tags: existingEntry?.tags ?? [],
       photo: null,
     })
     setClearExistingPhoto(false)
-  }, [date, existingEntry, reset])
+  }, [date, existingEntry, initialNote, reset])
 
   const noteValue = watch('note')
 

@@ -5,9 +5,11 @@
  *  idle → tap → requesting mic → recording → stop → uploading → transcribing
  *  → done: show "Save to…" destination sheet
  *    ├── Behavior log  → BehaviorLogForm pre-filled with transcribed text
- *    ├── Diary note    → DiaryEntryForm pre-filled with transcribed text
- *    ├── Handoff note  → Inline handoff editor pre-filled
- *    └── Quick note    → Save immediately as unfiled, toast confirmation
+ *    ├── Diary note    → if today already has a note, ask replace vs. append,
+ *    │                   then DiaryEntryForm pre-filled accordingly (updates
+ *    │                   the existing row rather than inserting a duplicate)
+ *    ├── Handoff note  → same replace vs. append choice, then inline editor
+ *    └── Quick note    → save immediately as unfiled, toast confirmation
  */
 
 import { useState, useRef, useEffect, useCallback } from 'react'
@@ -18,12 +20,16 @@ import { supabase } from '../../lib/supabase'
 import { useAuth } from '../../contexts/AuthContext'
 import { useProfile } from '../../contexts/ProfileContext'
 import { useMyRole, canCreate } from '../../hooks/useMyRole'
+import { useDiaryEntry } from '../../hooks/useDiaryEntries'
+import { useHandoffNote } from '../../hooks/useHandoffNote'
 import { BottomSheet } from '../ui/BottomSheet'
 import { BehaviorLogForm } from '../behavior/BehaviorLogForm'
 import { DiaryEntryForm } from '../diary/DiaryEntryForm'
 
 type Phase = 'idle' | 'requesting' | 'recording' | 'uploading' | 'transcribing' | 'done' | 'error'
 type Destination = 'behavior' | 'handoff' | 'diary' | 'quick' | null
+/** Whether a new voice transcription should replace or be appended to an existing note. */
+type NoteChoice = 'replace' | 'append' | null
 
 function detectMimeType(): string {
   const candidates = [
@@ -39,21 +45,70 @@ function formatTime(s: number) {
 
 const MAX_SECONDS = 180
 
-// ── Sub-component: HandoffSheet ───────────────────────────────────────────────
+// ── Sub-component: NoteChoicePrompt ───────────────────────────────────────────
+// Shown when a voice note targets the diary/handoff destination and a note
+// for today already exists — lets the user decide whether the new
+// transcription should replace it or be appended to it.
 
-interface HandoffSheetProps {
-  open: boolean
-  onClose: () => void
-  profileId: string
-  initialText: string
+interface NoteChoicePromptProps {
+  existingText: string
+  noteLabel: string
+  onChoose: (mode: 'replace' | 'append') => void
 }
 
-function HandoffSheet({ open, onClose, profileId, initialText }: HandoffSheetProps) {
+function NoteChoicePrompt({ existingText, noteLabel, onChoose }: NoteChoicePromptProps) {
+  return (
+    <div className="px-4 pt-2 pb-6 space-y-4">
+      <div>
+        <p className="text-xs font-semibold uppercase tracking-widest mb-2" style={{ color: '#9A9187' }}>
+          Current {noteLabel}
+        </p>
+        <div
+          className="px-3 py-2.5 rounded-xl text-sm leading-relaxed whitespace-pre-wrap max-h-40 overflow-y-auto"
+          style={{ background: 'rgba(91,123,122,0.07)', color: '#4A6564' }}
+        >
+          {existingText}
+        </div>
+      </div>
+      <p className="text-sm" style={{ color: '#33322E' }}>
+        You already have a {noteLabel} for today. What should the new recording do?
+      </p>
+      <div className="space-y-2">
+        <button
+          type="button"
+          onClick={() => onChoose('append')}
+          className="w-full py-3 rounded-xl text-sm font-semibold text-white transition active:scale-[0.98]"
+          style={{ background: 'var(--color-accent)' }}
+        >
+          Add to existing note
+        </button>
+        <button
+          type="button"
+          onClick={() => onChoose('replace')}
+          className="w-full py-3 rounded-xl text-sm font-semibold transition active:scale-[0.98]"
+          style={{ background: 'rgba(199,123,106,0.12)', color: '#C77B6A' }}
+        >
+          Replace existing note
+        </button>
+      </div>
+    </div>
+  )
+}
+
+// ── Sub-component: HandoffNoteForm ────────────────────────────────────────────
+
+interface HandoffNoteFormProps {
+  profileId: string
+  initialText: string
+  onSaved: () => void
+}
+
+function HandoffNoteForm({ profileId, initialText, onSaved }: HandoffNoteFormProps) {
   const [text, setText]     = useState(initialText)
   const [saving, setSaving] = useState(false)
 
-  // Reset text when opened with new content
-  useEffect(() => { if (open) setText(initialText) }, [open, initialText])
+  // Re-sync if the initial text changes (e.g. user switches replace/append choice)
+  useEffect(() => { setText(initialText) }, [initialText])
 
   async function handleSave() {
     if (!text.trim()) return
@@ -67,7 +122,7 @@ function HandoffSheet({ open, onClose, profileId, initialText }: HandoffSheetPro
         { onConflict: 'profile_id' },
       )
       toast.success('Handoff note saved')
-      onClose()
+      onSaved()
     } catch {
       toast.error('Could not save handoff note')
     } finally {
@@ -76,34 +131,32 @@ function HandoffSheet({ open, onClose, profileId, initialText }: HandoffSheetPro
   }
 
   return (
-    <BottomSheet open={open} onClose={onClose} title="Handoff note">
-      <div className="px-4 pt-3 pb-6 space-y-3">
-        <p className="text-xs" style={{ color: '#9A9187' }}>
-          Review and edit the transcription before saving.
-        </p>
-        <textarea
-          value={text}
-          onChange={e => setText(e.target.value)}
-          rows={6}
-          className="w-full px-3 py-2.5 rounded-xl border text-sm resize-none focus:outline-none focus:ring-2 transition"
-          style={{
-            borderColor: 'var(--color-accent-200)',
-            caretColor: 'var(--color-accent)',
-          }}
-          placeholder="Handoff note content…"
-          autoFocus
-        />
-        <button
-          type="button"
-          onClick={handleSave}
-          disabled={saving || !text.trim()}
-          className="w-full py-2.5 rounded-xl text-sm font-semibold text-white transition disabled:opacity-50"
-          style={{ background: 'var(--color-accent)' }}
-        >
-          {saving ? 'Saving…' : 'Save handoff note'}
-        </button>
-      </div>
-    </BottomSheet>
+    <div className="px-4 pt-3 pb-6 space-y-3">
+      <p className="text-xs" style={{ color: '#9A9187' }}>
+        Review and edit the note before saving.
+      </p>
+      <textarea
+        value={text}
+        onChange={e => setText(e.target.value)}
+        rows={6}
+        className="w-full px-3 py-2.5 rounded-xl border text-sm resize-none focus:outline-none focus:ring-2 transition"
+        style={{
+          borderColor: 'var(--color-accent-200)',
+          caretColor: 'var(--color-accent)',
+        }}
+        placeholder="Handoff note content…"
+        autoFocus
+      />
+      <button
+        type="button"
+        onClick={handleSave}
+        disabled={saving || !text.trim()}
+        className="w-full py-2.5 rounded-xl text-sm font-semibold text-white transition disabled:opacity-50"
+        style={{ background: 'var(--color-accent)' }}
+      >
+        {saving ? 'Saving…' : 'Save handoff note'}
+      </button>
+    </div>
   )
 }
 
@@ -120,6 +173,8 @@ export function GlobalRecordButton() {
   const [error, setError]           = useState<string | null>(null)
   const [transcribed, setTranscribed] = useState<string | null>(null)
   const [destination, setDestination] = useState<Destination>(null)
+  const [diaryChoice, setDiaryChoice]     = useState<NoteChoice>(null)
+  const [handoffChoice, setHandoffChoice] = useState<NoteChoice>(null)
 
   const recorderRef  = useRef<MediaRecorder | null>(null)
   const chunksRef    = useRef<Blob[]>([])
@@ -136,6 +191,13 @@ export function GlobalRecordButton() {
 
   const profileId = activeProfile?.id ?? null
   const canLog    = canCreate(myRole)
+
+  // Today's existing diary/handoff notes — fetched proactively so we can offer
+  // a "replace or add to it?" choice instead of silently overriding them.
+  const { entry: existingDiaryEntry, refetch: refetchDiaryEntry } =
+    useDiaryEntry(profileId, today)
+  const { data: existingHandoffNote, refetch: refetchHandoffNote } =
+    useHandoffNote(profileId)
 
   function startTimer() {
     setElapsed(0)
@@ -240,6 +302,8 @@ export function GlobalRecordButton() {
     setError(null)
     setTranscribed(null)
     setDestination(null)
+    setDiaryChoice(null)
+    setHandoffChoice(null)
   }
 
   async function saveAsQuickNote() {
@@ -396,7 +460,7 @@ export function GlobalRecordButton() {
               dest: 'diary' as Destination,
               emoji: '📖',
               label: 'Diary note',
-              sub: "Added to today's diary entry",
+              sub: "Today's diary entry",
               color: 'rgba(91,143,120,0.10)',
               accent: '#3a6b52',
             },
@@ -404,7 +468,7 @@ export function GlobalRecordButton() {
               dest: 'handoff' as Destination,
               emoji: '📋',
               label: 'Handoff note',
-              sub: 'Replaces today\'s handoff note',
+              sub: "Today's handoff note",
               color: 'var(--color-accent-subtle)',
               accent: 'var(--color-accent)',
             },
@@ -425,6 +489,10 @@ export function GlobalRecordButton() {
                   saveAsQuickNote()
                   // sheet closes via reset() after save
                 } else {
+                  // Refresh today's existing note so the replace/append
+                  // choice reflects the latest saved content.
+                  if (dest === 'diary') refetchDiaryEntry()
+                  if (dest === 'handoff') refetchHandoffNote()
                   setDestination(dest)
                 }
               }}
@@ -474,26 +542,77 @@ export function GlobalRecordButton() {
           onClose={reset}
           title="Diary note"
         >
-          <div className="px-4 pt-2 pb-6">
-            <DiaryEntryForm
-              profileId={profileId}
-              date={today}
-              existingEntry={null}
-              initialNote={transcribed ?? ''}
-              onSaved={() => { toast.success('Diary note saved'); reset() }}
+          {existingDiaryEntry && existingDiaryEntry.note.trim() && diaryChoice === null ? (
+            <NoteChoicePrompt
+              existingText={existingDiaryEntry.note}
+              noteLabel="diary note"
+              onChoose={setDiaryChoice}
             />
-          </div>
+          ) : (
+            <div className="px-4 pt-2 pb-6">
+              {existingDiaryEntry && existingDiaryEntry.note.trim() && (
+                <button
+                  type="button"
+                  onClick={() => setDiaryChoice(null)}
+                  className="text-xs font-semibold mb-3"
+                  style={{ color: 'var(--color-accent)' }}
+                >
+                  ← Change save option
+                </button>
+              )}
+              <DiaryEntryForm
+                profileId={profileId}
+                date={today}
+                existingEntry={existingDiaryEntry}
+                initialNote={
+                  diaryChoice === 'append' && existingDiaryEntry
+                    ? `${existingDiaryEntry.note}\n\n${transcribed ?? ''}`
+                    : transcribed ?? ''
+                }
+                onSaved={() => { toast.success('Diary note saved'); reset() }}
+              />
+            </div>
+          )}
         </BottomSheet>
       )}
 
       {/* ── Handoff note sub-sheet ─────────────────────────────────────── */}
       {profileId && (
-        <HandoffSheet
+        <BottomSheet
           open={phase === 'done' && destination === 'handoff'}
           onClose={reset}
-          profileId={profileId}
-          initialText={transcribed ?? ''}
-        />
+          title="Handoff note"
+        >
+          {existingHandoffNote && existingHandoffNote.note.trim() && handoffChoice === null ? (
+            <NoteChoicePrompt
+              existingText={existingHandoffNote.note}
+              noteLabel="handoff note"
+              onChoose={setHandoffChoice}
+            />
+          ) : (
+            <>
+              {existingHandoffNote && existingHandoffNote.note.trim() && (
+                <button
+                  type="button"
+                  onClick={() => setHandoffChoice(null)}
+                  className="text-xs font-semibold px-4 pt-3"
+                  style={{ color: 'var(--color-accent)' }}
+                >
+                  ← Change save option
+                </button>
+              )}
+              <HandoffNoteForm
+                profileId={profileId}
+                initialText={
+                  handoffChoice === 'append' && existingHandoffNote
+                    ? `${existingHandoffNote.note}\n\n${transcribed ?? ''}`
+                    : transcribed ?? ''
+                }
+                onSaved={reset}
+              />
+            </>
+          )}
+        </BottomSheet>
       )}
     </>
   )
