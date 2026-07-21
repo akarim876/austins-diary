@@ -1,7 +1,7 @@
 import type { ReactNode } from 'react'
 import { useEffect, useState } from 'react'
 import { Navigate, Outlet, Route, Routes, useLocation } from 'react-router-dom'
-import { Toaster, toast } from 'react-hot-toast'
+import { Toaster } from 'react-hot-toast'
 import { useAuth } from './contexts/AuthContext'
 import { useTheme } from './hooks/useTheme'
 import { useProfile } from './contexts/ProfileContext'
@@ -140,41 +140,6 @@ function AppShell() {
 }
 
 /**
- * TEMPORARY diagnostic — surfaces otherwise-silent JS errors as toasts and
- * shows the live router location in a small corner badge, so we can see
- * on-screen (without devtools) exactly what happens when navbar taps don't
- * visibly navigate. Safe to remove once the navbar bug is confirmed fixed.
- */
-function DebugOverlay() {
-  const location = useLocation()
-
-  useEffect(() => {
-    function onError(e: ErrorEvent) {
-      toast.error(`JS error: ${e.message}`, { duration: 8000 })
-    }
-    function onRejection(e: PromiseRejectionEvent) {
-      const reason = e.reason instanceof Error ? e.reason.message : String(e.reason)
-      toast.error(`Unhandled rejection: ${reason}`, { duration: 8000 })
-    }
-    window.addEventListener('error', onError)
-    window.addEventListener('unhandledrejection', onRejection)
-    return () => {
-      window.removeEventListener('error', onError)
-      window.removeEventListener('unhandledrejection', onRejection)
-    }
-  }, [])
-
-  return (
-    <div
-      className="fixed top-1 right-1 z-[9999] px-1.5 py-0.5 rounded text-[9px] font-mono pointer-events-none"
-      style={{ background: 'rgba(0,0,0,0.6)', color: '#fff' }}
-    >
-      {location.pathname}
-    </div>
-  )
-}
-
-/**
  * Reads the user's stored theme, applies data-theme to <html>, and keeps the
  * PWA theme-color meta tag in sync so the browser chrome matches the active theme.
  */
@@ -287,7 +252,6 @@ export default function App() {
   return (
     <>
       <ThemeApplier />
-      <DebugOverlay />
       <Toaster
         position="top-center"
         toastOptions={{
