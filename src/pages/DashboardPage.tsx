@@ -1,4 +1,4 @@
-import { useRef, useState } from 'react'
+import { lazy, Suspense, useRef, useState } from 'react'
 import { format, startOfWeek, endOfWeek, parseISO } from 'date-fns'
 import {
   AlertTriangle, Bell, BookOpen, Calendar,
@@ -30,6 +30,8 @@ import { QuickMoodDrawer } from '../components/sensory/QuickMoodDrawer'
 import { CustomTrackerLogForm } from '../components/tracker/CustomTrackerLogForm'
 import { WeeklyBubbleChart } from '../components/dashboard/WeeklyBubbleChart'
 import type { BubbleData } from '../components/dashboard/WeeklyBubbleChart'
+import type { CorrelationPoint } from '../components/dashboard/BehaviorSleepCorrelationChart'
+import { computeSleepBehaviorInsight } from '../lib/dashboardInsights'
 import { Spinner } from '../components/ui/Spinner'
 import { HandoffNote } from '../components/dashboard/HandoffNote'
 import { DailySchedule } from '../components/schedule/DailySchedule'
@@ -39,6 +41,19 @@ import { useDietSettings } from '../hooks/useDietSettings'
 import { useQuickNotes } from '../hooks/useQuickNotes'
 import { useMyRole, canCreate as _canCreate } from '../hooks/useMyRole'
 import type { AttentionItem } from '../hooks/useDashboard'
+
+// The Trends charts pull in `recharts`, which is otherwise unused elsewhere in
+// the eagerly-bundled Dashboard/Log routes. Lazy-loading them keeps that ~150kB
+// library out of the critical-path bundle — it loads as its own chunk only
+// when the Trends section actually renders.
+const BehaviorFrequencyChart = lazy(() =>
+  import('../components/dashboard/BehaviorFrequencyChart').then(m => ({ default: m.BehaviorFrequencyChart })))
+const SleepDurationChart = lazy(() =>
+  import('../components/dashboard/SleepDurationChart').then(m => ({ default: m.SleepDurationChart })))
+const RegulationDistributionChart = lazy(() =>
+  import('../components/dashboard/RegulationDistributionChart').then(m => ({ default: m.RegulationDistributionChart })))
+const BehaviorSleepCorrelationChart = lazy(() =>
+  import('../components/dashboard/BehaviorSleepCorrelationChart').then(m => ({ default: m.BehaviorSleepCorrelationChart })))
 
 // ─── Small helpers ────────────────────────────────────────────────────────────
 
@@ -75,6 +90,26 @@ function TrendIcon({ curr, prev }: { curr: number; prev: number }) {
   if (curr > prev) return <TrendingUp className="w-3.5 h-3.5 text-red-500" />
   if (curr < prev) return <TrendingDown className="w-3.5 h-3.5 text-emerald-500" />
   return <Minus className="w-3.5 h-3.5" style={{ color: 'var(--color-text-muted)' }} />
+}
+
+type ChartTabId = 'overview' | 'behavior' | 'sleep' | 'regulation'
+
+function ChartTabButton({ active, onClick, children }: {
+  active: boolean; onClick: () => void; children: React.ReactNode
+}) {
+  return (
+    <button
+      type="button"
+      onClick={onClick}
+      className="flex-shrink-0 px-3 py-1.5 rounded-full text-xs font-semibold transition-colors whitespace-nowrap focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-500"
+      style={{
+        background: active ? 'var(--color-accent)' : 'var(--color-warm-100)',
+        color:      active ? '#fff' : 'var(--color-text-muted)',
+      }}
+    >
+      {children}
+    </button>
+  )
 }
 
 function AttentionCard({ item, onNavigate }: { item: AttentionItem; onNavigate: () => void }) {
@@ -148,6 +183,7 @@ export function DashboardPage() {
   const [_chartsOpen,     _setChartsOpen]     = useState(false) // replaced by bubble chart
   const [trackerLogOpen,  setTrackerLogOpen]  = useState<string | null>(null) // tracker ID
   const [quickMoodOpen,   setQuickMoodOpen]   = useState(false)
+  const [chartTab,        setChartTab]        = useState<ChartTabId>('overview')
 
   const today     = new Date()
   const weekStart = format(startOfWeek(today, { weekStartsOn: 0 }), 'MMM d')
@@ -224,6 +260,19 @@ export function DashboardPage() {
       icon:      'sensory',
     },
   ]
+
+  // Combine the 30-day behavior + sleep series into one date-aligned dataset
+  // for the "Behavior + Sleep" overlay chart.
+  const sleepHoursByDate = new Map(db.sleepChart.map(p => [p.date, p.hours]))
+  const correlationChart: CorrelationPoint[] = db.behaviorChart.map(p => ({
+    date:  p.date,
+    label: p.label,
+    count: p.count,
+    hours: sleepHoursByDate.get(p.date) ?? null,
+  }))
+  const sleepBehaviorInsight = computeSleepBehaviorInsight(db.sleepChart, db.behaviorChart)
+  const hasBehaviorData = db.behaviorChart.some(p => p.count > 0)
+  const hasSleepData    = db.sleepChart.some(p => p.hours != null)
 
   return (
     <div className="pb-28 w-full">
@@ -533,6 +582,77 @@ export function DashboardPage() {
                   </>
                 )}
               </div>
+            </>
+          )}
+        </Section>
+
+        {/* ── Trends (30-day charts + correlated insight) ─────────────────────── */}
+        <Section title="Trends">
+          {db.loading ? (
+            <div className="flex justify-center py-4"><Spinner className="w-5 h-5" /></div>
+          ) : (
+            <>
+              <div className="flex gap-1.5 overflow-x-auto -mx-1 px-1 pb-1">
+                <ChartTabButton active={chartTab === 'overview'}   onClick={() => setChartTab('overview')}>Behavior + Sleep</ChartTabButton>
+                <ChartTabButton active={chartTab === 'behavior'}   onClick={() => setChartTab('behavior')}>Behavior</ChartTabButton>
+                <ChartTabButton active={chartTab === 'sleep'}      onClick={() => setChartTab('sleep')}>Sleep</ChartTabButton>
+                <ChartTabButton active={chartTab === 'regulation'} onClick={() => setChartTab('regulation')}>Regulation</ChartTabButton>
+              </div>
+
+              <Suspense fallback={<div className="flex justify-center py-8"><Spinner className="w-5 h-5" /></div>}>
+                <div className="mt-3">
+                  {chartTab === 'overview' && (
+                    !hasBehaviorData && !hasSleepData ? (
+                      <p className="text-sm text-center py-6" style={{ color: 'var(--color-text-muted)' }}>
+                        No behavior or sleep entries in the last 30 days
+                      </p>
+                    ) : (
+                      <>
+                        <BehaviorSleepCorrelationChart data={correlationChart} />
+                        <p className="text-xs mt-2 leading-relaxed" style={{ color: 'var(--color-text-muted)' }}>
+                          {sleepBehaviorInsight ? (
+                            <>
+                              On days after a night with under {sleepBehaviorInsight.threshold}h of sleep
+                              ({sleepBehaviorInsight.lowNights} night{sleepBehaviorInsight.lowNights === 1 ? '' : 's'}),
+                              there were an average of{' '}
+                              <strong style={{ color: 'var(--color-text)' }}>
+                                {sleepBehaviorInsight.lowAvg.toFixed(1)} behavior incident{sleepBehaviorInsight.lowAvg === 1 ? '' : 's'}
+                              </strong>
+                              , compared to{' '}
+                              <strong style={{ color: 'var(--color-text)' }}>{sleepBehaviorInsight.okAvg.toFixed(1)}</strong>
+                              {' '}after nights of {sleepBehaviorInsight.threshold}h+
+                              ({sleepBehaviorInsight.okNights} night{sleepBehaviorInsight.okNights === 1 ? '' : 's'}).
+                              This isn't proof either causes the other, but may be worth watching.
+                            </>
+                          ) : (
+                            'Keep logging sleep and behavior daily — once there\'s enough data in both a short-sleep and a well-rested group of nights, we\'ll surface whether one tends to follow the other.'
+                          )}
+                        </p>
+                      </>
+                    )
+                  )}
+
+                  {chartTab === 'behavior' && (
+                    hasBehaviorData
+                      ? <BehaviorFrequencyChart data={db.behaviorChart} />
+                      : <p className="text-sm text-center py-6" style={{ color: 'var(--color-text-muted)' }}>No behavior incidents logged in the last 30 days</p>
+                  )}
+
+                  {chartTab === 'sleep' && (
+                    hasSleepData
+                      ? <SleepDurationChart data={db.sleepChart} />
+                      : <p className="text-sm text-center py-6" style={{ color: 'var(--color-text-muted)' }}>No completed sleep entries in the last 30 days</p>
+                  )}
+
+                  {chartTab === 'regulation' && (
+                    <RegulationDistributionChart data={db.regulationChart} />
+                  )}
+                </div>
+              </Suspense>
+
+              <p className="text-[10px] mt-2 uppercase tracking-wide" style={{ color: 'var(--color-text-muted)' }}>
+                {chartTab === 'regulation' ? 'This week' : 'Last 30 days'}
+              </p>
             </>
           )}
         </Section>
