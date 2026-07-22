@@ -1,4 +1,4 @@
-import { lazy, Suspense, useRef, useState } from 'react'
+import { lazy, Suspense, useMemo, useRef, useState } from 'react'
 import { format, startOfWeek, endOfWeek, parseISO } from 'date-fns'
 import {
   AlertTriangle, Bell, BookOpen, Calendar,
@@ -128,7 +128,7 @@ function chartErrorFallback(error: Error, retry: () => void, componentStack?: st
     <div className="text-center py-6">
       <p className="text-sm" style={{ color: 'var(--color-text-muted)' }}>Couldn't load this chart.</p>
       <p className="text-xs mt-1 px-4 break-words" style={{ color: 'var(--color-text-muted)', opacity: 0.8 }}>
-        [diag-build-6] [{error.name}] {error.message || String(error)}
+        [diag-build-7] [{error.name}] {error.message || String(error)}
       </p>
       {topStack && (
         <pre
@@ -300,14 +300,19 @@ export function DashboardPage() {
   ]
 
   // Combine the 30-day behavior + sleep series into one date-aligned dataset
-  // for the "Behavior + Sleep" overlay chart.
-  const sleepHoursByDate = new Map(db.sleepChart.map(p => [p.date, p.hours]))
-  const correlationChart: CorrelationPoint[] = db.behaviorChart.map(p => ({
-    date:  p.date,
-    label: p.label,
-    count: p.count,
-    hours: sleepHoursByDate.get(p.date) ?? null,
-  }))
+  // for the "Behavior + Sleep" overlay chart. Memoized so the chart receives a
+  // referentially-stable `data` prop — recharts 3 re-dispatches to its internal
+  // store on every chart re-render, so a fresh array each render would help feed
+  // the RenderedTicksReporter update loop (recharts#7563).
+  const correlationChart: CorrelationPoint[] = useMemo(() => {
+    const sleepHoursByDate = new Map(db.sleepChart.map(p => [p.date, p.hours]))
+    return db.behaviorChart.map(p => ({
+      date:  p.date,
+      label: p.label,
+      count: p.count,
+      hours: sleepHoursByDate.get(p.date) ?? null,
+    }))
+  }, [db.behaviorChart, db.sleepChart])
   const sleepBehaviorInsight = computeSleepBehaviorInsight(db.sleepChart, db.behaviorChart)
   const hasBehaviorData = db.behaviorChart.some(p => p.count > 0)
   const hasSleepData    = db.sleepChart.some(p => p.hours != null)

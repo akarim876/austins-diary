@@ -1,3 +1,4 @@
+import { memo } from 'react'
 import {
   BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, Cell, CartesianGrid,
 } from 'recharts'
@@ -7,7 +8,19 @@ interface Props {
   data: RegulationPoint[]
 }
 
-export function RegulationDistributionChart({ data }: Props) {
+// Stable module-level references — see BehaviorSleepCorrelationChart for why
+// (recharts#7563: unstable props + animation drive an update-depth loop).
+const CHART_MARGIN  = { top: 0, right: 24, bottom: 0, left: 0 }
+const X_AXIS_TICK   = { fontSize: 10, fill: '#9ca3af' }
+const Y_AXIS_TICK   = { fontSize: 11, fill: '#6b7280' }
+const TOOLTIP_STYLE = { fontSize: 12, borderRadius: 8, border: '1px solid #f0ede8', boxShadow: '0 2px 8px rgba(0,0,0,0.08)' }
+const TOOLTIP_CURSOR = { fill: '#f3f4f6' }
+const X_DOMAIN: [number, string] = [0, 'dataMax + 1']
+
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+const tooltipFormatter = ((v: number) => [v, 'entries']) as any
+
+export const RegulationDistributionChart = memo(function RegulationDistributionChart({ data }: Props) {
   const total = data.reduce((s, d) => s + d.count, 0)
   if (total === 0) {
     return (
@@ -21,32 +34,32 @@ export function RegulationDistributionChart({ data }: Props) {
       <BarChart
         data={data}
         layout="vertical"
-        margin={{ top: 0, right: 24, bottom: 0, left: 0 }}
+        margin={CHART_MARGIN}
         barSize={14}
       >
         <CartesianGrid horizontal={false} stroke="#f0ede8" />
         <XAxis
           type="number"
           allowDecimals={false}
-          tick={{ fontSize: 10, fill: '#9ca3af' }}
+          tick={X_AXIS_TICK}
           tickLine={false}
           axisLine={false}
-          domain={[0, 'dataMax + 1']}
+          domain={X_DOMAIN}
         />
         <YAxis
           type="category"
           dataKey="label"
-          tick={{ fontSize: 11, fill: '#6b7280' }}
+          tick={Y_AXIS_TICK}
           tickLine={false}
           axisLine={false}
           width={62}
         />
         <Tooltip
-          contentStyle={{ fontSize: 12, borderRadius: 8, border: '1px solid #f0ede8', boxShadow: '0 2px 8px rgba(0,0,0,0.08)' }}
-          cursor={{ fill: '#f3f4f6' }}
-          formatter={((v: number) => [v, 'entries']) as any}
+          contentStyle={TOOLTIP_STYLE}
+          cursor={TOOLTIP_CURSOR}
+          formatter={tooltipFormatter}
         />
-        <Bar dataKey="count" radius={[0, 4, 4, 0]}>
+        <Bar dataKey="count" radius={[0, 4, 4, 0]} isAnimationActive={false}>
           {data.map((d, i) => (
             <Cell key={i} fill={d.count > 0 ? d.color : '#e5e7eb'} />
           ))}
@@ -54,4 +67,4 @@ export function RegulationDistributionChart({ data }: Props) {
       </BarChart>
     </ResponsiveContainer>
   )
-}
+})
