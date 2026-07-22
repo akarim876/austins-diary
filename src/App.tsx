@@ -11,6 +11,7 @@ import { useCaregiverWelcome } from './hooks/useCaregiverWelcome'
 import { AuthPage } from './components/auth/AuthPage'
 import { AppHeader } from './components/layout/AppHeader'
 import { BottomNav } from './components/layout/BottomNav'
+import { ErrorBoundary } from './components/ui/ErrorBoundary'
 // Core, always-needed screens (bottom-nav tabs reachable on first paint) stay
 // eagerly bundled. Everything else is route-split with React.lazy() so the
 // initial JS payload doesn't include settings, exports, calendars, etc. that
@@ -144,9 +145,35 @@ function AppShell() {
       <AppHeader />
       <main className="flex-1 flex flex-col">
         <div key={location.pathname} className="flex-1 flex flex-col">
-          <Suspense fallback={<FullScreenLoader />}>
-            <Outlet />
-          </Suspense>
+          <ErrorBoundary fallback={(_err, retry) => (
+            <div className="flex-1 flex flex-col items-center justify-center gap-3 px-6 text-center">
+              <p className="text-sm font-medium" style={{ color: 'var(--color-text)' }}>
+                Something went wrong loading this page.
+              </p>
+              <div className="flex gap-2">
+                <button
+                  type="button"
+                  onClick={retry}
+                  className="px-4 py-2 rounded-xl text-sm font-semibold text-white transition"
+                  style={{ background: 'var(--color-accent)' }}
+                >
+                  Try again
+                </button>
+                <button
+                  type="button"
+                  onClick={() => window.location.reload()}
+                  className="px-4 py-2 rounded-xl text-sm font-semibold transition"
+                  style={{ color: 'var(--color-text-muted)', background: 'var(--color-warm-100)' }}
+                >
+                  Reload app
+                </button>
+              </div>
+            </div>
+          )}>
+            <Suspense fallback={<FullScreenLoader />}>
+              <Outlet />
+            </Suspense>
+          </ErrorBoundary>
         </div>
       </main>
       <BottomNav />

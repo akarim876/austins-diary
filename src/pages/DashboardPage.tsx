@@ -32,6 +32,7 @@ import { WeeklyBubbleChart } from '../components/dashboard/WeeklyBubbleChart'
 import type { BubbleData } from '../components/dashboard/WeeklyBubbleChart'
 import type { CorrelationPoint } from '../components/dashboard/BehaviorSleepCorrelationChart'
 import { computeSleepBehaviorInsight } from '../lib/dashboardInsights'
+import { ErrorBoundary } from '../components/ui/ErrorBoundary'
 import { Spinner } from '../components/ui/Spinner'
 import { HandoffNote } from '../components/dashboard/HandoffNote'
 import { DailySchedule } from '../components/schedule/DailySchedule'
@@ -599,56 +600,70 @@ export function DashboardPage() {
                 <ChartTabButton active={chartTab === 'regulation'} onClick={() => setChartTab('regulation')}>Regulation</ChartTabButton>
               </div>
 
-              <Suspense fallback={<div className="flex justify-center py-8"><Spinner className="w-5 h-5" /></div>}>
-                <div className="mt-3">
-                  {chartTab === 'overview' && (
-                    !hasBehaviorData && !hasSleepData ? (
-                      <p className="text-sm text-center py-6" style={{ color: 'var(--color-text-muted)' }}>
-                        No behavior or sleep entries in the last 30 days
-                      </p>
-                    ) : (
-                      <>
-                        <BehaviorSleepCorrelationChart data={correlationChart} />
-                        <p className="text-xs mt-2 leading-relaxed" style={{ color: 'var(--color-text-muted)' }}>
-                          {sleepBehaviorInsight ? (
-                            <>
-                              On days after a night with under {sleepBehaviorInsight.threshold}h of sleep
-                              ({sleepBehaviorInsight.lowNights} night{sleepBehaviorInsight.lowNights === 1 ? '' : 's'}),
-                              there were an average of{' '}
-                              <strong style={{ color: 'var(--color-text)' }}>
-                                {sleepBehaviorInsight.lowAvg.toFixed(1)} behavior incident{sleepBehaviorInsight.lowAvg === 1 ? '' : 's'}
-                              </strong>
-                              , compared to{' '}
-                              <strong style={{ color: 'var(--color-text)' }}>{sleepBehaviorInsight.okAvg.toFixed(1)}</strong>
-                              {' '}after nights of {sleepBehaviorInsight.threshold}h+
-                              ({sleepBehaviorInsight.okNights} night{sleepBehaviorInsight.okNights === 1 ? '' : 's'}).
-                              This isn't proof either causes the other, but may be worth watching.
-                            </>
-                          ) : (
-                            'Keep logging sleep and behavior daily — once there\'s enough data in both a short-sleep and a well-rested group of nights, we\'ll surface whether one tends to follow the other.'
-                          )}
-                        </p>
-                      </>
-                    )
-                  )}
-
-                  {chartTab === 'behavior' && (
-                    hasBehaviorData
-                      ? <BehaviorFrequencyChart data={db.behaviorChart} />
-                      : <p className="text-sm text-center py-6" style={{ color: 'var(--color-text-muted)' }}>No behavior incidents logged in the last 30 days</p>
-                  )}
-
-                  {chartTab === 'sleep' && (
-                    hasSleepData
-                      ? <SleepDurationChart data={db.sleepChart} />
-                      : <p className="text-sm text-center py-6" style={{ color: 'var(--color-text-muted)' }}>No completed sleep entries in the last 30 days</p>
-                  )}
-
-                  {chartTab === 'regulation' && (
-                    <RegulationDistributionChart data={db.regulationChart} />
-                  )}
+              <ErrorBoundary fallback={(_err, retry) => (
+                <div className="text-center py-6">
+                  <p className="text-sm" style={{ color: 'var(--color-text-muted)' }}>Couldn't load this chart.</p>
+                  <button
+                    type="button"
+                    onClick={retry}
+                    className="mt-2 text-xs font-semibold underline"
+                    style={{ color: 'var(--color-accent)' }}
+                  >
+                    Try again
+                  </button>
                 </div>
-              </Suspense>
+              )}>
+                <Suspense fallback={<div className="flex justify-center py-8"><Spinner className="w-5 h-5" /></div>}>
+                  <div className="mt-3">
+                    {chartTab === 'overview' && (
+                      !hasBehaviorData && !hasSleepData ? (
+                        <p className="text-sm text-center py-6" style={{ color: 'var(--color-text-muted)' }}>
+                          No behavior or sleep entries in the last 30 days
+                        </p>
+                      ) : (
+                        <>
+                          <BehaviorSleepCorrelationChart data={correlationChart} />
+                          <p className="text-xs mt-2 leading-relaxed" style={{ color: 'var(--color-text-muted)' }}>
+                            {sleepBehaviorInsight ? (
+                              <>
+                                On days after a night with under {sleepBehaviorInsight.threshold}h of sleep
+                                ({sleepBehaviorInsight.lowNights} night{sleepBehaviorInsight.lowNights === 1 ? '' : 's'}),
+                                there were an average of{' '}
+                                <strong style={{ color: 'var(--color-text)' }}>
+                                  {sleepBehaviorInsight.lowAvg.toFixed(1)} behavior incident{sleepBehaviorInsight.lowAvg === 1 ? '' : 's'}
+                                </strong>
+                                , compared to{' '}
+                                <strong style={{ color: 'var(--color-text)' }}>{sleepBehaviorInsight.okAvg.toFixed(1)}</strong>
+                                {' '}after nights of {sleepBehaviorInsight.threshold}h+
+                                ({sleepBehaviorInsight.okNights} night{sleepBehaviorInsight.okNights === 1 ? '' : 's'}).
+                                This isn't proof either causes the other, but may be worth watching.
+                              </>
+                            ) : (
+                              'Keep logging sleep and behavior daily — once there\'s enough data in both a short-sleep and a well-rested group of nights, we\'ll surface whether one tends to follow the other.'
+                            )}
+                          </p>
+                        </>
+                      )
+                    )}
+
+                    {chartTab === 'behavior' && (
+                      hasBehaviorData
+                        ? <BehaviorFrequencyChart data={db.behaviorChart} />
+                        : <p className="text-sm text-center py-6" style={{ color: 'var(--color-text-muted)' }}>No behavior incidents logged in the last 30 days</p>
+                    )}
+
+                    {chartTab === 'sleep' && (
+                      hasSleepData
+                        ? <SleepDurationChart data={db.sleepChart} />
+                        : <p className="text-sm text-center py-6" style={{ color: 'var(--color-text-muted)' }}>No completed sleep entries in the last 30 days</p>
+                    )}
+
+                    {chartTab === 'regulation' && (
+                      <RegulationDistributionChart data={db.regulationChart} />
+                    )}
+                  </div>
+                </Suspense>
+              </ErrorBoundary>
 
               <p className="text-[10px] mt-2 uppercase tracking-wide" style={{ color: 'var(--color-text-muted)' }}>
                 {chartTab === 'regulation' ? 'This week' : 'Last 30 days'}
