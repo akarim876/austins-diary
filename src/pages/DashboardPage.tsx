@@ -113,6 +113,23 @@ function ChartTabButton({ active, onClick, children }: {
   )
 }
 
+/** Shared fallback for the per-tab chart ErrorBoundaries (see DashboardPage's Trends section). */
+function chartErrorFallback(_error: Error, retry: () => void) {
+  return (
+    <div className="text-center py-6">
+      <p className="text-sm" style={{ color: 'var(--color-text-muted)' }}>Couldn't load this chart.</p>
+      <button
+        type="button"
+        onClick={retry}
+        className="mt-2 text-xs font-semibold underline"
+        style={{ color: 'var(--color-accent)' }}
+      >
+        Try again
+      </button>
+    </div>
+  )
+}
+
 function AttentionCard({ item, onNavigate }: { item: AttentionItem; onNavigate: () => void }) {
   const cfg: Record<AttentionItem['type'], { icon: React.ElementType; iconColor: string; bg: string }> = {
     draft_sleep:   { icon: Moon,     iconColor: 'var(--color-accent)', bg: 'var(--color-accent-subtle)'  },
@@ -600,28 +617,25 @@ export function DashboardPage() {
                 <ChartTabButton active={chartTab === 'regulation'} onClick={() => setChartTab('regulation')}>Regulation</ChartTabButton>
               </div>
 
-              <ErrorBoundary fallback={(err, retry) => (
-                <div className="text-center py-6">
-                  <p className="text-sm" style={{ color: 'var(--color-text-muted)' }}>Couldn't load this chart.</p>
-                  {/* TEMP: surfacing the raw error on-screen while we track down the
-                      production-only chart-loading bug — remove once diagnosed. */}
-                  <p className="text-xs mt-1 px-4 break-words" style={{ color: 'var(--color-text-muted)', opacity: 0.8 }}>
-                    {err.message || String(err)}
-                  </p>
-                  <button
-                    type="button"
-                    onClick={retry}
-                    className="mt-2 text-xs font-semibold underline"
-                    style={{ color: 'var(--color-accent)' }}
-                  >
-                    Try again
-                  </button>
-                </div>
-              )}>
-                <Suspense fallback={<div className="flex justify-center py-8"><Spinner className="w-5 h-5" /></div>}>
-                  <div className="mt-3">
-                    {chartTab === 'overview' && (
-                      !hasBehaviorData && !hasSleepData ? (
+              {/*
+                Each tab gets its OWN ErrorBoundary + Suspense pair, keyed by tab id,
+                instead of one shared boundary around a conditionally-swapped chart.
+
+                Why: recharts 3.x + React 19 has an open bug (recharts#7463) where if a
+                Suspense boundary that has already committed a chart re-suspends (e.g. a
+                *different* lazy chart under the same boundary hasn't loaded yet), React
+                "hides" the previously-shown chart instead of unmounting it. Recharts'
+                internal ref-cleanup runs unconditional setState calls during that hide,
+                which loops forever ("Maximum update depth exceeded"). Giving each tab an
+                independent boundary means switching tabs fully unmounts the old chart
+                and freshly mounts the new one — never hides an already-rendered chart —
+                which sidesteps the bug entirely.
+              */}
+              <div className="mt-3">
+                {chartTab === 'overview' && (
+                  <ErrorBoundary key="overview" fallback={chartErrorFallback}>
+                    <Suspense fallback={<div className="flex justify-center py-8"><Spinner className="w-5 h-5" /></div>}>
+                      {!hasBehaviorData && !hasSleepData ? (
                         <p className="text-sm text-center py-6" style={{ color: 'var(--color-text-muted)' }}>
                           No behavior or sleep entries in the last 30 days
                         </p>
@@ -648,27 +662,39 @@ export function DashboardPage() {
                             )}
                           </p>
                         </>
-                      )
-                    )}
+                      )}
+                    </Suspense>
+                  </ErrorBoundary>
+                )}
 
-                    {chartTab === 'behavior' && (
-                      hasBehaviorData
+                {chartTab === 'behavior' && (
+                  <ErrorBoundary key="behavior" fallback={chartErrorFallback}>
+                    <Suspense fallback={<div className="flex justify-center py-8"><Spinner className="w-5 h-5" /></div>}>
+                      {hasBehaviorData
                         ? <BehaviorFrequencyChart data={db.behaviorChart} />
-                        : <p className="text-sm text-center py-6" style={{ color: 'var(--color-text-muted)' }}>No behavior incidents logged in the last 30 days</p>
-                    )}
+                        : <p className="text-sm text-center py-6" style={{ color: 'var(--color-text-muted)' }}>No behavior incidents logged in the last 30 days</p>}
+                    </Suspense>
+                  </ErrorBoundary>
+                )}
 
-                    {chartTab === 'sleep' && (
-                      hasSleepData
+                {chartTab === 'sleep' && (
+                  <ErrorBoundary key="sleep" fallback={chartErrorFallback}>
+                    <Suspense fallback={<div className="flex justify-center py-8"><Spinner className="w-5 h-5" /></div>}>
+                      {hasSleepData
                         ? <SleepDurationChart data={db.sleepChart} />
-                        : <p className="text-sm text-center py-6" style={{ color: 'var(--color-text-muted)' }}>No completed sleep entries in the last 30 days</p>
-                    )}
+                        : <p className="text-sm text-center py-6" style={{ color: 'var(--color-text-muted)' }}>No completed sleep entries in the last 30 days</p>}
+                    </Suspense>
+                  </ErrorBoundary>
+                )}
 
-                    {chartTab === 'regulation' && (
+                {chartTab === 'regulation' && (
+                  <ErrorBoundary key="regulation" fallback={chartErrorFallback}>
+                    <Suspense fallback={<div className="flex justify-center py-8"><Spinner className="w-5 h-5" /></div>}>
                       <RegulationDistributionChart data={db.regulationChart} />
-                    )}
-                  </div>
-                </Suspense>
-              </ErrorBoundary>
+                    </Suspense>
+                  </ErrorBoundary>
+                )}
+              </div>
 
               <p className="text-[10px] mt-2 uppercase tracking-wide" style={{ color: 'var(--color-text-muted)' }}>
                 {chartTab === 'regulation' ? 'This week' : 'Last 30 days'}
