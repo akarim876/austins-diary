@@ -226,10 +226,11 @@ export function SmoothieLogForm({ profileId, date, existingLog, settings, onSave
 
       {/* ── Time ── */}
       <section>
-        <label className="flex items-center gap-1 text-xs font-medium text-gray-600 mb-1.5">
+        <label htmlFor="smoothie-time" className="flex items-center gap-1 text-xs font-medium text-gray-600 mb-1.5">
           <Clock className="w-3 h-3" /> Time
         </label>
         <input
+          id="smoothie-time"
           type="time"
           value={time}
           onChange={e => setTime(e.target.value)}

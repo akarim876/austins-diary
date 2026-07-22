@@ -329,7 +329,7 @@ export function VoiceInput({ onTranscribed, disabled = false }: Props) {
             type="button"
             onClick={reset}
             className="flex items-center justify-center gap-1 px-3 py-2 rounded-xl text-sm font-medium transition hover:bg-black/5 select-none"
-            style={{ color: '#9A9187' }}
+            style={{ color: 'var(--color-text-muted)' }}
           >
             <X className="w-3.5 h-3.5" />
             Dismiss

@@ -74,7 +74,7 @@ export function HandoffNote({ data, updaterName, myRole, onSave }: Props) {
     <div
       className="rounded-xl overflow-hidden transition-opacity"
       style={{
-        background:   '#fff',
+        background:   'var(--color-surface)',
         border:       '1px solid var(--color-accent-200)',
         borderLeft:   '4px solid var(--color-accent)',
         boxShadow:    '0 2px 12px rgba(51,50,46,0.08)',
@@ -138,7 +138,7 @@ export function HandoffNote({ data, updaterName, myRole, onSave }: Props) {
               placeholder="What should today's caregiver know? e.g. 'Had a rough morning, avoiding transitions. Needs snack by 3pm.'"
               className="w-full text-sm leading-relaxed resize-none bg-transparent outline-none"
               style={{
-                color:           '#33322E',
+                color:           'var(--color-text)',
                 minHeight:       72,
                 caretColor:      'var(--color-accent)',
                 fontFamily:      'Inter, sans-serif',
@@ -153,7 +153,7 @@ export function HandoffNote({ data, updaterName, myRole, onSave }: Props) {
               />
             </div>
             <div className="flex items-center justify-between mt-2.5">
-              <span className="text-[10px]" style={{ color: '#9A9187' }}>⌘ Enter to save</span>
+              <span className="text-[10px]" style={{ color: 'var(--color-text-muted)' }}>⌘ Enter to save</span>
               <div className="flex gap-2">
                 <button
                   onClick={handleCancel}
@@ -188,7 +188,7 @@ export function HandoffNote({ data, updaterName, myRole, onSave }: Props) {
         ) : (
           <p
             className="text-sm leading-relaxed whitespace-pre-wrap"
-            style={{ color: '#33322E', cursor: canEdit ? 'text' : 'default' }}
+            style={{ color: 'var(--color-text)', cursor: canEdit ? 'text' : 'default' }}
             onClick={canEdit ? startEdit : undefined}
           >
             {data!.note}
@@ -197,7 +197,7 @@ export function HandoffNote({ data, updaterName, myRole, onSave }: Props) {
 
         {/* Attribution line */}
         {!isEmpty && !editing && updatedAgo && (
-          <p className="text-[11px] mt-2" style={{ color: '#9A9187' }}>
+          <p className="text-[11px] mt-2" style={{ color: 'var(--color-text-muted)' }}>
             Updated{updaterName ? ` by ${updaterName}` : ''}, {updatedAgo}
           </p>
         )}

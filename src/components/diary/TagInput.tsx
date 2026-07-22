@@ -9,9 +9,10 @@ const PRESET_TAGS = [
 interface TagInputProps {
   value: string[]
   onChange: (tags: string[]) => void
+  id?: string
 }
 
-export function TagInput({ value, onChange }: TagInputProps) {
+export function TagInput({ value, onChange, id }: TagInputProps) {
   const [input, setInput] = useState('')
 
   function addTag(tag: string) {
@@ -65,6 +66,7 @@ export function TagInput({ value, onChange }: TagInputProps) {
 
       {/* Input */}
       <input
+        id={id}
         type="text"
         value={input}
         onChange={e => setInput(e.target.value)}

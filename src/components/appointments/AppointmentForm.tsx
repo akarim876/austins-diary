@@ -121,20 +121,20 @@ export function AppointmentForm({
       {/* Date & time */}
       <div className="grid grid-cols-2 gap-3">
         <div>
-          <label className="block text-xs font-semibold text-gray-600 mb-1.5 uppercase tracking-wide">Date</label>
-          <input type="date" value={apptDate} onChange={e => handleDateChange(e.target.value)}
+          <label htmlFor="appt-date" className="block text-xs font-semibold text-gray-600 mb-1.5 uppercase tracking-wide">Date</label>
+          <input id="appt-date" type="date" value={apptDate} onChange={e => handleDateChange(e.target.value)}
             className="w-full px-3 py-2.5 rounded-xl border border-gray-200 text-sm focus:outline-none focus:ring-2 focus:ring-rose-400 transition bg-white" />
         </div>
         <div>
-          <label className="block text-xs font-semibold text-gray-600 mb-1.5 uppercase tracking-wide">Time <span className="text-gray-400 font-normal normal-case">(optional)</span></label>
-          <input type="time" value={apptTime} onChange={e => setApptTime(e.target.value)}
+          <label htmlFor="appt-time" className="block text-xs font-semibold text-gray-600 mb-1.5 uppercase tracking-wide">Time <span className="text-gray-400 font-normal normal-case">(optional)</span></label>
+          <input id="appt-time" type="time" value={apptTime} onChange={e => setApptTime(e.target.value)}
             className="w-full px-3 py-2.5 rounded-xl border border-gray-200 text-sm focus:outline-none focus:ring-2 focus:ring-rose-400 transition bg-white" />
         </div>
       </div>
 
       {/* Provider selector */}
       <div>
-        <label className="block text-xs font-semibold text-gray-600 mb-1.5 uppercase tracking-wide">Provider <span className="text-gray-400 font-normal normal-case">(optional)</span></label>
+        <label id="appt-provider-label" className="block text-xs font-semibold text-gray-600 mb-1.5 uppercase tracking-wide">Provider <span className="text-gray-400 font-normal normal-case">(optional)</span></label>
 
         {showQuickAdd ? (
           <div className="border border-rose-200 rounded-xl overflow-hidden bg-rose-50/30">
@@ -158,6 +158,8 @@ export function AppointmentForm({
             <button
               type="button"
               onClick={() => setShowProviderPicker(v => !v)}
+              aria-labelledby="appt-provider-label"
+              aria-expanded={showProviderPicker}
               className="w-full flex items-center justify-between px-3.5 py-2.5 rounded-xl border border-gray-200 text-sm text-left hover:border-gray-300 transition"
             >
               <span className={selectedProvider ? 'text-gray-900 font-medium' : 'text-gray-400'}>
@@ -226,8 +228,8 @@ export function AppointmentForm({
 
       {/* Type */}
       <div>
-        <label className="block text-xs font-semibold text-gray-600 mb-1.5 uppercase tracking-wide">Type</label>
-        <div className="flex flex-wrap gap-1.5">
+        <label id="appt-type-label" className="block text-xs font-semibold text-gray-600 mb-1.5 uppercase tracking-wide">Type</label>
+        <div role="group" aria-labelledby="appt-type-label" className="flex flex-wrap gap-1.5">
           {APPOINTMENT_TYPES.map(t => (
             <button key={t} type="button" onClick={() => setType(t)}
               className={`px-3 py-1.5 rounded-lg border text-xs font-semibold transition-all ${
@@ -243,8 +245,8 @@ export function AppointmentForm({
 
       {/* Status */}
       <div>
-        <label className="block text-xs font-semibold text-gray-600 mb-1.5 uppercase tracking-wide">Status</label>
-        <div className="flex flex-wrap gap-1.5">
+        <label id="appt-status-label" className="block text-xs font-semibold text-gray-600 mb-1.5 uppercase tracking-wide">Status</label>
+        <div role="group" aria-labelledby="appt-status-label" className="flex flex-wrap gap-1.5">
           {APPOINTMENT_STATUSES.map(s => (
             <button key={s.value} type="button" onClick={() => setStatus(s.value)}
               className={`px-3 py-1.5 rounded-lg border text-xs font-semibold transition-all ${
@@ -260,10 +262,10 @@ export function AppointmentForm({
 
       {/* Notes */}
       <div>
-        <label className="block text-xs font-semibold text-gray-600 mb-1.5 uppercase tracking-wide">
+        <label htmlFor="appt-notes" className="block text-xs font-semibold text-gray-600 mb-1.5 uppercase tracking-wide">
           Summary / notes <span className="text-gray-400 font-normal normal-case">(optional)</span>
         </label>
-        <textarea rows={3} value={notes} onChange={e => setNotes(e.target.value)}
+        <textarea id="appt-notes" rows={3} value={notes} onChange={e => setNotes(e.target.value)}
           placeholder="What was discussed, recommended, or observed…"
           className="w-full px-3.5 py-2.5 rounded-xl border border-gray-200 text-sm focus:outline-none focus:ring-2 focus:ring-rose-400 transition resize-none" />
       </div>
@@ -273,6 +275,8 @@ export function AppointmentForm({
         <button
           type="button"
           onClick={() => setFollowup(v => !v)}
+          role="switch"
+          aria-checked={followup}
           className={`flex items-center gap-3 w-full px-3.5 py-2.5 rounded-xl border text-sm font-medium transition-all ${
             followup
               ? 'bg-amber-50 border-amber-300 text-amber-800'
@@ -293,8 +297,8 @@ export function AppointmentForm({
               placeholder="What needs to be followed up on?"
               className="w-full px-3.5 py-2 rounded-xl border border-amber-200 bg-amber-50/50 text-sm focus:outline-none focus:ring-2 focus:ring-amber-400 transition resize-none" />
             <div>
-              <label className="block text-xs text-gray-500 mb-1">Target date <span className="text-gray-400">(optional)</span></label>
-              <input type="date" value={followupDate} onChange={e => setFollowupDate(e.target.value)}
+              <label htmlFor="appt-followup-date" className="block text-xs text-gray-500 mb-1">Target date <span className="text-gray-400">(optional)</span></label>
+              <input id="appt-followup-date" type="date" value={followupDate} onChange={e => setFollowupDate(e.target.value)}
                 className="w-full px-3 py-2 rounded-xl border border-amber-200 bg-amber-50/50 text-sm focus:outline-none focus:ring-2 focus:ring-amber-400 transition" />
             </div>
           </div>

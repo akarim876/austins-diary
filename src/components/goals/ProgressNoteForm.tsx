@@ -104,7 +104,7 @@ export function ProgressNoteForm({
         </div>
       ) : (
         <div>
-          <label className="block text-xs font-semibold text-gray-600 mb-1.5 uppercase tracking-wide">
+          <label id="progress-goal-label" className="block text-xs font-semibold text-gray-600 mb-1.5 uppercase tracking-wide">
             Goal
           </label>
           {activeGoals.length === 0 ? (
@@ -116,6 +116,7 @@ export function ProgressNoteForm({
                   <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-gray-400" />
                   <input
                     type="text"
+                    aria-labelledby="progress-goal-label"
                     placeholder="Search goals…"
                     value={search}
                     onChange={e => setSearch(e.target.value)}
@@ -123,7 +124,7 @@ export function ProgressNoteForm({
                   />
                 </div>
               )}
-              <div className="max-h-40 overflow-y-auto space-y-1">
+              <div role="group" aria-labelledby="progress-goal-label" className="max-h-40 overflow-y-auto space-y-1">
                 {filteredGoals.map(g => (
                   <button
                     key={g.id}
@@ -150,10 +151,10 @@ export function ProgressNoteForm({
 
       {/* Rating */}
       <div>
-        <label className="block text-xs font-semibold text-gray-600 mb-1.5 uppercase tracking-wide">
+        <label id="progress-rating-label" className="block text-xs font-semibold text-gray-600 mb-1.5 uppercase tracking-wide">
           Progress rating
         </label>
-        <div className="space-y-1.5">
+        <div role="group" aria-labelledby="progress-rating-label" className="space-y-1.5">
           {PROGRESS_RATINGS.map(opt => (
             <button
               key={opt.value}
@@ -174,10 +175,11 @@ export function ProgressNoteForm({
 
       {/* Date */}
       <div>
-        <label className="block text-xs font-semibold text-gray-600 mb-1.5 uppercase tracking-wide">
+        <label htmlFor="progress-date" className="block text-xs font-semibold text-gray-600 mb-1.5 uppercase tracking-wide">
           Date
         </label>
         <input
+          id="progress-date"
           type="date"
           value={noteDate}
           onChange={e => setNoteDate(e.target.value)}
@@ -187,10 +189,11 @@ export function ProgressNoteForm({
 
       {/* Notes */}
       <div>
-        <label className="block text-xs font-semibold text-gray-600 mb-1.5 uppercase tracking-wide">
+        <label htmlFor="progress-notes" className="block text-xs font-semibold text-gray-600 mb-1.5 uppercase tracking-wide">
           Notes <span className="text-gray-400 font-normal normal-case">(optional)</span>
         </label>
         <textarea
+          id="progress-notes"
           rows={3}
           value={noteText}
           onChange={e => setNoteText(e.target.value)}

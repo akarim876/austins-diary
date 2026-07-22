@@ -1,6 +1,9 @@
-import { type ReactNode, useEffect, useRef, useState } from 'react'
+import { type ReactNode, useEffect, useId, useRef, useState } from 'react'
 import { createPortal } from 'react-dom'
 import { X } from 'lucide-react'
+
+const FOCUSABLE_SELECTOR =
+  'a[href], button:not([disabled]), textarea:not([disabled]), input:not([disabled]), select:not([disabled]), [tabindex]:not([tabindex="-1"])'
 
 interface Props {
   open: boolean
@@ -18,6 +21,10 @@ export function BottomSheet({ open, onClose, title, children }: Props) {
   // `visible` drives the CSS translateY (true = on-screen, false = off-screen)
   const [visible, setVisible] = useState(false)
   const closeTimer = useRef<ReturnType<typeof setTimeout> | null>(null)
+  const titleId = useId()
+  const closeButtonRef = useRef<HTMLButtonElement>(null)
+  const previouslyFocused = useRef<HTMLElement | null>(null)
+  const sheetRef = useRef<HTMLDivElement>(null)
 
   useEffect(() => {
     if (closeTimer.current) {
@@ -60,6 +67,50 @@ export function BottomSheet({ open, onClose, title, children }: Props) {
     return () => { document.body.style.overflow = '' }
   }, [mounted, visible])
 
+  // ── Focus management ────────────────────────────────────────────────────
+  // Remember what had focus before opening, move focus into the sheet once
+  // it's visible/interactive, and restore focus to the trigger on close so
+  // keyboard/screen-reader users aren't dropped back at the top of the page.
+  useEffect(() => {
+    if (visible) {
+      previouslyFocused.current = document.activeElement as HTMLElement | null
+      // If a child field already grabbed focus (e.g. a form's own autoFocus),
+      // respect it — otherwise default to the close button so keyboard/SR
+      // users land inside the dialog.
+      const alreadyFocusedInside = sheetRef.current?.contains(document.activeElement)
+      if (!alreadyFocusedInside) closeButtonRef.current?.focus()
+    } else if (previouslyFocused.current) {
+      previouslyFocused.current.focus()
+      previouslyFocused.current = null
+    }
+  }, [visible])
+
+  // Escape-to-close + a lightweight Tab focus trap while the sheet is open.
+  function handleKeyDown(e: React.KeyboardEvent) {
+    if (e.key === 'Escape') {
+      e.stopPropagation()
+      onClose()
+      return
+    }
+    if (e.key !== 'Tab' || !sheetRef.current) return
+
+    const focusable = Array.from(
+      sheetRef.current.querySelectorAll<HTMLElement>(FOCUSABLE_SELECTOR)
+    ).filter(el => el.offsetParent !== null)
+    if (focusable.length === 0) return
+
+    const first = focusable[0]
+    const last = focusable[focusable.length - 1]
+
+    if (e.shiftKey && document.activeElement === first) {
+      e.preventDefault()
+      last.focus()
+    } else if (!e.shiftKey && document.activeElement === last) {
+      e.preventDefault()
+      first.focus()
+    }
+  }
+
   function handleTransitionEnd(e: React.TransitionEvent) {
     if (e.propertyName === 'transform' && !open) {
       if (closeTimer.current) {
@@ -72,7 +123,6 @@ export function BottomSheet({ open, onClose, title, children }: Props) {
 
   // ── Swipe-down-to-dismiss ───────────────────────────────────────────────────
   const touchStartY = useRef<number | null>(null)
-  const sheetRef    = useRef<HTMLDivElement>(null)
 
   function handleTouchStart(e: React.TouchEvent) {
     touchStartY.current = e.touches[0].clientY
@@ -129,14 +179,19 @@ export function BottomSheet({ open, onClose, title, children }: Props) {
 
       <div
         ref={sheetRef}
-        className="relative bg-white rounded-t-2xl shadow-2xl max-h-[92dvh] flex flex-col"
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby={titleId}
+        className="relative rounded-t-2xl shadow-2xl max-h-[92dvh] flex flex-col"
         style={{
+          background: 'var(--color-surface)',
           transform:  visible ? 'translateY(0)' : 'translateY(100%)',
           transition: `transform ${DURATION}ms ${EASING}`,
           willChange: 'transform',
           pointerEvents: interactive ? 'auto' : 'none',
         }}
         onTransitionEnd={handleTransitionEnd}
+        onKeyDown={handleKeyDown}
       >
         <div
           className="flex-shrink-0 px-4 pt-3 pb-3 border-b border-warm-200 select-none"
@@ -145,14 +200,18 @@ export function BottomSheet({ open, onClose, title, children }: Props) {
           onTouchMove={handleTouchMove}
           onTouchEnd={handleTouchEnd}
         >
-          <div className="w-10 h-1 rounded-full bg-gray-200 mx-auto mb-3" />
+          <div className="w-10 h-1 rounded-full mx-auto mb-3" style={{ background: 'var(--color-warm-300)' }} aria-hidden="true" />
           <div className="flex items-center justify-between">
-            <h2 className="font-bold text-gray-900">{title}</h2>
+            <h2 id={titleId} className="font-bold" style={{ color: 'var(--color-text)' }}>{title}</h2>
             <button
+              ref={closeButtonRef}
+              type="button"
               onClick={onClose}
-              className="w-8 h-8 rounded-full bg-gray-100 flex items-center justify-center hover:bg-gray-200 transition-colors"
+              aria-label="Close"
+              className="w-8 h-8 rounded-full flex items-center justify-center transition-colors hover:opacity-70 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-500"
+              style={{ background: 'var(--color-warm-100)' }}
             >
-              <X className="w-4 h-4 text-gray-600" />
+              <X className="w-4 h-4" style={{ color: 'var(--color-text-muted)' }} />
             </button>
           </div>
         </div>

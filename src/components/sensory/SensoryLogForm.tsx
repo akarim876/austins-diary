@@ -45,6 +45,8 @@ interface Props {
   date: string
   existingLog?: SensoryLog | null
   availableBehaviorLogs?: BehaviorLog[]
+  /** Pre-fill the notes field — used when opening from the global voice button */
+  initialNotes?: string
   onSaved: () => void
   onCancel: () => void
 }
@@ -89,7 +91,7 @@ function MultiChipRow({
 }
 
 export function SensoryLogForm({
-  profileId, date, existingLog, availableBehaviorLogs = [], onSaved, onCancel,
+  profileId, date, existingLog, availableBehaviorLogs = [], initialNotes, onSaved, onCancel,
 }: Props) {
   const { user } = useAuth()
   const [submitting, setSubmitting] = useState(false)
@@ -110,7 +112,7 @@ export function SensoryLogForm({
         calming_strategies_other: '',
         helped:                   'somewhat',
         duration_mins:            null,
-        notes:                    '',
+        notes:                    initialNotes ?? '',
         behavior_log_id:          null,
       },
     })
@@ -128,11 +130,11 @@ export function SensoryLogForm({
       calming_strategies_other: existingLog?.calming_strategies_other ?? '',
       helped:                   existingLog?.helped                   ?? 'somewhat',
       duration_mins:            existingLog?.duration_mins            ?? null,
-      notes:                    existingLog?.notes                    ?? '',
+      notes:                    existingLog?.notes                    ?? initialNotes ?? '',
       behavior_log_id:          existingLog?.behavior_log_id          ?? null,
     })
     if (hasLink) setShowLinkSection(true)
-  }, [date, existingLog, reset])
+  }, [date, existingLog, initialNotes, reset])
 
   const regulationLevel  = watch('regulation_level')
   const sensoryTriggers  = watch('sensory_triggers')
@@ -265,23 +267,26 @@ export function SensoryLogForm({
         </h3>
 
         <div>
-          <label className="flex items-center gap-1 text-xs font-medium text-gray-600 mb-1.5">
+          <label id="sensory-time-label" className="flex items-center gap-1 text-xs font-medium text-gray-600 mb-1.5">
             <Clock className="w-3 h-3" /> Time
           </label>
-          <TimeChipPicker
-            value={watch('time_of_day')}
-            onChange={(t) => setValue('time_of_day', t, { shouldValidate: true })}
-            accentColor="#8B5CF6"
-            isEditing={!!existingLog}
-          />
+          <div role="group" aria-labelledby="sensory-time-label">
+            <TimeChipPicker
+              value={watch('time_of_day')}
+              onChange={(t) => setValue('time_of_day', t, { shouldValidate: true })}
+              accentColor="#8B5CF6"
+              isEditing={!!existingLog}
+            />
+          </div>
           {errors.time_of_day && (
             <p className="mt-1 text-xs text-red-500">{errors.time_of_day.message}</p>
           )}
         </div>
 
         <div>
-          <label className="block text-xs font-medium text-gray-600 mb-1.5">Date</label>
+          <label htmlFor="sensory-date" className="block text-xs font-medium text-gray-600 mb-1.5">Date</label>
           <input
+            id="sensory-date"
             type="date"
             {...register('entry_date')}
             className="w-full px-3 py-2.5 rounded-xl border border-gray-200 text-sm focus:outline-none focus:ring-2 focus:ring-violet-400 transition"
@@ -289,10 +294,10 @@ export function SensoryLogForm({
         </div>
 
         <div>
-          <label className="flex items-center gap-1 text-xs font-medium text-gray-600 mb-1.5">
+          <label id="sensory-location-label" className="flex items-center gap-1 text-xs font-medium text-gray-600 mb-1.5">
             <MapPin className="w-3 h-3" /> Location
           </label>
-          <div className="flex flex-wrap gap-1.5 mb-2">
+          <div role="group" aria-labelledby="sensory-location-label" className="flex flex-wrap gap-1.5 mb-2">
             {LOCATIONS.map(loc => (
               <button
                 key={loc}
@@ -310,6 +315,7 @@ export function SensoryLogForm({
           </div>
           <input
             type="text"
+            aria-labelledby="sensory-location-label"
             placeholder="Or type a location…"
             {...register('location')}
             className="w-full px-3 py-2.5 rounded-xl border border-gray-200 text-sm focus:outline-none focus:ring-2 focus:ring-violet-400 transition"
@@ -392,7 +398,7 @@ export function SensoryLogForm({
       {/* ── Section 6: Optional fields ── */}
       <section className="space-y-4">
         <div>
-          <label className="block text-xs font-medium text-gray-600 mb-1.5">
+          <label htmlFor="sensory-duration" className="block text-xs font-medium text-gray-600 mb-1.5">
             Duration <span className="text-gray-400">(minutes, optional)</span>
           </label>
           <Controller
@@ -400,6 +406,7 @@ export function SensoryLogForm({
             control={control}
             render={({ field }) => (
               <input
+                id="sensory-duration"
                 type="number"
                 min={0}
                 max={999}
@@ -413,10 +420,11 @@ export function SensoryLogForm({
         </div>
 
         <div>
-          <label className="block text-xs font-medium text-gray-600 mb-1.5">
+          <label htmlFor="sensory-notes" className="block text-xs font-medium text-gray-600 mb-1.5">
             Notes <span className="text-gray-400">(optional)</span>
           </label>
           <textarea
+            id="sensory-notes"
             {...register('notes')}
             rows={2}
             placeholder="Anything else to note about this moment…"

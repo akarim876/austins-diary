@@ -118,10 +118,11 @@ export function MealLogForm({ profileId, date, existingLog, settings, onSaved, o
 
       {/* ── Time ── */}
       <section className="space-y-2">
-        <label className="flex items-center gap-1 text-xs font-semibold text-gray-400 uppercase tracking-widest">
+        <label htmlFor="meal-time" className="flex items-center gap-1 text-xs font-semibold text-gray-400 uppercase tracking-widest">
           <Clock className="w-3 h-3" /> Time
         </label>
         <input
+          id="meal-time"
           type="time"
           value={time}
           onChange={e => setTime(e.target.value)}
@@ -261,10 +262,11 @@ export function MealLogForm({ profileId, date, existingLog, settings, onSaved, o
 
       {/* ── Notes ── */}
       <section>
-        <label className="block text-xs font-semibold text-gray-400 uppercase tracking-widest mb-2">
+        <label htmlFor="meal-notes" className="block text-xs font-semibold text-gray-400 uppercase tracking-widest mb-2">
           Notes <span className="text-gray-300 normal-case font-normal">(optional)</span>
         </label>
         <textarea
+          id="meal-notes"
           value={notes}
           onChange={e => setNotes(e.target.value)}
           rows={2}

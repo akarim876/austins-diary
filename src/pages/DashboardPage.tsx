@@ -48,10 +48,10 @@ function Section({ title, children, className = '', action }: {
   return (
     <section
       className={`overflow-hidden ${className}`}
-      style={{ background: '#fff', borderRadius: 20, boxShadow: '0 2px 10px rgba(51,50,46,0.07)' }}
+      style={{ background: 'var(--color-surface)', borderRadius: 20, boxShadow: '0 2px 10px rgba(51,50,46,0.07)' }}
     >
       <div className="px-4 pt-4 pb-1 flex items-center justify-between">
-        <h2 className="text-[10px] font-bold uppercase tracking-widest" style={{ color: '#9A9187' }}>{title}</h2>
+        <h2 className="text-[10px] font-bold uppercase tracking-widest" style={{ color: 'var(--color-text-muted)' }}>{title}</h2>
         {action}
       </div>
       <div className="px-4 pb-4">{children}</div>
@@ -74,7 +74,7 @@ function StatBadge({ label, value, icon, color }: {
 function TrendIcon({ curr, prev }: { curr: number; prev: number }) {
   if (curr > prev) return <TrendingUp className="w-3.5 h-3.5 text-red-500" />
   if (curr < prev) return <TrendingDown className="w-3.5 h-3.5 text-emerald-500" />
-  return <Minus className="w-3.5 h-3.5 text-gray-400" />
+  return <Minus className="w-3.5 h-3.5" style={{ color: 'var(--color-text-muted)' }} />
 }
 
 function AttentionCard({ item, onNavigate }: { item: AttentionItem; onNavigate: () => void }) {
@@ -93,8 +93,8 @@ function AttentionCard({ item, onNavigate }: { item: AttentionItem; onNavigate: 
     >
       <Icon className="w-4 h-4 flex-shrink-0" style={{ color: iconColor }} />
       <div className="flex-1 min-w-0">
-        <p className="text-sm font-semibold leading-tight" style={{ color: '#33322E' }}>{item.label}</p>
-        {item.sub && <p className="text-xs mt-0.5 truncate" style={{ color: '#9A9187' }}>{item.sub}</p>}
+        <p className="text-sm font-semibold leading-tight" style={{ color: 'var(--color-text)' }}>{item.label}</p>
+        {item.sub && <p className="text-xs mt-0.5 truncate" style={{ color: 'var(--color-text-muted)' }}>{item.sub}</p>}
       </div>
     </button>
   )
@@ -183,6 +183,48 @@ export function DashboardPage() {
     ? db.avgSleepHoursThisWeek - db.avgSleepHoursLastWeek
     : null
 
+  // Weekly bubble snapshot — shared between the loading check and JSX below
+  const weekStartDate = startOfWeek(new Date(), { weekStartsOn: 0 })
+  const sleepWeekCount = db.sleepChart.filter(
+    p => parseISO(p.date) >= weekStartDate && p.hours != null
+  ).length
+  const sensoryWeekTotal = db.regulationChart.reduce((sum, z) => sum + z.count, 0)
+
+  const weeklyBubbles: BubbleData[] = [
+    {
+      id:        'behavior',
+      label:     'Behavior',
+      value:     db.weekBehaviorCount,
+      bgColor:   'var(--module-behavior-bg)',
+      iconColor: 'var(--module-behavior-icon)',
+      icon:      'behavior',
+    },
+    {
+      id:        'diet',
+      label:     'Diet',
+      value:     db.smoothiesThisWeek,
+      bgColor:   'var(--module-diet-bg)',
+      iconColor: 'var(--module-diet-icon)',
+      icon:      'smoothie',
+    },
+    {
+      id:        'sleep',
+      label:     'Sleep',
+      value:     sleepWeekCount,
+      bgColor:   'var(--module-sleep-bg)',
+      iconColor: 'var(--module-sleep-icon)',
+      icon:      'sleep',
+    },
+    {
+      id:        'sensory',
+      label:     'Regulation',
+      value:     sensoryWeekTotal,
+      bgColor:   'var(--module-sensory-bg)',
+      iconColor: 'var(--module-sensory-icon)',
+      icon:      'sensory',
+    },
+  ]
+
   return (
     <div className="pb-28 w-full">
 
@@ -190,7 +232,7 @@ export function DashboardPage() {
       <div className="pt-5 pb-1">
         <h1
           className="font-display text-2xl font-semibold text-center mb-4"
-          style={{ color: '#33322E' }}
+          style={{ color: 'var(--color-text)' }}
         >
           {isViewingToday ? 'Today' : format(parseISO(viewDate), 'EEEE, MMM d')}
         </h1>
@@ -230,7 +272,7 @@ export function DashboardPage() {
         const cols  = 2
         return (
           <div className="px-4 pb-2">
-            <p className="text-[10px] font-bold uppercase tracking-widest mb-2.5" style={{ color: '#9A9187' }}>Quick log</p>
+            <p className="text-[10px] font-bold uppercase tracking-widest mb-2.5" style={{ color: 'var(--color-text-muted)' }}>Quick log</p>
             <div className="grid gap-2.5" style={{ gridTemplateColumns: `repeat(${cols}, minmax(0, 1fr))` }}>
               {quickTileIds.map(id => {
                 if (id.startsWith('tracker:')) {
@@ -243,14 +285,14 @@ export function DashboardPage() {
                       type="button"
                       onClick={() => setTrackerLogOpen(tracker.id)}
                       className="flex flex-col items-start gap-3 p-4 rounded-xl text-left active:scale-[0.97] transition-transform duration-100 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-500"
-                      style={{ background: '#fff', boxShadow: '0 2px 10px rgba(51,50,46,0.07)', minHeight: 110 }}
+                      style={{ background: 'var(--color-surface)', boxShadow: '0 2px 10px rgba(51,50,46,0.07)', minHeight: 110 }}
                     >
                       <span className="w-10 h-10 rounded-xl flex items-center justify-center flex-shrink-0" style={{ background: trackerIconBg(tracker.color) }}>
                         <TrIcon className="w-5 h-5" style={{ color: tracker.color }} />
                       </span>
                       <div>
-                        <p className="font-semibold text-sm leading-snug" style={{ color: '#33322E' }}>{tracker.name}</p>
-                        <p className="text-xs mt-0.5 leading-snug" style={{ color: '#9A9187' }}>Log entry</p>
+                        <p className="font-semibold text-sm leading-snug" style={{ color: 'var(--color-text)' }}>{tracker.name}</p>
+                        <p className="text-xs mt-0.5 leading-snug" style={{ color: 'var(--color-text-muted)' }}>Log entry</p>
                       </div>
                     </button>
                   )
@@ -263,14 +305,14 @@ export function DashboardPage() {
                     type="button"
                     onClick={staticHandlers[id]}
                     className="flex flex-col items-start gap-3 p-4 rounded-xl text-left active:scale-[0.97] transition-transform duration-100 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-500"
-                    style={{ background: '#fff', boxShadow: '0 2px 10px rgba(51,50,46,0.07)', minHeight: 110 }}
+                    style={{ background: 'var(--color-surface)', boxShadow: '0 2px 10px rgba(51,50,46,0.07)', minHeight: 110 }}
                   >
                     <span className="w-10 h-10 rounded-xl flex items-center justify-center flex-shrink-0" style={{ background: def.iconBg }}>
                       <ModuleIcon name={def.icon} className="w-5 h-5" style={{ color: def.accent }} />
                     </span>
                     <div>
-                      <p className="font-semibold text-sm leading-snug" style={{ color: '#33322E' }}>{def.label}</p>
-                      <p className="text-xs mt-0.5 leading-snug" style={{ color: '#9A9187' }}>{def.description}</p>
+                      <p className="font-semibold text-sm leading-snug" style={{ color: 'var(--color-text)' }}>{def.label}</p>
+                      <p className="text-xs mt-0.5 leading-snug" style={{ color: 'var(--color-text-muted)' }}>{def.description}</p>
                     </div>
                   </button>
                 )
@@ -292,7 +334,7 @@ export function DashboardPage() {
             className="rounded-xl px-4 py-3 flex items-center justify-between gap-3"
             style={{ background: 'rgba(51,50,46,0.04)', border: '1px solid rgba(51,50,46,0.08)' }}
           >
-            <p className="text-xs font-medium leading-snug" style={{ color: '#6B6860' }}>
+            <p className="text-xs font-medium leading-snug" style={{ color: 'var(--color-text-muted)' }}>
               Viewing {format(parseISO(viewDate), 'MMMM d')} — go to Today to log new entries.
             </p>
             <button
@@ -310,8 +352,6 @@ export function DashboardPage() {
 
         {/* ── Today at a glance ───────────────────────────────────────────────── */}
         <Section title={isViewingToday ? 'Today at a glance' : `${format(parseISO(viewDate), 'MMM d')} at a glance`}>
-          <p className="text-sm font-semibold" style={{ color: '#33322E' }} />
-
           {db.loading ? (
             <div className="flex justify-center py-4"><Spinner className="w-5 h-5" /></div>
           ) : activeBadges.length > 0 ? (
@@ -321,12 +361,12 @@ export function DashboardPage() {
               ))}
             </div>
           ) : (
-            <p className="text-sm mb-3" style={{ color: '#9A9187' }}>Nothing logged yet — tap Quick log above.</p>
+            <p className="text-sm mb-3" style={{ color: 'var(--color-text-muted)' }}>Nothing logged yet — tap Quick log above.</p>
           )}
 
           {attentionItems.length > 0 && (
-            <div className="space-y-2 pt-1" style={{ borderTop: '1px solid #EDE9E3' }}>
-              <p className="text-[10px] font-bold uppercase tracking-widest mt-2" style={{ color: '#9A9187' }}>Needs attention</p>
+            <div className="space-y-2 pt-1" style={{ borderTop: '1px solid var(--color-warm-200)' }}>
+              <p className="text-[10px] font-bold uppercase tracking-widest mt-2" style={{ color: 'var(--color-text-muted)' }}>Needs attention</p>
               {attentionItems.map(item => (
                 <AttentionCard
                   key={`${item.type}-${item.id}`}
@@ -364,207 +404,147 @@ export function DashboardPage() {
           />
         </Section>
 
-        {/* ── This Week ───────────────────────────────────────────────────────── */}
+        {/* ── This Week (bubble snapshot + trend detail, one consolidated card) ── */}
         <Section title={`This week  ${weekStart} - ${weekEnd}`}>
           {db.loading ? (
             <div className="flex justify-center py-4"><Spinner className="w-5 h-5" /></div>
           ) : (
-            <div className="space-y-3 mt-1">
+            <>
+              {/* Bubble snapshot — the at-a-glance counts for each module.
+                  The detail rows below intentionally avoid repeating these
+                  same raw numbers and instead add context the bubbles can't
+                  show (trend direction, top triggers, goal status…). */}
+              <WeeklyBubbleChart bubbles={weeklyBubbles} />
 
-              {/* Behavior */}
-              <div className="flex items-start gap-3">
-                <div className="w-8 h-8 rounded-xl flex items-center justify-center flex-shrink-0" style={{ background: '#F3E1B8' }}>
-                  <ModuleIcon name="behavior" className="w-4 h-4" style={{ color: '#7A5008' }} />
-                </div>
-                <div className="flex-1">
-                  <div className="flex items-center gap-1.5">
-                    <span className="text-sm font-semibold text-gray-900">
-                      {db.weekBehaviorCount} behavior {db.weekBehaviorCount === 1 ? 'incident' : 'incidents'}
-                    </span>
-                    <TrendIcon curr={db.weekBehaviorCount} prev={db.lastWeekBehaviorCount} />
+              <div className="space-y-3 mt-3">
+
+                {/* Behavior */}
+                <div className="flex items-start gap-3 pt-3" style={{ borderTop: '1px solid var(--color-warm-200)' }}>
+                  <div className="w-8 h-8 rounded-xl flex items-center justify-center flex-shrink-0" style={{ background: 'var(--module-behavior-bg)' }}>
+                    <ModuleIcon name="behavior" className="w-4 h-4" style={{ color: 'var(--module-behavior-icon)' }} />
                   </div>
-                  <p className="text-xs text-gray-500">{behaviorTrendText}</p>
-                  {db.topAntecedents.length > 0 && (
-                    <p className="text-xs text-gray-500 mt-0.5">
-                      Top trigger{db.topAntecedents.length > 1 ? 's' : ''}:{' '}
-                      {db.topAntecedents.map(a => a.antecedent).join(', ')}
-                    </p>
-                  )}
+                  <div className="flex-1">
+                    <div className="flex items-center gap-1.5">
+                      <span className="text-sm font-semibold" style={{ color: 'var(--color-text)' }}>{behaviorTrendText}</span>
+                      <TrendIcon curr={db.weekBehaviorCount} prev={db.lastWeekBehaviorCount} />
+                    </div>
+                    {db.topAntecedents.length > 0 && (
+                      <p className="text-xs mt-0.5" style={{ color: 'var(--color-text-muted)' }}>
+                        Top trigger{db.topAntecedents.length > 1 ? 's' : ''}:{' '}
+                        {db.topAntecedents.map(a => a.antecedent).join(', ')}
+                      </p>
+                    )}
+                  </div>
                 </div>
-              </div>
 
-              <div style={{ borderTop: '1px solid #EDE9E3' }} />
+                <div style={{ borderTop: '1px solid var(--color-warm-200)' }} />
 
-              {/* Sleep */}
-              <div className="flex items-start gap-3">
-                <div className="w-8 h-8 rounded-xl flex items-center justify-center flex-shrink-0" style={{ background: '#D6E2ED' }}>
-                  <ModuleIcon name="sleep" className="w-4 h-4" style={{ color: '#2D5578' }} />
-                </div>
-                <div className="flex-1">
-                  {db.avgSleepHoursThisWeek != null ? (
-                    <>
-                      <div className="flex items-center gap-1.5">
-                        <span className="text-sm font-semibold text-gray-900">
-                          Avg {db.avgSleepHoursThisWeek.toFixed(1)}h sleep
-                        </span>
+                {/* Sleep */}
+                <div className="flex items-start gap-3">
+                  <div className="w-8 h-8 rounded-xl flex items-center justify-center flex-shrink-0" style={{ background: 'var(--module-sleep-bg)' }}>
+                    <ModuleIcon name="sleep" className="w-4 h-4" style={{ color: 'var(--module-sleep-icon)' }} />
+                  </div>
+                  <div className="flex-1">
+                    {db.avgSleepHoursThisWeek != null ? (
+                      <>
+                        <div className="flex items-center gap-1.5">
+                          <span className="text-sm font-semibold" style={{ color: 'var(--color-text)' }}>
+                            Avg {db.avgSleepHoursThisWeek.toFixed(1)}h sleep
+                          </span>
+                          {sleepDiff != null && (
+                            <TrendIcon curr={db.avgSleepHoursThisWeek} prev={db.avgSleepHoursLastWeek!} />
+                          )}
+                        </div>
                         {sleepDiff != null && (
-                          <TrendIcon curr={db.avgSleepHoursThisWeek} prev={db.avgSleepHoursLastWeek!} />
+                          <p className="text-xs" style={{ color: 'var(--color-text-muted)' }}>
+                            {sleepDiff > 0 ? '+' : ''}{sleepDiff.toFixed(1)}h vs prev week
+                          </p>
                         )}
-                      </div>
-                      {sleepDiff != null && (
-                        <p className="text-xs text-gray-500">
-                          {sleepDiff > 0 ? '+' : ''}{sleepDiff.toFixed(1)}h vs prev week
-                        </p>
-                      )}
-                      {db.avgSleepQualityThisWeek != null && (
-                        <p className="text-xs text-gray-500 mt-0.5">
-                          Avg quality: {qualityLabel(Math.round(db.avgSleepQualityThisWeek))}
-                        </p>
-                      )}
-                    </>
-                  ) : (
-                    <p className="text-sm text-gray-400">No completed sleep entries this week</p>
-                  )}
-                </div>
-              </div>
-
-              <div style={{ borderTop: '1px solid #EDE9E3' }} />
-
-              {/* Smoothies */}
-              <div className="flex items-start gap-3">
-                <div className="w-8 h-8 rounded-xl flex items-center justify-center flex-shrink-0" style={{ background: '#D9E4DC' }}>
-                  <ModuleIcon name="smoothie" className="w-4 h-4" style={{ color: '#3A6348' }} />
-                </div>
-                <div className="flex-1">
-                  <div className="flex items-center gap-2">
-                    <span className="text-sm font-semibold text-gray-900">
-                      {db.smoothiesThisWeek}/{db.smoothiesExpected} smoothies
-                    </span>
-                    {db.smoothiesThisWeek >= db.smoothiesExpected
-                      ? <span className="text-xs font-medium text-emerald-600">✓ On track</span>
-                      : db.smoothiesExpected > 0
-                        ? <span className="text-xs text-gray-400">{db.smoothiesExpected - db.smoothiesThisWeek} missed</span>
-                        : null
-                    }
+                        {db.avgSleepQualityThisWeek != null && (
+                          <p className="text-xs mt-0.5" style={{ color: 'var(--color-text-muted)' }}>
+                            Avg quality: {qualityLabel(Math.round(db.avgSleepQualityThisWeek))}
+                          </p>
+                        )}
+                      </>
+                    ) : (
+                      <p className="text-sm" style={{ color: 'var(--color-text-muted)' }}>No completed sleep entries this week</p>
+                    )}
                   </div>
-                  <p className="text-xs text-gray-500">Logged vs. 2/day expected</p>
                 </div>
-              </div>
 
-              {/* Stalled goals */}
-              {db.stalledGoals.length > 0 && (
-                <>
-                  <div style={{ borderTop: '1px solid #EDE9E3' }} />
-                  <div className="flex items-start gap-3">
-                    <div className="w-8 h-8 rounded-xl flex items-center justify-center flex-shrink-0" style={{ background: '#F1EDE3' }}>
-                      <AlertTriangle className="w-4 h-4" style={{ color: '#5E4D2A' }} />
+                <div style={{ borderTop: '1px solid var(--color-warm-200)' }} />
+
+                {/* Smoothies */}
+                <div className="flex items-start gap-3">
+                  <div className="w-8 h-8 rounded-xl flex items-center justify-center flex-shrink-0" style={{ background: 'var(--module-diet-bg)' }}>
+                    <ModuleIcon name="smoothie" className="w-4 h-4" style={{ color: 'var(--module-diet-icon)' }} />
+                  </div>
+                  <div className="flex-1">
+                    <div className="flex items-center gap-2">
+                      {db.smoothiesThisWeek >= db.smoothiesExpected
+                        ? <span className="text-sm font-semibold text-emerald-600">✓ On track for smoothies</span>
+                        : db.smoothiesExpected > 0
+                          ? <span className="text-sm font-semibold" style={{ color: 'var(--color-text)' }}>{db.smoothiesExpected - db.smoothiesThisWeek} smoothie{db.smoothiesExpected - db.smoothiesThisWeek === 1 ? '' : 's'} missed</span>
+                          : <span className="text-sm font-semibold" style={{ color: 'var(--color-text)' }}>Smoothies logged this week</span>
+                      }
                     </div>
-                    <div className="flex-1">
-                      <span className="text-sm font-semibold text-gray-900">
-                        {db.stalledGoals.length} goal{db.stalledGoals.length > 1 ? 's' : ''} with no recent progress
-                      </span>
-                      <p className="text-xs text-gray-500 mt-0.5">No progress notes in the last 14 days</p>
-                      <div className="mt-1.5 space-y-1">
-                        {db.stalledGoals.slice(0, 3).map(g => (
-                          <button
-                            key={g.id}
-                            type="button"
-                            onClick={() => navigate(`/goals/${g.id}`)}
-                            className="flex items-center gap-1.5 text-xs text-brand-600 font-medium hover:text-brand-700"
-                          >
-                            <ModuleIcon name="goals" className="w-3 h-3" />
-                            {g.title}
-                          </button>
-                        ))}
-                        {db.stalledGoals.length > 3 && (
-                          <button
-                            type="button"
-                            onClick={() => navigate('/goals')}
-                            className="text-xs text-gray-400 hover:text-gray-600"
-                          >
-                            +{db.stalledGoals.length - 3} more
-                          </button>
-                        )}
+                    <p className="text-xs" style={{ color: 'var(--color-text-muted)' }}>Logged vs. 2/day expected</p>
+                  </div>
+                </div>
+
+                {/* Stalled goals */}
+                {db.stalledGoals.length > 0 && (
+                  <>
+                    <div style={{ borderTop: '1px solid var(--color-warm-200)' }} />
+                    <div className="flex items-start gap-3">
+                      <div className="w-8 h-8 rounded-xl flex items-center justify-center flex-shrink-0" style={{ background: 'var(--module-goals-bg)' }}>
+                        <AlertTriangle className="w-4 h-4" style={{ color: 'var(--module-goals-icon)' }} />
+                      </div>
+                      <div className="flex-1">
+                        <span className="text-sm font-semibold" style={{ color: 'var(--color-text)' }}>
+                          {db.stalledGoals.length} goal{db.stalledGoals.length > 1 ? 's' : ''} with no recent progress
+                        </span>
+                        <p className="text-xs mt-0.5" style={{ color: 'var(--color-text-muted)' }}>No progress notes in the last 14 days</p>
+                        <div className="mt-1.5 space-y-1">
+                          {db.stalledGoals.slice(0, 3).map(g => (
+                            <button
+                              key={g.id}
+                              type="button"
+                              onClick={() => navigate(`/goals/${g.id}`)}
+                              className="flex items-center gap-1.5 text-xs text-brand-600 font-medium hover:text-brand-700"
+                            >
+                              <ModuleIcon name="goals" className="w-3 h-3" />
+                              {g.title}
+                            </button>
+                          ))}
+                          {db.stalledGoals.length > 3 && (
+                            <button
+                              type="button"
+                              onClick={() => navigate('/goals')}
+                              className="text-xs hover:opacity-70"
+                              style={{ color: 'var(--color-text-muted)' }}
+                            >
+                              +{db.stalledGoals.length - 3} more
+                            </button>
+                          )}
+                        </div>
                       </div>
                     </div>
-                  </div>
-                </>
-              )}
-            </div>
+                  </>
+                )}
+              </div>
+            </>
           )}
         </Section>
-
-        {/* ── Weekly snapshot (bubble chart) ───────────────────────────────────── */}
-        {(() => {
-          const weekStartDate = startOfWeek(new Date(), { weekStartsOn: 0 })
-          const sleepWeekCount = db.sleepChart.filter(
-            p => parseISO(p.date) >= weekStartDate && p.hours != null
-          ).length
-          const sensoryWeekTotal = db.regulationChart.reduce((sum, z) => sum + z.count, 0)
-
-          const weeklyBubbles: BubbleData[] = [
-            {
-              id:        'behavior',
-              label:     'Behavior',
-              value:     db.weekBehaviorCount,
-              bgColor:   '#F3E1B8',
-              iconColor: '#7A5008',
-              icon:      'behavior',
-            },
-            {
-              id:        'diet',
-              label:     'Diet',
-              value:     db.smoothiesThisWeek,
-              bgColor:   '#D9E4DC',
-              iconColor: '#3A6348',
-              icon:      'smoothie',
-            },
-            {
-              id:        'sleep',
-              label:     'Sleep',
-              value:     sleepWeekCount,
-              bgColor:   '#D6E2ED',
-              iconColor: '#2D5578',
-              icon:      'sleep',
-            },
-            {
-              id:        'sensory',
-              label:     'Regulation',
-              value:     sensoryWeekTotal,
-              bgColor:   '#E3CFE0',
-              iconColor: '#6B3568',
-              icon:      'sensory',
-            },
-          ]
-
-          return (
-            <section
-              className="overflow-hidden"
-              style={{ background: '#fff', borderRadius: 20, boxShadow: '0 2px 10px rgba(51,50,46,0.07)' }}
-            >
-              <div className="px-4 pt-4 pb-1">
-                <h2 className="text-[10px] font-bold uppercase tracking-widest" style={{ color: '#9A9187' }}>
-                  Weekly snapshot
-                </h2>
-              </div>
-              <div className="px-4 pb-5 pt-2">
-                {db.loading
-                  ? <div className="flex justify-center py-8"><Spinner className="w-5 h-5" /></div>
-                  : <WeeklyBubbleChart bubbles={weeklyBubbles} />
-                }
-              </div>
-            </section>
-          )
-        })()}
 
         {/* ── Unfiled voice notes ──────────────────────────────────────────────── */}
         {quickNotes.length > 0 && (
           <section
             className="overflow-hidden"
-            style={{ background: '#fff', borderRadius: 20, boxShadow: '0 2px 10px rgba(51,50,46,0.07)' }}
+            style={{ background: 'var(--color-surface)', borderRadius: 20, boxShadow: '0 2px 10px rgba(51,50,46,0.07)' }}
           >
             <div className="px-4 pt-4 pb-1">
-              <h2 className="text-[10px] font-bold uppercase tracking-widest" style={{ color: '#9A9187' }}>
+              <h2 className="text-[10px] font-bold uppercase tracking-widest" style={{ color: 'var(--color-text-muted)' }}>
                 Unfiled notes
               </h2>
             </div>

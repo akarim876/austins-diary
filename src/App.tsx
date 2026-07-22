@@ -1,5 +1,5 @@
 import type { ReactNode } from 'react'
-import { useEffect, useState } from 'react'
+import { lazy, Suspense, useEffect, useState } from 'react'
 import { Navigate, Outlet, Route, Routes, useLocation } from 'react-router-dom'
 import { Toaster } from 'react-hot-toast'
 import { useAuth } from './contexts/AuthContext'
@@ -8,32 +8,38 @@ import { useProfile } from './contexts/ProfileContext'
 import { useMyRole } from './hooks/useMyRole'
 import { useSetupWizard } from './hooks/useSetupWizard'
 import { useCaregiverWelcome } from './hooks/useCaregiverWelcome'
-import { SetupWizard } from './components/onboarding/SetupWizard'
-import { CaregiverWelcome } from './components/onboarding/CaregiverWelcome'
 import { AuthPage } from './components/auth/AuthPage'
 import { AppHeader } from './components/layout/AppHeader'
 import { BottomNav } from './components/layout/BottomNav'
+// Core, always-needed screens (bottom-nav tabs reachable on first paint) stay
+// eagerly bundled. Everything else is route-split with React.lazy() so the
+// initial JS payload doesn't include settings, exports, calendars, etc. that
+// most sessions never visit.
 import { DashboardPage } from './pages/DashboardPage'
-import { DiaryPage } from './pages/DiaryPage'
-import { ExportPage } from './pages/ExportPage'
 import { LogPage } from './pages/LogPage'
-import { CalendarPage } from './pages/CalendarPage'
-import { SettingsPage } from './pages/SettingsPage'
-import { GoalsPage } from './pages/GoalsPage'
-import { GoalDetailPage } from './pages/GoalDetailPage'
-import { ProvidersPage } from './pages/ProvidersPage'
-import { ProviderDetailPage } from './pages/ProviderDetailPage'
-import { ProfileSetupPage } from './components/profile/ProfileSetupPage'
-import { AcceptInvitePage } from './pages/AcceptInvitePage'
-import { DietSettingsPage } from './pages/DietSettingsPage'
-import { ScheduleSettingsPage } from './pages/ScheduleSettingsPage'
-import { TrackerSettingsPage } from './pages/TrackerSettingsPage'
-import { CompleteProfilePage } from './pages/CompleteProfilePage'
-import { ResetPasswordPage } from './pages/ResetPasswordPage'
-import { LandingPage } from './pages/LandingPage'
 import { Spinner } from './components/ui/Spinner'
 import { InstallPrompt } from './components/ui/InstallPrompt'
 import { AppLogo } from './components/ui/AppLogo'
+
+const SetupWizard        = lazy(() => import('./components/onboarding/SetupWizard').then(m => ({ default: m.SetupWizard })))
+const CaregiverWelcome   = lazy(() => import('./components/onboarding/CaregiverWelcome').then(m => ({ default: m.CaregiverWelcome })))
+const ProfileSetupPage   = lazy(() => import('./components/profile/ProfileSetupPage').then(m => ({ default: m.ProfileSetupPage })))
+const CompleteProfilePage = lazy(() => import('./pages/CompleteProfilePage').then(m => ({ default: m.CompleteProfilePage })))
+const ResetPasswordPage  = lazy(() => import('./pages/ResetPasswordPage').then(m => ({ default: m.ResetPasswordPage })))
+const AcceptInvitePage   = lazy(() => import('./pages/AcceptInvitePage').then(m => ({ default: m.AcceptInvitePage })))
+const LandingPage        = lazy(() => import('./pages/LandingPage').then(m => ({ default: m.LandingPage })))
+
+const DiaryPage             = lazy(() => import('./pages/DiaryPage').then(m => ({ default: m.DiaryPage })))
+const ExportPage            = lazy(() => import('./pages/ExportPage').then(m => ({ default: m.ExportPage })))
+const CalendarPage          = lazy(() => import('./pages/CalendarPage').then(m => ({ default: m.CalendarPage })))
+const SettingsPage          = lazy(() => import('./pages/SettingsPage').then(m => ({ default: m.SettingsPage })))
+const GoalsPage             = lazy(() => import('./pages/GoalsPage').then(m => ({ default: m.GoalsPage })))
+const GoalDetailPage        = lazy(() => import('./pages/GoalDetailPage').then(m => ({ default: m.GoalDetailPage })))
+const ProvidersPage         = lazy(() => import('./pages/ProvidersPage').then(m => ({ default: m.ProvidersPage })))
+const ProviderDetailPage    = lazy(() => import('./pages/ProviderDetailPage').then(m => ({ default: m.ProviderDetailPage })))
+const DietSettingsPage      = lazy(() => import('./pages/DietSettingsPage').then(m => ({ default: m.DietSettingsPage })))
+const ScheduleSettingsPage  = lazy(() => import('./pages/ScheduleSettingsPage').then(m => ({ default: m.ScheduleSettingsPage })))
+const TrackerSettingsPage   = lazy(() => import('./pages/TrackerSettingsPage').then(m => ({ default: m.TrackerSettingsPage })))
 
 /** Full-screen branded loading screen: logo above a small spinner. */
 function FullScreenLoader() {
@@ -80,7 +86,7 @@ function WizardController() {
   if (!activeProfile || !user) return null
 
   return (
-    <>
+    <Suspense fallback={null}>
       {ownerWizardOpen && (
         <SetupWizard
           profileId={activeProfile.id}
@@ -99,7 +105,7 @@ function WizardController() {
           onClose={() => { markSeen(); setCaregiverOpen(false) }}
         />
       )}
-    </>
+    </Suspense>
   )
 }
 
@@ -116,12 +122,20 @@ function AppShell() {
 
   // First-time user: must set their name before anything else
   if (!userProfile) {
-    return <CompleteProfilePage onComplete={reloadUserProfile} />
+    return (
+      <Suspense fallback={<FullScreenLoader />}>
+        <CompleteProfilePage onComplete={reloadUserProfile} />
+      </Suspense>
+    )
   }
 
   // No child profiles yet → show profile setup
   if (!activeProfile) {
-    return <ProfileSetupPage />
+    return (
+      <Suspense fallback={<FullScreenLoader />}>
+        <ProfileSetupPage />
+      </Suspense>
+    )
   }
 
   return (
@@ -130,7 +144,9 @@ function AppShell() {
       <AppHeader />
       <main className="flex-1 flex flex-col">
         <div key={location.pathname} className="flex-1 flex flex-col">
-          <Outlet />
+          <Suspense fallback={<FullScreenLoader />}>
+            <Outlet />
+          </Suspense>
         </div>
       </main>
       <BottomNav />
@@ -191,7 +207,9 @@ export default function App() {
             },
           }}
         />
-        <ResetPasswordPage />
+        <Suspense fallback={<FullScreenLoader />}>
+          <ResetPasswordPage />
+        </Suspense>
       </>
     )
   }
@@ -222,7 +240,9 @@ export default function App() {
             },
           }}
         />
-        {publicPage}
+        <Suspense fallback={<FullScreenLoader />}>
+          {publicPage}
+        </Suspense>
       </>
     )
   }
@@ -243,7 +263,9 @@ export default function App() {
             },
           }}
         />
-        <AcceptInvitePage />
+        <Suspense fallback={<FullScreenLoader />}>
+          <AcceptInvitePage />
+        </Suspense>
       </>
     )
   }

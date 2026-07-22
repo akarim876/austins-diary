@@ -206,23 +206,26 @@ export function BehaviorLogForm({ profileId, date, existingLog, initialConsequen
         </h3>
 
         <div>
-          <label className="flex items-center gap-1 text-xs font-medium text-gray-600 mb-1.5">
+          <label id="behavior-time-label" className="flex items-center gap-1 text-xs font-medium text-gray-600 mb-1.5">
             <Clock className="w-3 h-3" /> Time
           </label>
-          <TimeChipPicker
-            value={watch('time_of_day')}
-            onChange={(t) => setValue('time_of_day', t, { shouldValidate: true })}
-            accentColor="#F59E0B"
-            isEditing={!!existingLog}
-          />
+          <div role="group" aria-labelledby="behavior-time-label">
+            <TimeChipPicker
+              value={watch('time_of_day')}
+              onChange={(t) => setValue('time_of_day', t, { shouldValidate: true })}
+              accentColor="#F59E0B"
+              isEditing={!!existingLog}
+            />
+          </div>
           {errors.time_of_day && (
             <p className="mt-1 text-xs text-red-500">{errors.time_of_day.message}</p>
           )}
         </div>
 
         <div>
-          <label className="block text-xs font-medium text-gray-600 mb-1.5">Date</label>
+          <label htmlFor="behavior-date" className="block text-xs font-medium text-gray-600 mb-1.5">Date</label>
           <input
+            id="behavior-date"
             type="date"
             {...register('entry_date')}
             className="w-full px-3 py-2.5 rounded-xl border border-gray-200 text-sm focus:outline-none focus:ring-2 focus:ring-amber-400 transition"
@@ -230,10 +233,10 @@ export function BehaviorLogForm({ profileId, date, existingLog, initialConsequen
         </div>
 
         <div>
-          <label className="flex items-center gap-1 text-xs font-medium text-gray-600 mb-1.5">
+          <label id="behavior-location-label" className="flex items-center gap-1 text-xs font-medium text-gray-600 mb-1.5">
             <MapPin className="w-3 h-3" /> Location
           </label>
-          <div className="flex flex-wrap gap-1.5 mb-2">
+          <div role="group" aria-labelledby="behavior-location-label" className="flex flex-wrap gap-1.5 mb-2">
             {LOCATIONS.map(loc => (
               <button
                 key={loc}
@@ -251,6 +254,7 @@ export function BehaviorLogForm({ profileId, date, existingLog, initialConsequen
           </div>
           <input
             type="text"
+            aria-labelledby="behavior-location-label"
             placeholder="Or type a location…"
             {...register('location')}
             className="w-full px-3 py-2.5 rounded-xl border border-gray-200 text-sm focus:outline-none focus:ring-2 focus:ring-amber-400 transition"
@@ -283,11 +287,11 @@ export function BehaviorLogForm({ profileId, date, existingLog, initialConsequen
             className="rounded-xl p-3 space-y-2"
             style={{ background: 'rgba(91,123,122,0.06)', border: '1px solid rgba(91,123,122,0.15)' }}
           >
-            <label className="flex items-center gap-1.5 text-xs font-semibold" style={{ color: 'var(--color-accent)' }}>
+            <label id="behavior-schedule-item-label" className="flex items-center gap-1.5 text-xs font-semibold" style={{ color: 'var(--color-accent)' }}>
               <CalendarClock className="w-3.5 h-3.5" />
               Which schedule item changed? (optional)
             </label>
-            <div className="flex flex-wrap gap-1.5">
+            <div role="group" aria-labelledby="behavior-schedule-item-label" className="flex flex-wrap gap-1.5">
               {scheduleItems.map(item => (
                 <button
                   key={item.templateItemId}
@@ -376,7 +380,7 @@ export function BehaviorLogForm({ profileId, date, existingLog, initialConsequen
 
         {/* Duration */}
         <div>
-          <label className="block text-xs font-medium text-gray-600 mb-1.5">
+          <label htmlFor="behavior-duration" className="block text-xs font-medium text-gray-600 mb-1.5">
             Duration <span className="text-gray-400">(minutes, optional)</span>
           </label>
           <Controller
@@ -384,6 +388,7 @@ export function BehaviorLogForm({ profileId, date, existingLog, initialConsequen
             control={control}
             render={({ field }) => (
               <input
+                id="behavior-duration"
                 type="number"
                 min={0}
                 max={999}

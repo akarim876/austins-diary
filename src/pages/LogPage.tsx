@@ -41,7 +41,7 @@ function LogTile({
       onClick={onClick}
       className="flex flex-col items-start gap-3 p-4 rounded-xl text-left active:scale-[0.97] transition-transform duration-100 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-500"
       style={{
-        background: '#fff',
+        background: 'var(--color-surface)',
         boxShadow: '0 2px 10px rgba(51,50,46,0.07)',
         minHeight: 120,
       }}
@@ -53,8 +53,8 @@ function LogTile({
         {icon}
       </span>
       <div>
-        <p className="font-semibold text-sm" style={{ color: '#33322E' }}>{label}</p>
-        <p className="text-xs mt-0.5 leading-snug" style={{ color: '#9A9187' }}>{description}</p>
+        <p className="font-semibold text-sm" style={{ color: 'var(--color-text)' }}>{label}</p>
+        <p className="text-xs mt-0.5 leading-snug" style={{ color: 'var(--color-text-muted)' }}>{description}</p>
       </div>
     </button>
   )
@@ -67,7 +67,7 @@ function TileGroup({ heading, children }: { heading: string; children: ReactNode
     <div>
       <p
         className="text-[10px] font-bold uppercase tracking-widest mb-2 px-0.5"
-        style={{ color: '#9A9187' }}
+        style={{ color: 'var(--color-text-muted)' }}
       >
         {heading}
       </p>
@@ -115,10 +115,10 @@ export function LogPage() {
 
       {/* Page heading */}
       <div>
-        <h1 className="font-display text-2xl font-semibold" style={{ color: '#33322E' }}>
+        <h1 className="font-display text-2xl font-semibold" style={{ color: 'var(--color-text)' }}>
           Log an entry
         </h1>
-        <p className="text-sm mt-1" style={{ color: '#9A9187' }}>
+        <p className="text-sm mt-1" style={{ color: 'var(--color-text-muted)' }}>
           What do you want to record?
         </p>
       </div>
@@ -280,7 +280,7 @@ export function LogPage() {
       <BottomSheet open={sheet === 'progress'} onClose={close} title="Log progress">
         {activeGoals.length === 0 ? (
           <div className="px-4 pt-6 pb-8 text-center">
-            <p className="text-sm text-gray-500">No active goals yet.</p>
+            <p className="text-sm" style={{ color: 'var(--color-text-muted)' }}>No active goals yet.</p>
             <button
               type="button"
               onClick={() => { close(); navigate('/goals') }}

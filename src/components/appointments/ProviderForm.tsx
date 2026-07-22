@@ -83,10 +83,11 @@ export function ProviderForm({ profileId, existingProvider, compact, onSaved, on
     <div className="px-4 pt-2 pb-6 space-y-4">
       {/* Name */}
       <div>
-        <label className="block text-xs font-semibold text-gray-600 mb-1.5 uppercase tracking-wide">
+        <label htmlFor="provider-name" className="block text-xs font-semibold text-gray-600 mb-1.5 uppercase tracking-wide">
           Provider name *
         </label>
         <input
+          id="provider-name"
           type="text"
           value={name}
           onChange={e => { setName(e.target.value); setNameError('') }}
@@ -101,10 +102,10 @@ export function ProviderForm({ profileId, existingProvider, compact, onSaved, on
 
       {/* Role */}
       <div>
-        <label className="block text-xs font-semibold text-gray-600 mb-1.5 uppercase tracking-wide">
+        <label id="provider-role-label" className="block text-xs font-semibold text-gray-600 mb-1.5 uppercase tracking-wide">
           Role / specialty
         </label>
-        <div className="flex flex-wrap gap-1.5">
+        <div role="group" aria-labelledby="provider-role-label" className="flex flex-wrap gap-1.5">
           {PROVIDER_ROLES.map(r => (
             <button key={r} type="button" onClick={() => setRole(r)}
               className={`px-3 py-1.5 rounded-lg border text-xs font-semibold transition-all ${
@@ -131,10 +132,10 @@ export function ProviderForm({ profileId, existingProvider, compact, onSaved, on
         <>
           {/* Organization */}
           <div>
-            <label className="block text-xs font-semibold text-gray-600 mb-1.5 uppercase tracking-wide">
+            <label htmlFor="provider-org" className="block text-xs font-semibold text-gray-600 mb-1.5 uppercase tracking-wide">
               Practice / organization <span className="text-gray-400 font-normal normal-case">(optional)</span>
             </label>
-            <input type="text" value={organization} onChange={e => setOrganization(e.target.value)}
+            <input id="provider-org" type="text" value={organization} onChange={e => setOrganization(e.target.value)}
               placeholder="e.g. Children's Health Associates"
               className="w-full px-3.5 py-2.5 rounded-xl border border-gray-200 text-sm focus:outline-none focus:ring-2 focus:ring-rose-400 transition" />
           </div>
@@ -142,14 +143,14 @@ export function ProviderForm({ profileId, existingProvider, compact, onSaved, on
           {/* Phone + Email */}
           <div className="grid grid-cols-2 gap-3">
             <div>
-              <label className="block text-xs font-semibold text-gray-600 mb-1.5 uppercase tracking-wide">Phone</label>
-              <input type="tel" value={phone} onChange={e => setPhone(e.target.value)}
+              <label htmlFor="provider-phone" className="block text-xs font-semibold text-gray-600 mb-1.5 uppercase tracking-wide">Phone</label>
+              <input id="provider-phone" type="tel" value={phone} onChange={e => setPhone(e.target.value)}
                 placeholder="(555) 000-0000"
                 className="w-full px-3.5 py-2.5 rounded-xl border border-gray-200 text-sm focus:outline-none focus:ring-2 focus:ring-rose-400 transition" />
             </div>
             <div>
-              <label className="block text-xs font-semibold text-gray-600 mb-1.5 uppercase tracking-wide">Email</label>
-              <input type="email" value={email} onChange={e => setEmail(e.target.value)}
+              <label htmlFor="provider-email" className="block text-xs font-semibold text-gray-600 mb-1.5 uppercase tracking-wide">Email</label>
+              <input id="provider-email" type="email" value={email} onChange={e => setEmail(e.target.value)}
                 placeholder="dr@example.com"
                 className="w-full px-3.5 py-2.5 rounded-xl border border-gray-200 text-sm focus:outline-none focus:ring-2 focus:ring-rose-400 transition" />
             </div>
@@ -157,16 +158,16 @@ export function ProviderForm({ profileId, existingProvider, compact, onSaved, on
 
           {/* Address */}
           <div>
-            <label className="block text-xs font-semibold text-gray-600 mb-1.5 uppercase tracking-wide">Address <span className="text-gray-400 font-normal normal-case">(optional)</span></label>
-            <input type="text" value={address} onChange={e => setAddress(e.target.value)}
+            <label htmlFor="provider-address" className="block text-xs font-semibold text-gray-600 mb-1.5 uppercase tracking-wide">Address <span className="text-gray-400 font-normal normal-case">(optional)</span></label>
+            <input id="provider-address" type="text" value={address} onChange={e => setAddress(e.target.value)}
               placeholder="123 Main St, Suite 4"
               className="w-full px-3.5 py-2.5 rounded-xl border border-gray-200 text-sm focus:outline-none focus:ring-2 focus:ring-rose-400 transition" />
           </div>
 
           {/* Notes */}
           <div>
-            <label className="block text-xs font-semibold text-gray-600 mb-1.5 uppercase tracking-wide">Notes <span className="text-gray-400 font-normal normal-case">(optional)</span></label>
-            <textarea rows={2} value={notes} onChange={e => setNotes(e.target.value)}
+            <label htmlFor="provider-notes" className="block text-xs font-semibold text-gray-600 mb-1.5 uppercase tracking-wide">Notes <span className="text-gray-400 font-normal normal-case">(optional)</span></label>
+            <textarea id="provider-notes" rows={2} value={notes} onChange={e => setNotes(e.target.value)}
               placeholder="e.g. Sees him every other Tuesday; prefers email over calls"
               className="w-full px-3.5 py-2.5 rounded-xl border border-gray-200 text-sm focus:outline-none focus:ring-2 focus:ring-rose-400 transition resize-none" />
           </div>

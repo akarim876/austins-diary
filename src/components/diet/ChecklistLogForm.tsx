@@ -169,8 +169,9 @@ export default function ChecklistLogForm({
 
       {/* Time */}
       <div>
-        <label className="block text-sm font-medium text-stone-700 mb-1">Time</label>
+        <label htmlFor="checklist-time" className="block text-sm font-medium text-stone-700 mb-1">Time</label>
         <input
+          id="checklist-time"
           type="time"
           value={timeStr}
           onChange={e => setTimeStr(e.target.value)}
@@ -223,8 +224,9 @@ export default function ChecklistLogForm({
 
       {/* Notes */}
       <div>
-        <label className="block text-sm font-medium text-stone-700 mb-1">Notes (optional)</label>
+        <label htmlFor="checklist-notes" className="block text-sm font-medium text-stone-700 mb-1">Notes (optional)</label>
         <textarea
+          id="checklist-notes"
           value={notes}
           onChange={e => setNotes(e.target.value)}
           rows={2}

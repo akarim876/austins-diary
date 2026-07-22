@@ -115,7 +115,7 @@ function TrackerForm({ profileId, existing, onSaved, onCancel }: TrackerFormProp
               <div className="flex-1">
                 <p
                   className="text-sm font-semibold"
-                  style={{ color: type === opt.id ? color : '#33322E' }}
+                  style={{ color: type === opt.id ? color : 'var(--color-text)' }}
                 >
                   {opt.label}
                 </p>
@@ -172,7 +172,7 @@ function TrackerForm({ profileId, existing, onSaved, onCancel }: TrackerFormProp
               className="w-8 h-8 rounded-full border-2 transition"
               style={{
                 background: c,
-                borderColor: color === c ? '#33322E' : 'transparent',
+                borderColor: color === c ? 'var(--color-text)' : 'transparent',
                 transform: color === c ? 'scale(1.15)' : 'scale(1)',
               }}
               aria-label={c}

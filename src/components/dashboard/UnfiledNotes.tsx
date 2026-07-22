@@ -20,10 +20,10 @@ export function UnfiledNotes({ notes, onDelete }: Props) {
         >
           <FileText className="w-4 h-4 flex-shrink-0 mt-0.5" style={{ color: 'var(--color-accent)' }} />
           <div className="flex-1 min-w-0">
-            <p className="text-sm leading-relaxed" style={{ color: '#33322E' }}>
+            <p className="text-sm leading-relaxed" style={{ color: 'var(--color-text)' }}>
               {note.content}
             </p>
-            <p className="text-[11px] mt-1" style={{ color: '#9A9187' }}>
+            <p className="text-[11px] mt-1" style={{ color: 'var(--color-text-muted)' }}>
               {formatDistanceToNow(parseISO(note.created_at), { addSuffix: true })}
             </p>
           </div>

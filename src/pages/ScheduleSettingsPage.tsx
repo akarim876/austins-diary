@@ -34,7 +34,7 @@ function TimeInput({ value, onChange }: { value: string; onChange: (v: string) =
       value={value}
       onChange={e => onChange(e.target.value)}
       className="text-xs px-2 py-1.5 rounded-lg outline-none w-24"
-      style={{ border: '1px solid rgba(51,50,46,0.15)', color: '#33322E', background: '#fff' }}
+      style={{ border: '1px solid rgba(51,50,46,0.15)', color: 'var(--color-text)', background: 'var(--color-surface)' }}
     />
   )
 }
@@ -75,7 +75,7 @@ function SortableRow({
     // While being dragged (the placeholder), fade it out so only the overlay is visible
     opacity: isDragging && !isOverlay ? 0.35 : 1,
     borderBottom: isLast ? undefined : '1px solid rgba(51,50,46,0.06)',
-    background: '#fff',
+    background: 'var(--color-surface)',
     position: 'relative',
     zIndex: isOverlay ? 50 : undefined,
     // Subtle lift for the overlay clone
@@ -97,7 +97,7 @@ function SortableRow({
             value={draft.label}
             onChange={e => onChangeDraft({ label: e.target.value })}
             className="flex-1 text-sm px-2.5 py-1.5 rounded-lg outline-none"
-            style={{ border: '1px solid rgba(91,123,122,0.4)', color: '#33322E', background: '#fff' }}
+            style={{ border: '1px solid rgba(91,123,122,0.4)', color: 'var(--color-text)', background: 'var(--color-surface)' }}
             autoFocus
             onKeyDown={e => {
               if (e.key === 'Enter') onSaveEdit()
@@ -138,13 +138,13 @@ function SortableRow({
           {/* Time */}
           <span
             className="w-12 text-[11px] font-data flex-shrink-0 text-right"
-            style={{ color: '#9A9187' }}
+            style={{ color: 'var(--color-text-muted)' }}
           >
             {item.time_of_day ?? ''}
           </span>
 
           {/* Label */}
-          <span className="flex-1 text-sm font-medium truncate" style={{ color: '#33322E' }}>
+          <span className="flex-1 text-sm font-medium truncate" style={{ color: 'var(--color-text)' }}>
             {item.label}
           </span>
 
@@ -154,7 +154,7 @@ function SortableRow({
               <button
                 onClick={onStartEdit}
                 className="w-7 h-7 rounded-full flex items-center justify-center hover:bg-warm-100 transition-colors"
-                style={{ color: '#9A9187' }}
+                style={{ color: 'var(--color-text-muted)' }}
               >
                 <Pencil className="w-3.5 h-3.5" />
               </button>
@@ -271,7 +271,7 @@ export function ScheduleSettingsPage() {
           >
             <ArrowLeft className="w-4 h-4" />
           </button>
-          <h1 className="font-display text-lg font-semibold" style={{ color: '#33322E' }}>
+          <h1 className="font-display text-lg font-semibold" style={{ color: 'var(--color-text)' }}>
             Daily Schedule Template
           </h1>
         </div>
@@ -279,11 +279,11 @@ export function ScheduleSettingsPage() {
 
       <div className="px-4 pt-4 max-w-lg mx-auto space-y-4">
         {/* Explainer */}
-        <p className="text-sm leading-relaxed" style={{ color: '#6B6860' }}>
+        <p className="text-sm leading-relaxed" style={{ color: 'var(--color-text-muted)' }}>
           Build the typical routine for {activeProfile.name}. Each day on the dashboard,
           this template auto-populates as a checklist caregivers can mark Done, Skipped, or Changed.
           {canEdit && (
-            <span className="block mt-1" style={{ color: '#9A9187' }}>
+            <span className="block mt-1" style={{ color: 'var(--color-text-muted)' }}>
               Drag the <GripVertical className="inline w-3.5 h-3.5 mb-0.5" /> handle to reorder items.
             </span>
           )}
@@ -295,7 +295,7 @@ export function ScheduleSettingsPage() {
         ) : items.length === 0 ? (
           <div
             className="rounded-xl px-4 py-6 text-center"
-            style={{ background: '#fff', border: '1px solid rgba(51,50,46,0.08)', boxShadow: '0 2px 8px rgba(51,50,46,0.06)' }}
+            style={{ background: 'var(--color-surface)', border: '1px solid rgba(51,50,46,0.08)', boxShadow: '0 2px 8px rgba(51,50,46,0.06)' }}
           >
             <p className="text-sm text-gray-400">No items yet — add the first step below.</p>
           </div>
@@ -312,7 +312,7 @@ export function ScheduleSettingsPage() {
             >
               <div
                 className="rounded-xl overflow-hidden"
-                style={{ background: '#fff', border: '1px solid rgba(51,50,46,0.08)', boxShadow: '0 2px 8px rgba(51,50,46,0.06)' }}
+                style={{ background: 'var(--color-surface)', border: '1px solid rgba(51,50,46,0.08)', boxShadow: '0 2px 8px rgba(51,50,46,0.06)' }}
               >
                 {items.map((item, idx) => (
                   <SortableRow
@@ -357,9 +357,9 @@ export function ScheduleSettingsPage() {
         {canEdit && (
           <div
             className="rounded-xl px-4 py-3"
-            style={{ background: '#fff', border: '1px solid rgba(51,50,46,0.08)', boxShadow: '0 2px 8px rgba(51,50,46,0.06)' }}
+            style={{ background: 'var(--color-surface)', border: '1px solid rgba(51,50,46,0.08)', boxShadow: '0 2px 8px rgba(51,50,46,0.06)' }}
           >
-            <p className="text-xs font-semibold uppercase tracking-widest mb-3" style={{ color: '#9A9187' }}>Add item</p>
+            <p className="text-xs font-semibold uppercase tracking-widest mb-3" style={{ color: 'var(--color-text-muted)' }}>Add item</p>
             <div className="flex items-center gap-2">
               <TimeInput value={addTime} onChange={setAddTime} />
               <input
@@ -368,7 +368,7 @@ export function ScheduleSettingsPage() {
                 onChange={e => setAddLabel(e.target.value)}
                 placeholder="e.g. Breakfast, OT session…"
                 className="flex-1 text-sm px-2.5 py-1.5 rounded-lg outline-none"
-                style={{ border: '1px solid rgba(51,50,46,0.15)', color: '#33322E', background: '#fff' }}
+                style={{ border: '1px solid rgba(51,50,46,0.15)', color: 'var(--color-text)', background: 'var(--color-surface)' }}
                 onKeyDown={e => { if (e.key === 'Enter') handleAdd() }}
               />
               <button

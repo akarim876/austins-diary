@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import { format, subDays } from 'date-fns'
 import { ChevronDown, ChevronUp, Moon, Trash2, X } from 'lucide-react'
 import toast from 'react-hot-toast'
@@ -25,11 +25,13 @@ function defaultSleepDate(): string {
 interface Props {
   profileId: string
   existingLog?: SleepLog | null
+  /** Pre-fill the notes field — used when opening from the global voice button */
+  initialNotes?: string
   onSaved: () => void
   onCancel: () => void
 }
 
-export function SleepLogForm({ profileId, existingLog, onSaved, onCancel }: Props) {
+export function SleepLogForm({ profileId, existingLog, initialNotes, onSaved, onCancel }: Props) {
   const { user } = useAuth()
 
   // ── Form state ──────────────────────────────────────────────────────────────
@@ -42,9 +44,16 @@ export function SleepLogForm({ profileId, existingLog, onSaved, onCancel }: Prop
   const [wakingsOpen, setWakingsOpen] = useState(false)
   const [napEnabled,  setNapEnabled]  = useState(existingLog?.nap_enabled ?? false)
   const [naps,        setNaps]        = useState<Nap[]>(existingLog?.naps?.length ? existingLog.naps : [{ start_time: '', end_time: '' }])
-  const [notes,       setNotes]       = useState(existingLog?.notes ?? '')
+  const [notes,       setNotes]       = useState(existingLog?.notes ?? initialNotes ?? '')
   const [saving,      setSaving]      = useState(false)
   const [deleting,    setDeleting]    = useState(false)
+
+  // This form stays mounted across multiple voice-note recordings (it lives
+  // inside an always-rendered BottomSheet), so re-sync the notes field
+  // whenever a fresh transcription comes in rather than only on first mount.
+  useEffect(() => {
+    if (!existingLog) setNotes(initialNotes ?? '')
+  }, [initialNotes, existingLog])
 
   // ── Derived ─────────────────────────────────────────────────────────────────
   const isDraft = !bedtime || !wakeTime
@@ -153,10 +162,11 @@ export function SleepLogForm({ profileId, existingLog, onSaved, onCancel }: Prop
 
       {/* Date */}
       <div>
-        <label className="block text-xs font-semibold text-gray-600 mb-1.5 uppercase tracking-wide">
+        <label htmlFor="sleep-night-of" className="block text-xs font-semibold text-gray-600 mb-1.5 uppercase tracking-wide">
           Night of
         </label>
         <input
+          id="sleep-night-of"
           type="date"
           value={logDate}
           onChange={e => setLogDate(e.target.value)}
@@ -166,13 +176,14 @@ export function SleepLogForm({ profileId, existingLog, onSaved, onCancel }: Prop
 
       {/* Bedtime + Wake time */}
       <div>
-        <label className="block text-xs font-semibold text-gray-600 mb-1.5 uppercase tracking-wide">
+        <label id="sleep-window-label" className="block text-xs font-semibold text-gray-600 mb-1.5 uppercase tracking-wide">
           Sleep window
         </label>
-        <div className="grid grid-cols-2 gap-3">
+        <div role="group" aria-labelledby="sleep-window-label" className="grid grid-cols-2 gap-3">
           <div>
-            <label className="block text-xs text-gray-500 mb-1">Bedtime</label>
+            <label htmlFor="sleep-bedtime" className="block text-xs text-gray-500 mb-1">Bedtime</label>
             <input
+              id="sleep-bedtime"
               type="time"
               value={bedtime}
               onChange={e => setBedtime(e.target.value)}
@@ -180,8 +191,9 @@ export function SleepLogForm({ profileId, existingLog, onSaved, onCancel }: Prop
             />
           </div>
           <div>
-            <label className="block text-xs text-gray-500 mb-1">Wake time</label>
+            <label htmlFor="sleep-waketime" className="block text-xs text-gray-500 mb-1">Wake time</label>
             <input
+              id="sleep-waketime"
               type="time"
               value={wakeTime}
               onChange={e => setWakeTime(e.target.value)}
@@ -201,10 +213,10 @@ export function SleepLogForm({ profileId, existingLog, onSaved, onCancel }: Prop
 
       {/* Sleep quality */}
       <div>
-        <label className="block text-xs font-semibold text-gray-600 mb-1.5 uppercase tracking-wide">
+        <label id="sleep-quality-label" className="block text-xs font-semibold text-gray-600 mb-1.5 uppercase tracking-wide">
           Sleep quality
         </label>
-        <div className="flex gap-2 flex-wrap">
+        <div role="group" aria-labelledby="sleep-quality-label" className="flex gap-2 flex-wrap">
           {SLEEP_QUALITY_OPTIONS.map(opt => (
             <button
               key={opt.value}
@@ -224,20 +236,22 @@ export function SleepLogForm({ profileId, existingLog, onSaved, onCancel }: Prop
 
       {/* Night wakings */}
       <div>
-        <label className="block text-xs font-semibold text-gray-600 mb-1.5 uppercase tracking-wide">
+        <label id="sleep-wakings-label" className="block text-xs font-semibold text-gray-600 mb-1.5 uppercase tracking-wide">
           Night wakings
         </label>
-        <div className="flex items-center gap-3">
+        <div role="group" aria-labelledby="sleep-wakings-label" className="flex items-center gap-3">
           <div className="flex items-center gap-2 flex-1">
             <button
               type="button"
               onClick={() => syncWakings(Math.max(0, wakingsCount - 1))}
+              aria-label="Decrease night wakings"
               className="w-8 h-8 rounded-lg border border-gray-200 text-gray-600 text-lg font-bold hover:bg-gray-50 transition flex items-center justify-center"
             >−</button>
             <span className="w-8 text-center font-semibold text-gray-900">{wakingsCount}</span>
             <button
               type="button"
               onClick={() => syncWakings(wakingsCount + 1)}
+              aria-label="Increase night wakings"
               className="w-8 h-8 rounded-lg border border-gray-200 text-gray-600 text-lg font-bold hover:bg-gray-50 transition flex items-center justify-center"
             >+</button>
           </div>
@@ -259,8 +273,9 @@ export function SleepLogForm({ profileId, existingLog, onSaved, onCancel }: Prop
             <p className="text-xs font-semibold text-indigo-700">Waking {idx + 1}</p>
             <div className="grid grid-cols-2 gap-2">
               <div>
-                <label className="text-xs text-gray-500 mb-0.5 block">Duration (min)</label>
+                <label htmlFor={`sleep-waking-${idx}-duration`} className="text-xs text-gray-500 mb-0.5 block">Duration (min)</label>
                 <input
+                  id={`sleep-waking-${idx}-duration`}
                   type="number"
                   min="1"
                   placeholder="—"
@@ -270,8 +285,9 @@ export function SleepLogForm({ profileId, existingLog, onSaved, onCancel }: Prop
                 />
               </div>
               <div>
-                <label className="text-xs text-gray-500 mb-0.5 block">Cause</label>
+                <label htmlFor={`sleep-waking-${idx}-cause`} className="text-xs text-gray-500 mb-0.5 block">Cause</label>
                 <select
+                  id={`sleep-waking-${idx}-cause`}
                   value={w.cause}
                   onChange={e => updateWaking(idx, { cause: e.target.value })}
                   className="w-full px-2.5 py-2 rounded-lg border border-gray-200 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-300 transition bg-white"
@@ -296,12 +312,15 @@ export function SleepLogForm({ profileId, existingLog, onSaved, onCancel }: Prop
       {/* Nap(s) */}
       <div>
         <div className="flex items-center justify-between mb-1.5">
-          <label className="text-xs font-semibold text-gray-600 uppercase tracking-wide">
+          <label id="sleep-naps-label" className="text-xs font-semibold text-gray-600 uppercase tracking-wide">
             Nap(s)
           </label>
           <button
             type="button"
             onClick={() => setNapEnabled(n => !n)}
+            role="switch"
+            aria-checked={napEnabled}
+            aria-labelledby="sleep-naps-label"
             className={`relative w-10 h-5 rounded-full transition-colors ${napEnabled ? 'bg-indigo-500' : 'bg-gray-200'}`}
           >
             <span className={`absolute top-0.5 left-0.5 w-4 h-4 rounded-full bg-white shadow transition-transform ${napEnabled ? 'translate-x-5' : ''}`} />
@@ -329,15 +348,15 @@ export function SleepLogForm({ profileId, existingLog, onSaved, onCancel }: Prop
                   </div>
                   <div className="grid grid-cols-2 gap-2">
                     <div>
-                      <label className="text-xs text-gray-500 mb-0.5 block">Start</label>
-                      <input type="time" value={nap.start_time ?? ''}
+                      <label htmlFor={`sleep-nap-${idx}-start`} className="text-xs text-gray-500 mb-0.5 block">Start</label>
+                      <input id={`sleep-nap-${idx}-start`} type="time" value={nap.start_time ?? ''}
                         onChange={e => updateNap(idx, { start_time: e.target.value || null })}
                         className="w-full px-2.5 py-2 rounded-lg border border-gray-200 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-300 transition bg-white"
                       />
                     </div>
                     <div>
-                      <label className="text-xs text-gray-500 mb-0.5 block">End</label>
-                      <input type="time" value={nap.end_time ?? ''}
+                      <label htmlFor={`sleep-nap-${idx}-end`} className="text-xs text-gray-500 mb-0.5 block">End</label>
+                      <input id={`sleep-nap-${idx}-end`} type="time" value={nap.end_time ?? ''}
                         onChange={e => updateNap(idx, { end_time: e.target.value || null })}
                         className="w-full px-2.5 py-2 rounded-lg border border-gray-200 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-300 transition bg-white"
                       />
@@ -361,10 +380,11 @@ export function SleepLogForm({ profileId, existingLog, onSaved, onCancel }: Prop
 
       {/* Notes */}
       <div>
-        <label className="block text-xs font-semibold text-gray-600 mb-1.5 uppercase tracking-wide">
+        <label htmlFor="sleep-notes" className="block text-xs font-semibold text-gray-600 mb-1.5 uppercase tracking-wide">
           Notes (optional)
         </label>
         <textarea
+          id="sleep-notes"
           rows={3}
           placeholder="Anything else notable about this night…"
           value={notes}

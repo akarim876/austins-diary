@@ -83,10 +83,11 @@ export function GoalForm({ profileId, existingGoal, onSaved, onCancel }: Props) 
 
       {/* Title */}
       <div>
-        <label className="block text-xs font-semibold text-gray-600 mb-1.5 uppercase tracking-wide">
+        <label htmlFor="goal-title" className="block text-xs font-semibold text-gray-600 mb-1.5 uppercase tracking-wide">
           Goal title *
         </label>
         <input
+          id="goal-title"
           type="text"
           value={title}
           onChange={e => setTitle(e.target.value)}
@@ -101,10 +102,10 @@ export function GoalForm({ profileId, existingGoal, onSaved, onCancel }: Props) 
 
       {/* Source */}
       <div>
-        <label className="block text-xs font-semibold text-gray-600 mb-1.5 uppercase tracking-wide">
+        <label id="goal-source-label" className="block text-xs font-semibold text-gray-600 mb-1.5 uppercase tracking-wide">
           Source
         </label>
-        <div className="flex flex-wrap gap-2">
+        <div role="group" aria-labelledby="goal-source-label" className="flex flex-wrap gap-2">
           {GOAL_SOURCES.map(s => (
             <button
               key={s}
@@ -124,10 +125,11 @@ export function GoalForm({ profileId, existingGoal, onSaved, onCancel }: Props) 
 
       {/* Description */}
       <div>
-        <label className="block text-xs font-semibold text-gray-600 mb-1.5 uppercase tracking-wide">
+        <label htmlFor="goal-description" className="block text-xs font-semibold text-gray-600 mb-1.5 uppercase tracking-wide">
           Description &amp; success criteria
         </label>
         <textarea
+          id="goal-description"
           rows={3}
           value={description}
           onChange={e => setDescription(e.target.value)}
@@ -138,10 +140,10 @@ export function GoalForm({ profileId, existingGoal, onSaved, onCancel }: Props) 
 
       {/* Status */}
       <div>
-        <label className="block text-xs font-semibold text-gray-600 mb-1.5 uppercase tracking-wide">
+        <label id="goal-status-label" className="block text-xs font-semibold text-gray-600 mb-1.5 uppercase tracking-wide">
           Status
         </label>
-        <div className="flex flex-wrap gap-2">
+        <div role="group" aria-labelledby="goal-status-label" className="flex flex-wrap gap-2">
           {GOAL_STATUSES.map(s => (
             <button
               key={s.value}
@@ -162,10 +164,11 @@ export function GoalForm({ profileId, existingGoal, onSaved, onCancel }: Props) 
       {/* Dates */}
       <div className="grid grid-cols-2 gap-3">
         <div>
-          <label className="block text-xs font-semibold text-gray-600 mb-1.5 uppercase tracking-wide">
+          <label htmlFor="goal-start-date" className="block text-xs font-semibold text-gray-600 mb-1.5 uppercase tracking-wide">
             Start date
           </label>
           <input
+            id="goal-start-date"
             type="date"
             value={startDate}
             onChange={e => setStartDate(e.target.value)}
@@ -173,10 +176,11 @@ export function GoalForm({ profileId, existingGoal, onSaved, onCancel }: Props) 
           />
         </div>
         <div>
-          <label className="block text-xs font-semibold text-gray-600 mb-1.5 uppercase tracking-wide">
+          <label htmlFor="goal-target-date" className="block text-xs font-semibold text-gray-600 mb-1.5 uppercase tracking-wide">
             Target date <span className="text-gray-400 font-normal normal-case">(optional)</span>
           </label>
           <input
+            id="goal-target-date"
             type="date"
             value={targetDate}
             onChange={e => setTargetDate(e.target.value)}

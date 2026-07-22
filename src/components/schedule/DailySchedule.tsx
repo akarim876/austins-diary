@@ -80,7 +80,7 @@ function ItemRow({ item, canEdit, onUpdate, onLogBehavior }: ItemRowProps) {
         {/* Time badge */}
         <span
           className="flex-shrink-0 w-12 text-[10px] font-data text-right leading-none"
-          style={{ color: '#9A9187' }}
+          style={{ color: 'var(--color-text-muted)' }}
         >
           {item.time_of_day
             ? format(parseISO(`2000-01-01T${item.time_of_day}`), 'h:mma').toLowerCase()
@@ -88,7 +88,7 @@ function ItemRow({ item, canEdit, onUpdate, onLogBehavior }: ItemRowProps) {
         </span>
 
         {/* Label */}
-        <span className="flex-1 text-sm font-medium truncate" style={{ color: '#33322E' }}>
+        <span className="flex-1 text-sm font-medium truncate" style={{ color: 'var(--color-text)' }}>
           {item.label}
         </span>
 
@@ -157,7 +157,7 @@ function ItemRow({ item, canEdit, onUpdate, onLogBehavior }: ItemRowProps) {
             onChange={e => setNote(e.target.value)}
             placeholder="Optional note…"
             className="w-full text-xs bg-white rounded-lg px-2.5 py-1.5 outline-none"
-            style={{ border: '1px solid rgba(51,50,46,0.12)', color: '#33322E' }}
+            style={{ border: '1px solid rgba(51,50,46,0.12)', color: 'var(--color-text)' }}
           />
           <div className="flex justify-end gap-2">
             <button
@@ -247,7 +247,7 @@ export function DailySchedule({ profileId, date, myRole, onLogBehavior, compact 
               style={{ width: `${(doneCount / items.length) * 100}%`, background: 'var(--color-accent)' }}
             />
           </div>
-          <span className="text-[11px] font-data flex-shrink-0" style={{ color: '#9A9187' }}>
+          <span className="text-[11px] font-data flex-shrink-0" style={{ color: 'var(--color-text-muted)' }}>
             {doneCount}/{items.length}
             {skippedCount > 0 ? ` · ${skippedCount} varied` : ''}
           </span>

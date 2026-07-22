@@ -4,12 +4,14 @@
  * Flow:
  *  idle → tap → requesting mic → recording → stop → uploading → transcribing
  *  → done: show "Save to…" destination sheet
- *    ├── Behavior log  → BehaviorLogForm pre-filled with transcribed text
- *    ├── Diary note    → if today already has a note, ask replace vs. append,
- *    │                   then DiaryEntryForm pre-filled accordingly (updates
- *    │                   the existing row rather than inserting a duplicate)
- *    ├── Handoff note  → same replace vs. append choice, then inline editor
- *    └── Quick note    → save immediately as unfiled, toast confirmation
+ *    ├── Behavior log        → BehaviorLogForm pre-filled in the consequence field
+ *    ├── Sensory/Regulation  → SensoryLogForm pre-filled in the notes field
+ *    ├── Sleep log           → SleepLogForm pre-filled in the notes field
+ *    ├── Diary note          → if today already has a note, ask replace vs. append,
+ *    │                         then DiaryEntryForm pre-filled accordingly (updates
+ *    │                         the existing row rather than inserting a duplicate)
+ *    ├── Handoff note        → same replace vs. append choice, then inline editor
+ *    └── Quick note          → save immediately as unfiled, toast confirmation
  */
 
 import { useState, useRef, useEffect, useCallback } from 'react'
@@ -25,9 +27,11 @@ import { useHandoffNote } from '../../hooks/useHandoffNote'
 import { BottomSheet } from '../ui/BottomSheet'
 import { BehaviorLogForm } from '../behavior/BehaviorLogForm'
 import { DiaryEntryForm } from '../diary/DiaryEntryForm'
+import { SensoryLogForm } from '../sensory/SensoryLogForm'
+import { SleepLogForm } from '../sleep/SleepLogForm'
 
 type Phase = 'idle' | 'requesting' | 'recording' | 'uploading' | 'transcribing' | 'done' | 'error'
-type Destination = 'behavior' | 'handoff' | 'diary' | 'quick' | null
+type Destination = 'behavior' | 'sensory' | 'sleep' | 'handoff' | 'diary' | 'quick' | null
 /** Whether a new voice transcription should replace or be appended to an existing note. */
 type NoteChoice = 'replace' | 'append' | null
 
@@ -60,7 +64,7 @@ function NoteChoicePrompt({ existingText, noteLabel, onChoose }: NoteChoicePromp
   return (
     <div className="px-4 pt-2 pb-6 space-y-4">
       <div>
-        <p className="text-xs font-semibold uppercase tracking-widest mb-2" style={{ color: '#9A9187' }}>
+        <p className="text-xs font-semibold uppercase tracking-widest mb-2" style={{ color: 'var(--color-text-muted)' }}>
           Current {noteLabel}
         </p>
         <div
@@ -70,7 +74,7 @@ function NoteChoicePrompt({ existingText, noteLabel, onChoose }: NoteChoicePromp
           {existingText}
         </div>
       </div>
-      <p className="text-sm" style={{ color: '#33322E' }}>
+      <p className="text-sm" style={{ color: 'var(--color-text)' }}>
         You already have a {noteLabel} for today. What should the new recording do?
       </p>
       <div className="space-y-2">
@@ -132,7 +136,7 @@ function HandoffNoteForm({ profileId, initialText, onSaved }: HandoffNoteFormPro
 
   return (
     <div className="px-4 pt-3 pb-6 space-y-3">
-      <p className="text-xs" style={{ color: '#9A9187' }}>
+      <p className="text-xs" style={{ color: 'var(--color-text-muted)' }}>
         Review and edit the note before saving.
       </p>
       <textarea
@@ -384,7 +388,7 @@ export function GlobalRecordButton() {
         <span
           className="text-[10px] font-semibold tabular-nums"
           style={{
-            color: isRecording ? '#C77B6A' : '#9A9187',
+            color: isRecording ? '#C77B6A' : 'var(--color-text-muted)',
             fontFamily: 'inherit',
           }}
         >
@@ -398,12 +402,12 @@ export function GlobalRecordButton() {
           className="fixed left-1/2 -translate-x-1/2 z-[70] flex items-start gap-2.5 px-4 py-3 rounded-2xl shadow-xl max-w-xs w-[90vw]"
           style={{
             bottom: 88,
-            background: '#fff',
+            background: 'var(--color-surface)',
             border: '1.5px solid rgba(199,123,106,0.3)',
           }}
         >
           <AlertCircle className="w-4 h-4 flex-shrink-0 mt-0.5" style={{ color: '#C77B6A' }} />
-          <span className="text-xs leading-relaxed flex-1" style={{ color: '#33322E' }}>{error}</span>
+          <span className="text-xs leading-relaxed flex-1" style={{ color: 'var(--color-text)' }}>{error}</span>
           <div className="flex flex-col gap-1 ml-1">
             <button
               type="button"
@@ -417,7 +421,7 @@ export function GlobalRecordButton() {
               type="button"
               onClick={reset}
               className="text-[10px] px-2 py-1 rounded-lg transition"
-              style={{ color: '#9A9187' }}
+              style={{ color: 'var(--color-text-muted)' }}
             >
               <X className="w-3 h-3 inline mr-0.5" />Dismiss
             </button>
@@ -442,7 +446,7 @@ export function GlobalRecordButton() {
             </div>
           )}
 
-          <p className="text-xs font-semibold uppercase tracking-widest" style={{ color: '#9A9187' }}>
+          <p className="text-xs font-semibold uppercase tracking-widest" style={{ color: 'var(--color-text-muted)' }}>
             Choose destination
           </p>
 
@@ -455,6 +459,22 @@ export function GlobalRecordButton() {
               sub: 'Pre-filled in the consequence field',
               color: 'rgba(240,196,90,0.12)',
               accent: '#c47a35',
+            },
+            {
+              dest: 'sensory' as Destination,
+              emoji: '🌀',
+              label: 'Sensory / Regulation',
+              sub: 'Pre-filled in the notes field',
+              color: 'rgba(155,142,196,0.14)',
+              accent: '#6B3568',
+            },
+            {
+              dest: 'sleep' as Destination,
+              emoji: '🌙',
+              label: 'Sleep log',
+              sub: 'Pre-filled in the notes field',
+              color: 'var(--module-sleep-bg)',
+              accent: 'var(--module-sleep-icon)',
             },
             {
               dest: 'diary' as Destination,
@@ -501,7 +521,7 @@ export function GlobalRecordButton() {
             >
               <span className="text-xl">{emoji}</span>
               <div className="flex-1 min-w-0">
-                <p className="text-sm font-semibold" style={{ color: '#33322E' }}>{label}</p>
+                <p className="text-sm font-semibold" style={{ color: 'var(--color-text)' }}>{label}</p>
                 <p className="text-xs mt-0.5" style={{ color: accent }}>{sub}</p>
               </div>
             </button>
@@ -511,7 +531,7 @@ export function GlobalRecordButton() {
             type="button"
             onClick={reset}
             className="w-full py-2.5 text-sm font-medium rounded-xl transition hover:bg-black/5"
-            style={{ color: '#9A9187' }}
+            style={{ color: 'var(--color-text-muted)' }}
           >
             Discard
           </button>
@@ -530,6 +550,39 @@ export function GlobalRecordButton() {
             date={today}
             initialConsequence={transcribed ?? ''}
             onSaved={() => { toast.success('Behavior log saved'); reset() }}
+            onCancel={reset}
+          />
+        </BottomSheet>
+      )}
+
+      {/* ── Sensory / regulation sub-sheet ────────────────────────────── */}
+      {profileId && (
+        <BottomSheet
+          open={phase === 'done' && destination === 'sensory'}
+          onClose={reset}
+          title="Log sensory/regulation"
+        >
+          <SensoryLogForm
+            profileId={profileId}
+            date={today}
+            initialNotes={transcribed ?? ''}
+            onSaved={() => { toast.success('Sensory log saved'); reset() }}
+            onCancel={reset}
+          />
+        </BottomSheet>
+      )}
+
+      {/* ── Sleep log sub-sheet ──────────────────────────────────────── */}
+      {profileId && (
+        <BottomSheet
+          open={phase === 'done' && destination === 'sleep'}
+          onClose={reset}
+          title="Log sleep"
+        >
+          <SleepLogForm
+            profileId={profileId}
+            initialNotes={transcribed ?? ''}
+            onSaved={() => { toast.success('Sleep log saved'); reset() }}
             onCancel={reset}
           />
         </BottomSheet>

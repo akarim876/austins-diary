@@ -133,8 +133,9 @@ export function AppHeader() {
           <Link
             to="/export"
             title="Export"
+            aria-label="Export"
             className="w-8 h-8 rounded-full flex items-center justify-center transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-500"
-            style={{ color: '#9A9187' }}
+            style={{ color: 'var(--color-text-muted)' }}
           >
             <Download className="w-4 h-4" />
           </Link>

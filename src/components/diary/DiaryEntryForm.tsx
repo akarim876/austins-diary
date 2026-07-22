@@ -166,10 +166,11 @@ export function DiaryEntryForm({ profileId, date, existingEntry, initialNote, on
 
       {/* Note */}
       <div>
-        <label className="block text-sm font-medium text-gray-700 mb-1.5">
+        <label htmlFor="diary-note" className="block text-sm font-medium text-gray-700 mb-1.5">
           Today's note
         </label>
         <textarea
+          id="diary-note"
           {...register('note')}
           rows={6}
           placeholder="How was today? What happened? How did Austin feel…"
@@ -182,28 +183,30 @@ export function DiaryEntryForm({ profileId, date, existingEntry, initialNote, on
 
       {/* Tags */}
       <div>
-        <label className="block text-sm font-medium text-gray-700 mb-1.5">Tags</label>
+        <label htmlFor="diary-tags" className="block text-sm font-medium text-gray-700 mb-1.5">Tags</label>
         <Controller
           name="tags"
           control={control}
           render={({ field }) => (
-            <TagInput value={field.value} onChange={field.onChange} />
+            <TagInput id="diary-tags" value={field.value} onChange={field.onChange} />
           )}
         />
       </div>
 
       {/* Photo */}
       <div>
-        <label className="block text-sm font-medium text-gray-700 mb-1.5">Photo</label>
+        <label id="diary-photo-label" className="block text-sm font-medium text-gray-700 mb-1.5">Photo</label>
         <Controller
           name="photo"
           control={control}
           render={({ field }) => (
-            <PhotoUpload
-              existingPath={clearExistingPhoto ? null : existingEntry?.photo_url}
-              onChange={field.onChange}
-              onClearExisting={() => setClearExistingPhoto(true)}
-            />
+            <div role="group" aria-labelledby="diary-photo-label">
+              <PhotoUpload
+                existingPath={clearExistingPhoto ? null : existingEntry?.photo_url}
+                onChange={field.onChange}
+                onClearExisting={() => setClearExistingPhoto(true)}
+              />
+            </div>
           )}
         />
       </div>

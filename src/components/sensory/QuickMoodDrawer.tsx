@@ -81,7 +81,7 @@ export function QuickMoodDrawer({ profileId, date, onSaved, onCancel }: Props) {
 
       {/* Time picker */}
       <div>
-        <p className="text-xs font-bold uppercase tracking-widest mb-2" style={{ color: '#9A9187' }}>
+        <p className="text-xs font-bold uppercase tracking-widest mb-2" style={{ color: 'var(--color-text-muted)' }}>
           When?
         </p>
         <TimeChipPicker
@@ -93,7 +93,7 @@ export function QuickMoodDrawer({ profileId, date, onSaved, onCancel }: Props) {
 
       {/* Zone buttons */}
       <div>
-        <p className="text-xs font-bold uppercase tracking-widest mb-3" style={{ color: '#9A9187' }}>
+        <p className="text-xs font-bold uppercase tracking-widest mb-3" style={{ color: 'var(--color-text-muted)' }}>
           How is {displayDate === 'today' ? 'it' : null} going {displayDate}?
         </p>
 
