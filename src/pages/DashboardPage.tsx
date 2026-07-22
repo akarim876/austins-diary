@@ -114,10 +114,15 @@ function ChartTabButton({ active, onClick, children }: {
 }
 
 /** Shared fallback for the per-tab chart ErrorBoundaries (see DashboardPage's Trends section). */
-function chartErrorFallback(_error: Error, retry: () => void) {
+function chartErrorFallback(error: Error, retry: () => void) {
   return (
     <div className="text-center py-6">
       <p className="text-sm" style={{ color: 'var(--color-text-muted)' }}>Couldn't load this chart.</p>
+      {/* TEMP: surfacing the raw error + name + build marker on-screen while we
+          confirm the production fix — remove once verified working. */}
+      <p className="text-xs mt-1 px-4 break-words" style={{ color: 'var(--color-text-muted)', opacity: 0.8 }}>
+        [diag-build-5] [{error.name}] {error.message || String(error)}
+      </p>
       <button
         type="button"
         onClick={retry}
