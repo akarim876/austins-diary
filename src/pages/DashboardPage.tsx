@@ -600,9 +600,14 @@ export function DashboardPage() {
                 <ChartTabButton active={chartTab === 'regulation'} onClick={() => setChartTab('regulation')}>Regulation</ChartTabButton>
               </div>
 
-              <ErrorBoundary fallback={(_err, retry) => (
+              <ErrorBoundary fallback={(err, retry) => (
                 <div className="text-center py-6">
                   <p className="text-sm" style={{ color: 'var(--color-text-muted)' }}>Couldn't load this chart.</p>
+                  {/* TEMP: surfacing the raw error on-screen while we track down the
+                      production-only chart-loading bug — remove once diagnosed. */}
+                  <p className="text-xs mt-1 px-4 break-words" style={{ color: 'var(--color-text-muted)', opacity: 0.8 }}>
+                    {err.message || String(err)}
+                  </p>
                   <button
                     type="button"
                     onClick={retry}
