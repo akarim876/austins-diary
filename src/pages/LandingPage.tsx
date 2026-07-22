@@ -367,7 +367,7 @@ export function LandingPage() {
 
   return (
     <div
-      className="min-h-dvh flex flex-col"
+      className="min-h-dvh flex flex-col overflow-hidden"
       style={{ background: 'var(--color-background)', color: 'var(--color-text)' }}
     >
       {/* ── Header ─────────────────────────────────────────────────────────── */}
@@ -390,7 +390,7 @@ export function LandingPage() {
 
       {/* ── Slide body (swipeable) ─────────────────────────────────────────── */}
       <main
-        className="flex-1 flex flex-col px-5 pb-8 max-w-lg mx-auto w-full"
+        className="relative flex-1 flex flex-col px-5 pb-8 max-w-lg mx-auto w-full"
         style={{ touchAction: 'pan-y' }}
         onPointerDown={onPointerDown}
         onPointerMove={onPointerMove}
@@ -400,11 +400,11 @@ export function LandingPage() {
         {/* Animated content only — Continue stays pinned below */}
         <div key={slide} className="flex-1 flex flex-col min-h-0" style={shellAnim}>
           {isHero ? (
-            <div className="flex-1 flex flex-col items-center text-center pt-10">
+            <div className="flex-1 flex flex-col items-center text-center pt-8 min-h-0">
               <img
                 src="/Icon-splash.png"
                 alt="Austin's Diary"
-                className="h-24 w-24 object-contain mb-7"
+                className="h-24 w-24 object-contain mb-6"
                 style={enterStyle(reduced, 0, 'scale')}
               />
 
@@ -416,33 +416,82 @@ export function LandingPage() {
                   ...enterStyle(reduced, 60),
                 }}
               >
-                Every detail<br />
-                matters.
+                Welcome to<br />
+                Austin&apos;s Diary
               </h1>
 
               <p
-                className="text-3xl sm:text-4xl font-bold leading-tight tracking-tight mt-4 mb-5"
-                style={{
-                  color: 'var(--color-accent)',
-                  fontFamily: '"Fraunces", Georgia, serif',
-                  ...enterStyle(reduced, 120),
-                }}
-              >
-                Here&apos;s where you<br />
-                keep them.
-              </p>
-
-              <p
-                className="text-lg sm:text-xl leading-relaxed max-w-xl"
+                className="text-lg sm:text-xl leading-relaxed max-w-xl mt-5"
                 style={{
                   color: 'var(--color-text-muted)',
                   fontFamily: '"Merriweather", Georgia, serif',
+                  ...enterStyle(reduced, 120),
+                }}
+              >
+                A private space for parents, caregivers and service providers of neurodivergent kids.
+                It&apos;s a diary built to hold the hard moments, small wins and log experiences that
+                help loved ones and others keep in-sync.
+              </p>
+
+              <h2
+                className="text-3xl sm:text-4xl font-bold leading-tight tracking-tight mt-8"
+                style={{
+                  color: 'var(--color-accent)',
+                  fontFamily: '"Fraunces", Georgia, serif',
                   ...enterStyle(reduced, 180),
                 }}
               >
-                A private space for the people who care for them most — built to hold the small wins,
-                understand the hard moments, and keep everyone who loves your child in sync.
-              </p>
+                Every Detail Matters.
+              </h2>
+
+              <h2
+                className="text-3xl sm:text-4xl font-bold leading-tight tracking-tight mt-1"
+                style={{
+                  color: 'var(--color-accent)',
+                  fontFamily: '"Fraunces", Georgia, serif',
+                  ...enterStyle(reduced, 240),
+                }}
+              >
+                Here&apos;s where you keep them
+              </h2>
+
+              {/*
+                Decorative smiley tucked behind the Continue button — 3x the
+                original footprint (was w-28/w-36 ≈112–144px; cap is now
+                21rem/27rem, ~336–432px). This reserved-space wrapper is a normal
+                flex-1 flow sibling *below* the last h2, so its box can never
+                overlap the text above it: however big the smiley scales, it's
+                bounded by whatever room actually remains under the copy. The
+                inner element extends further (110px) past that box's bottom
+                edge so most of the face sits down behind the button — only the
+                top of the face peeks out above it — clipped by the page's
+                overflow-hidden and stacked below the button (z-10). Entrance is
+                a bigger dedicated slide-up (see slideUpBehindButton keyframe
+                below) rather than the standard scale-pop used elsewhere, so it
+                visibly rises up from behind the button.
+              */}
+              <div className="relative w-full flex-1 min-h-[56px]" aria-hidden="true">
+                <div
+                  className="absolute inset-x-0 top-0 flex justify-center"
+                  style={{
+                    bottom: -110,
+                    zIndex: 1,
+                    pointerEvents: 'none',
+                    ...(reduced ? {} : {
+                      opacity: 0,
+                      transform: 'translateY(64px)',
+                      animation: `slideUpBehindButton ${ANIM_MS}ms ease-out 300ms both`,
+                    }),
+                  }}
+                >
+                  <img
+                    src="/Images/Smiley-face-1.png"
+                    alt=""
+                    className="max-w-[21rem] sm:max-w-[27rem] w-full h-full object-contain object-bottom"
+                    style={{ transform: 'rotate(6deg)' }}
+                  />
+                </div>
+              </div>
             </div>
           ) : (
             (() => {
@@ -481,8 +530,9 @@ export function LandingPage() {
           )}
         </div>
 
-        {/* Fixed footer — does not remount or animate with slide changes */}
-        <div className="w-full pt-4 flex-shrink-0">
+        {/* Fixed footer — does not remount or animate with slide changes.
+            relative + z-10 so it paints above the decorative hero smiley. */}
+        <div className="relative z-10 w-full pt-4 flex-shrink-0">
           {!isHero && <DotIndicators activeIndex={featureIndex} />}
           {/* Reserve dot space on hero so Continue stays at the same Y */}
           {isHero && <div className="mb-5" style={{ height: 6 }} aria-hidden="true" />}
@@ -499,6 +549,10 @@ export function LandingPage() {
         @keyframes slideEnterScale {
           from { opacity: 0; transform: scale(0.85); }
           to   { opacity: 1; transform: scale(1); }
+        }
+        @keyframes slideUpBehindButton {
+          from { opacity: 0; transform: translateY(64px); }
+          to   { opacity: 1; transform: translateY(0); }
         }
         @keyframes slideEnterRight {
           from { opacity: 0; transform: translateX(28px); }
