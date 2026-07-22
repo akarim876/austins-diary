@@ -114,15 +114,30 @@ function ChartTabButton({ active, onClick, children }: {
 }
 
 /** Shared fallback for the per-tab chart ErrorBoundaries (see DashboardPage's Trends section). */
-function chartErrorFallback(error: Error, retry: () => void) {
+function chartErrorFallback(error: Error, retry: () => void, componentStack?: string) {
+  // TEMP: on-screen diagnostics (raw error + build marker + component stack) so we
+  // can pinpoint WHERE the render loop originates without needing devtools on the
+  // user's device. Remove once the root cause is fixed.
+  const topStack = (componentStack ?? '')
+    .split('\n')
+    .map(l => l.trim())
+    .filter(Boolean)
+    .slice(0, 12)
+    .join('\n')
   return (
     <div className="text-center py-6">
       <p className="text-sm" style={{ color: 'var(--color-text-muted)' }}>Couldn't load this chart.</p>
-      {/* TEMP: surfacing the raw error + name + build marker on-screen while we
-          confirm the production fix — remove once verified working. */}
       <p className="text-xs mt-1 px-4 break-words" style={{ color: 'var(--color-text-muted)', opacity: 0.8 }}>
-        [diag-build-5] [{error.name}] {error.message || String(error)}
+        [diag-build-6] [{error.name}] {error.message || String(error)}
       </p>
+      {topStack && (
+        <pre
+          className="text-[10px] mt-2 mx-4 p-2 text-left whitespace-pre-wrap break-words"
+          style={{ background: 'var(--color-warm-100)', color: 'var(--color-text-muted)', borderRadius: 8, maxHeight: 200, overflow: 'auto' }}
+        >
+          {topStack}
+        </pre>
+      )}
       <button
         type="button"
         onClick={retry}

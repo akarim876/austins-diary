@@ -3,12 +3,19 @@ import type { ReactNode } from 'react'
 
 interface Props {
   children: ReactNode
-  /** Rendered in place of `children` once an error has been caught. */
-  fallback: ReactNode | ((error: Error, retry: () => void) => ReactNode)
+  /**
+   * Rendered in place of `children` once an error has been caught. The function
+   * form also receives the React component stack (available on the render after
+   * componentDidCatch fires), useful for on-screen diagnostics.
+   */
+  fallback:
+    | ReactNode
+    | ((error: Error, retry: () => void, componentStack?: string) => ReactNode)
 }
 
 interface State {
   error: Error | null
+  componentStack?: string
 }
 
 /**
@@ -27,15 +34,16 @@ export class ErrorBoundary extends Component<Props, State> {
 
   componentDidCatch(error: Error, info: { componentStack?: string }) {
     console.error('ErrorBoundary caught:', error, info.componentStack)
+    this.setState({ componentStack: info.componentStack })
   }
 
-  retry = () => this.setState({ error: null })
+  retry = () => this.setState({ error: null, componentStack: undefined })
 
   render() {
-    const { error } = this.state
+    const { error, componentStack } = this.state
     if (error) {
       return typeof this.props.fallback === 'function'
-        ? this.props.fallback(error, this.retry)
+        ? this.props.fallback(error, this.retry, componentStack)
         : this.props.fallback
     }
     return this.props.children
