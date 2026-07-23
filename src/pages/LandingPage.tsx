@@ -222,7 +222,7 @@ function HandoffArt({ reduced }: { reduced: boolean }) {
         delay={220}
         rotate={8}
         className="absolute z-0"
-        style={{ width: '96%', bottom: '4%', left: '2%' }}
+        style={{ width: '50%', bottom: '4%', left: '8%' }}
       />
       <ArtPiece
         src="/Images/Smiley-face-5.png"
