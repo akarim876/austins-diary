@@ -1,9 +1,12 @@
 /**
  * GlobalRecordButton — floating action button centered in the bottom nav.
  *
+ * Recording itself (mic permission, MediaRecorder, live level meter, upload
+ * + transcription) is handled by the shared `useVoiceRecorder` hook.
+ *
  * Flow:
  *  idle → tap → requesting mic → recording → stop → uploading → transcribing
- *  → done: show "Save to…" destination sheet
+ *  → transcribed: show "Save to…" destination sheet
  *    ├── Behavior log        → BehaviorLogForm pre-filled in the consequence field
  *    ├── Sensory/Regulation  → SensoryLogForm pre-filled in the notes field
  *    ├── Sleep log           → SleepLogForm pre-filled in the notes field
@@ -14,40 +17,31 @@
  *    └── Quick note          → save immediately as unfiled, toast confirmation
  */
 
-import { useState, useRef, useEffect, useCallback } from 'react'
+import { useState, useEffect } from 'react'
 import { Loader2, Mic, Square, X, AlertCircle, RotateCcw } from 'lucide-react'
 import toast from 'react-hot-toast'
 import { format } from 'date-fns'
-import { supabase } from '../../lib/supabase'
 import { useAuth } from '../../contexts/AuthContext'
 import { useProfile } from '../../contexts/ProfileContext'
 import { useMyRole, canCreate } from '../../hooks/useMyRole'
 import { useDiaryEntry } from '../../hooks/useDiaryEntries'
 import { useHandoffNote } from '../../hooks/useHandoffNote'
+import { supabase } from '../../lib/supabase'
+import { useVoiceRecorder } from '../../hooks/useVoiceRecorder'
 import { BottomSheet } from '../ui/BottomSheet'
+import { AudioLevelBars } from '../ui/AudioLevelBars'
 import { BehaviorLogForm } from '../behavior/BehaviorLogForm'
 import { DiaryEntryForm } from '../diary/DiaryEntryForm'
 import { SensoryLogForm } from '../sensory/SensoryLogForm'
 import { SleepLogForm } from '../sleep/SleepLogForm'
 
-type Phase = 'idle' | 'requesting' | 'recording' | 'uploading' | 'transcribing' | 'done' | 'error'
 type Destination = 'behavior' | 'sensory' | 'sleep' | 'handoff' | 'diary' | 'quick' | null
 /** Whether a new voice transcription should replace or be appended to an existing note. */
 type NoteChoice = 'replace' | 'append' | null
 
-function detectMimeType(): string {
-  const candidates = [
-    'audio/webm;codecs=opus', 'audio/webm',
-    'audio/ogg;codecs=opus', 'audio/mp4',
-  ]
-  return candidates.find(t => MediaRecorder.isTypeSupported(t)) ?? ''
-}
-
 function formatTime(s: number) {
   return `${Math.floor(s / 60)}:${String(s % 60).padStart(2, '0')}`
 }
-
-const MAX_SECONDS = 180
 
 // ── Sub-component: NoteChoicePrompt ───────────────────────────────────────────
 // Shown when a voice note targets the diary/handoff destination and a note
@@ -172,26 +166,13 @@ export function GlobalRecordButton() {
   const myRole            = useMyRole(activeProfile?.id ?? null)
   const today             = format(new Date(), 'yyyy-MM-dd')
 
-  const [phase, setPhase]           = useState<Phase>('idle')
-  const [elapsed, setElapsed]       = useState(0)
-  const [error, setError]           = useState<string | null>(null)
   const [transcribed, setTranscribed] = useState<string | null>(null)
   const [destination, setDestination] = useState<Destination>(null)
   const [diaryChoice, setDiaryChoice]     = useState<NoteChoice>(null)
   const [handoffChoice, setHandoffChoice] = useState<NoteChoice>(null)
 
-  const recorderRef  = useRef<MediaRecorder | null>(null)
-  const chunksRef    = useRef<Blob[]>([])
-  const streamRef    = useRef<MediaStream | null>(null)
-  const timerRef     = useRef<ReturnType<typeof setInterval> | null>(null)
-  const mimeTypeRef  = useRef<string>('')
-  const userRef      = useRef(user)
-  useEffect(() => { userRef.current = user }, [user])
-
-  useEffect(() => () => {
-    if (timerRef.current) clearInterval(timerRef.current)
-    streamRef.current?.getTracks().forEach(t => t.stop())
-  }, [])
+  const { phase, error, elapsed, levels, startRecording: startRec, stopRecording, reset: resetRecorder } =
+    useVoiceRecorder({ onTranscribed: text => setTranscribed(text) })
 
   const profileId = activeProfile?.id ?? null
   const canLog    = canCreate(myRole)
@@ -203,107 +184,14 @@ export function GlobalRecordButton() {
   const { data: existingHandoffNote, refetch: refetchHandoffNote } =
     useHandoffNote(profileId)
 
-  function startTimer() {
-    setElapsed(0)
-    timerRef.current = setInterval(() => {
-      setElapsed(e => {
-        if (e + 1 >= MAX_SECONDS) { stopRecording(); return e + 1 }
-        return e + 1
-      })
-    }, 1000)
-  }
-
-  function clearTimer() {
-    if (timerRef.current) { clearInterval(timerRef.current); timerRef.current = null }
-  }
-
-  const handleStop = useCallback(async () => {
-    const currentUser = userRef.current
-    const blobs = chunksRef.current
-    if (!currentUser || blobs.length === 0) { setPhase('idle'); return }
-
-    const mimeType = mimeTypeRef.current || 'audio/webm'
-    const ext = mimeType.includes('mp4') ? 'm4a' : mimeType.includes('ogg') ? 'ogg' : 'webm'
-    const audioBlob = new Blob(blobs, { type: mimeType })
-    const path = `${currentUser.id}/${Date.now()}.${ext}`
-
-    setPhase('uploading')
-
-    try {
-      const { error: uploadErr } = await supabase.storage
-        .from('voice-recordings').upload(path, audioBlob, { contentType: mimeType })
-      if (uploadErr) throw new Error(uploadErr.message)
-
-      setPhase('transcribing')
-
-      const { data, error: fnErr } = await supabase.functions.invoke('transcribe-audio', {
-        body: { path },
-      })
-
-      if (fnErr) {
-        let detail = fnErr.message
-        try {
-          const ctx = (fnErr as unknown as { context?: Response }).context
-          if (ctx) { const b = await ctx.json().catch(() => null); if (b?.error) detail = b.error }
-        } catch { /* ignore */ }
-        throw new Error(detail)
-      }
-      if (data?.error) throw new Error(data.error as string)
-      if (!data?.text) throw new Error('No transcription returned')
-
-      setTranscribed((data.text as string).trim())
-      setPhase('done')
-    } catch (err: unknown) {
-      await supabase.storage.from('voice-recordings').remove([path]).catch(() => {})
-      setError(err instanceof Error ? err.message : 'Transcription failed')
-      setPhase('error')
-    }
-  }, [])
-
-  async function startRecording() {
+  function startRecording() {
     if (!canLog) { toast.error('You need editor access to log entries.'); return }
-    setError(null)
     setTranscribed(null)
-    setPhase('requesting')
-
-    try {
-      const stream = await navigator.mediaDevices.getUserMedia({ audio: true })
-      streamRef.current = stream
-      const mimeType = detectMimeType()
-      mimeTypeRef.current = mimeType
-
-      const recorder = new MediaRecorder(stream, mimeType ? { mimeType } : undefined)
-      recorderRef.current = recorder
-      chunksRef.current = []
-
-      recorder.ondataavailable = e => { if (e.data.size > 0) chunksRef.current.push(e.data) }
-      recorder.onstop = handleStop
-      recorder.start(250)
-      setPhase('recording')
-      startTimer()
-    } catch (err: unknown) {
-      const name = err instanceof Error ? err.name : ''
-      const msg  = err instanceof Error ? err.message : 'Microphone error'
-      setError(
-        name === 'NotAllowedError' || name === 'PermissionDeniedError'
-          ? 'Microphone access denied. Allow it in browser settings and try again.'
-          : name === 'NotFoundError'
-          ? 'No microphone found on this device.'
-          : msg,
-      )
-      setPhase('error')
-    }
-  }
-
-  function stopRecording() {
-    clearTimer()
-    streamRef.current?.getTracks().forEach(t => t.stop())
-    if (recorderRef.current?.state === 'recording') recorderRef.current.stop()
+    startRec()
   }
 
   function reset() {
-    setPhase('idle')
-    setError(null)
+    resetRecorder()
     setTranscribed(null)
     setDestination(null)
     setDiaryChoice(null)
@@ -385,15 +273,25 @@ export function GlobalRecordButton() {
           )}
         </button>
 
-        <span
-          className="text-[10px] font-semibold tabular-nums"
-          style={{
-            color: isRecording ? '#C77B6A' : 'var(--color-text-muted)',
-            fontFamily: 'inherit',
-          }}
-        >
-          {isRecording ? fabLabel : 'Record'}
-        </span>
+        {isRecording ? (
+          <div className="flex items-center gap-1.5">
+            {/* Live mic-level meter — confirms audio is actually being picked up */}
+            <AudioLevelBars levels={levels} color="#C77B6A" minHeightPx={3} maxHeightPx={11} />
+            <span
+              className="text-[10px] font-semibold tabular-nums"
+              style={{ color: '#C77B6A', fontFamily: 'inherit' }}
+            >
+              {fabLabel}
+            </span>
+          </div>
+        ) : (
+          <span
+            className="text-[10px] font-semibold tabular-nums"
+            style={{ color: 'var(--color-text-muted)', fontFamily: 'inherit' }}
+          >
+            Record
+          </span>
+        )}
       </div>
 
       {/* ── Error overlay (small, non-modal) ───────────────────────────── */}
@@ -431,7 +329,7 @@ export function GlobalRecordButton() {
 
       {/* ── Destination picker sheet ────────────────────────────────────── */}
       <BottomSheet
-        open={phase === 'done' && destination === null}
+        open={transcribed !== null && destination === null}
         onClose={reset}
         title="Save your note to…"
       >
@@ -541,7 +439,7 @@ export function GlobalRecordButton() {
       {/* ── Behavior log sub-sheet ─────────────────────────────────────── */}
       {profileId && (
         <BottomSheet
-          open={phase === 'done' && destination === 'behavior'}
+          open={transcribed !== null && destination === 'behavior'}
           onClose={reset}
           title="Log behavior"
         >
@@ -558,7 +456,7 @@ export function GlobalRecordButton() {
       {/* ── Sensory / regulation sub-sheet ────────────────────────────── */}
       {profileId && (
         <BottomSheet
-          open={phase === 'done' && destination === 'sensory'}
+          open={transcribed !== null && destination === 'sensory'}
           onClose={reset}
           title="Log sensory/regulation"
         >
@@ -575,7 +473,7 @@ export function GlobalRecordButton() {
       {/* ── Sleep log sub-sheet ──────────────────────────────────────── */}
       {profileId && (
         <BottomSheet
-          open={phase === 'done' && destination === 'sleep'}
+          open={transcribed !== null && destination === 'sleep'}
           onClose={reset}
           title="Log sleep"
         >
@@ -591,7 +489,7 @@ export function GlobalRecordButton() {
       {/* ── Diary note sub-sheet ───────────────────────────────────────── */}
       {profileId && (
         <BottomSheet
-          open={phase === 'done' && destination === 'diary'}
+          open={transcribed !== null && destination === 'diary'}
           onClose={reset}
           title="Diary note"
         >
@@ -632,7 +530,7 @@ export function GlobalRecordButton() {
       {/* ── Handoff note sub-sheet ─────────────────────────────────────── */}
       {profileId && (
         <BottomSheet
-          open={phase === 'done' && destination === 'handoff'}
+          open={transcribed !== null && destination === 'handoff'}
           onClose={reset}
           title="Handoff note"
         >
